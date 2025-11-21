@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur Pitch/Tempo | Hamcat Tools</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        .tool-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .tracks-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .track-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .note-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .note-btn {
+            padding: 8px 2px;
+            border: 2px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .note-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .note-btn.selected {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-highlight);
+        }
+
+        .bpm-display {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 700;
+            margin: 12px 0;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .bpm-display:hover {
+            color: var(--accent-highlight);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .result {
+            background: linear-gradient(135deg, var(--warning), #ff6b00);
+            color: white;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
+        }
+
+        .result.perfect {
+            background: linear-gradient(135deg, var(--success), #007e33);
+        }
+
+        @media (max-width: 768px) {
+            .tracks-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="nav-brand">♫ Hamcat</a>
+            <button class="nav-toggle">☰</button>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/" class="nav-link">Accueil</a></li>
+                <li class="nav-item"><a href="/portfolio/tracks.html" class="nav-link">Tracks</a></li>
+                <li class="nav-item"><a href="/portfolio/mixes.html" class="nav-link">Mixes</a></li>
+                <li class="nav-item"><a href="/tools/pitch.html" class="nav-link">Outils</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">🎵 Pitch/Tempo Pro</h1>
+        <p class="page-subtitle">Calculateur précis pour harmonic mixing et repitching</p>
+
+        <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid var(--accent-primary); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <p style="color: var(--text-secondary); font-size: 14px;">
+                <strong>Calcule le pitch shift et l'adaptation de tempo</strong> pour mixer deux tracks avec précision. 
+                Utilise la théorie harmonique pour déterminer les compatibilités entre notes.
+            </p>
+        </div>
+
+        <div class="tool-container">
+            <div class="tracks-container">
+                <!-- Track A -->
+                <div class="track">
+                    <div class="track-header">
+                        <div class="track-title" style="color: #ff6b6b;">Track A</div>
+                    </div>
+                    
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">Tonalité originale</label>
+                    <div class="note-grid" id="fromGridA">
+                        <button class="note-btn" data-note="C" onclick="selectNote(this, 'fromA', 'C')">C</button>
+                        <button class="note-btn" data-note="C#" onclick="selectNote(this, 'fromA', 'C#')">C#</button>
+                        <button class="note-btn" data-note="D" onclick="selectNote(this, 'fromA', 'D')">D</button>
+                        <button class="note-btn" data-note="D#" onclick="selectNote(this, 'fromA', 'D#')">D#</button>
+                        <button class="note-btn" data-note="E" onclick="selectNote(this, 'fromA', 'E')">E</button>
+                        <button class="note-btn" data-note="F" onclick="selectNote(this, 'fromA', 'F')">F</button>
+                        <button class="note-btn" data-note="F#" onclick="selectNote(this, 'fromA', 'F#')">F#</button>
+                        <button class="note-btn" data-note="G" onclick="selectNote(this, 'fromA', 'G')">G</button>
+                        <button class="note-btn" data-note="G#" onclick="selectNote(this, 'fromA', 'G#')">G#</button>
+                        <button class="note-btn selected" data-note="A" onclick="selectNote(this, 'fromA', 'A')">A</button>
+                        <button class="note-btn" data-note="A#" onclick="selectNote(this, 'fromA', 'A#')">A#</button>
+                        <button class="note-btn" data-note="B" onclick="selectNote(this, 'fromA', 'B')">B</button>
+                    </div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">BPM</label>
+                    <div class="bpm-display" id="currentDisplayA" onclick="editBpm('currentA')">120.000</div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">Tonalité cible</label>
+                    <div class="note-grid" id="toGridA">
+                        <button class="note-btn" data-note="C" onclick="selectNote(this, 'toA', 'C')">C</button>
+                        <button class="note-btn" data-note="C#" onclick="selectNote(this, 'toA', 'C#')">C#</button>
+                        <button class="note-btn" data-note="D" onclick="selectNote(this, 'toA', 'D')">D</button>
+                        <button class="note-btn" data-note="D#" onclick="selectNote(this, 'toA', 'D#')">D#</button>
+                        <button class="note-btn" data-note="E" onclick="selectNote(this, 'toA', 'E')">E</button>
+                        <button class="note-btn" data-note="F" onclick="selectNote(this, 'toA', 'F')">F</button>
+                        <button class="note-btn" data-note="F#" onclick="selectNote(this, 'toA', 'F#')">F#</button>
+                        <button class="note-btn" data-note="G" onclick="selectNote(this, 'toA', 'G')">G</button>
+                        <button class="note-btn" data-note="G#" onclick="selectNote(this, 'toA', 'G#')">G#</button>
+                        <button class="note-btn" data-note="A" onclick="selectNote(this, 'toA', 'A')">A</button>
+                        <button class="note-btn" data-note="A#" onclick="selectNote(this, 'toA', 'A#')">A#</button>
+                        <button class="note-btn" data-note="B" onclick="selectNote(this, 'toA', 'B')">B</button>
+                    </div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">BPM cible</label>
+                    <div class="bpm-display" id="targetDisplayA" onclick="editBpm('targetA')">120.000</div>
+                </div>
+
+                <!-- Track B -->
+                <div class="track">
+                    <div class="track-header">
+                        <div class="track-title" style="color: #4ecdc4;">Track B</div>
+                    </div>
+                    
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">Tonalité originale</label>
+                    <div class="note-grid" id="fromGridB">
+                        <button class="note-btn" data-note="C" onclick="selectNote(this, 'fromB', 'C')">C</button>
+                        <button class="note-btn" data-note="C#" onclick="selectNote(this, 'fromB', 'C#')">C#</button>
+                        <button class="note-btn" data-note="D" onclick="selectNote(this, 'fromB', 'D')">D</button>
+                        <button class="note-btn" data-note="D#" onclick="selectNote(this, 'fromB', 'D#')">D#</button>
+                        <button class="note-btn" data-note="E" onclick="selectNote(this, 'fromB', 'E')">E</button>
+                        <button class="note-btn" data-note="F" onclick="selectNote(this, 'fromB', 'F')">F</button>
+                        <button class="note-btn" data-note="F#" onclick="selectNote(this, 'fromB', 'F#')">F#</button>
+                        <button class="note-btn" data-note="G" onclick="selectNote(this, 'fromB', 'G')">G</button>
+                        <button class="note-btn" data-note="G#" onclick="selectNote(this, 'fromB', 'G#')">G#</button>
+                        <button class="note-btn selected" data-note="A" onclick="selectNote(this, 'fromB', 'A')">A</button>
+                        <button class="note-btn" data-note="A#" onclick="selectNote(this, 'fromB', 'A#')">A#</button>
+                        <button class="note-btn" data-note="B" onclick="selectNote(this, 'fromB', 'B')">B</button>
+                    </div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">BPM</label>
+                    <div class="bpm-display" id="currentDisplayB" onclick="editBpm('currentB')">120.000</div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">Tonalité cible</label>
+                    <div class="note-grid" id="toGridB">
+                        <button class="note-btn" data-note="C" onclick="selectNote(this, 'toB', 'C')">C</button>
+                        <button class="note-btn" data-note="C#" onclick="selectNote(this, 'toB', 'C#')">C#</button>
+                        <button class="note-btn" data-note="D" onclick="selectNote(this, 'toB', 'D')">D</button>
+                        <button class="note-btn" data-note="D#" onclick="selectNote(this, 'toB', 'D#')">D#</button>
+                        <button class="note-btn" data-note="E" onclick="selectNote(this, 'toB', 'E')">E</button>
+                        <button class="note-btn" data-note="F" onclick="selectNote(this, 'toB', 'F')">F</button>
+                        <button class="note-btn" data-note="F#" onclick="selectNote(this, 'toB', 'F#')">F#</button>
+                        <button class="note-btn" data-note="G" onclick="selectNote(this, 'toB', 'G')">G</button>
+                        <button class="note-btn" data-note="G#" onclick="selectNote(this, 'toB', 'G#')">G#</button>
+                        <button class="note-btn" data-note="A" onclick="selectNote(this, 'toB', 'A')">A</button>
+                        <button class="note-btn" data-note="A#" onclick="selectNote(this, 'toB', 'A#')">A#</button>
+                        <button class="note-btn" data-note="B" onclick="selectNote(this, 'toB', 'B')">B</button>
+                    </div>
+
+                    <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 6px;">BPM cible</label>
+                    <div class="bpm-display" id="targetDisplayB" onclick="editBpm('targetB')">120.000</div>
+                </div>
+            </div>
+
+            <div id="resultA" class="result" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">
+                Configure les tonalités et tempos
+            </div>
+            <div id="resultB" class="result" style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted);">
+                Configure les tonalités et tempos
+            </div>
+        </div>
+
+        <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid var(--accent-primary); border-radius: 12px; padding: 16px;">
+            <h3 style="color: var(--accent-highlight); margin-bottom: 8px;">💡 Comment utiliser</h3>
+            <ol style="color: var(--text-secondary); font-size: 14px; margin-left: 16px;">
+                <li style="margin-bottom: 8px;">Sélectionne la tonalité et le BPM de départ pour chaque track</li>
+                <li style="margin-bottom: 8px;">Indique la tonalité et le BPM cibles</li>
+                <li>Le calculateur affiche le pitch shift et les cents de détuning nécessaires</li>
+            </ol>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Navigation</h4>
+                <a href="/">Accueil</a>
+                <a href="/portfolio/tracks.html">Tracks</a>
+                <a href="/portfolio/mixes.html">Mixes</a>
+                <a href="/tools/pitch.html">Outils</a>
+            </div>
+            <div class="footer-section">
+                <h4>Présence</h4>
+                <a href="#">Bandcamp</a>
+                <a href="#">Soundcloud</a>
+                <a href="#">Instagram</a>
+                <a href="#">Email</a>
+            </div>
+            <div class="footer-section">
+                <h4>Outils</h4>
+                <a href="/tools/pitch.html">Pitch/Tempo</a>
+                <a href="/tools/bpm.html">BPM Converter</a>
+                <a href="/tools/samples.html">Sample Manager</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Hamcat. Créé avec ♫ pour les musiciens numériques.</p>
+        </div>
+    </footer>
+
+    <script src="/assets/nav.js"></script>
+    <script>
+        let selectedNotes = { fromA: 'A', toA: null, fromB: 'A', toB: null };
+        const noteValues = { 'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5, 'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11 };
+
+        function selectNote(el, type, note) {
+            el.parentElement.querySelectorAll('.note-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedNotes[type] = note;
+            calculate();
+        }
+
+        function editBpm(type) {
+            const display = document.getElementById(type.replace('current', 'currentDisplay').replace('target', 'targetDisplay'));
+            const val = prompt('BPM:', display.textContent);
+            if (val) {
+                display.textContent = parseFloat(val).toFixed(3);
+                calculate();
+            }
+        }
+
+        function calculateSemitones(from, to) {
+            let s = noteValues[to] - noteValues[from];
+            if (s > 6) s -= 12;
+            if (s < -6) s += 12;
+            return s;
+        }
+
+        function calculate() {
+            ['A', 'B'].forEach(track => {
+                const currentBpm = parseFloat(document.getElementById('currentDisplay' + track).textContent);
+                const targetBpm = parseFloat(document.getElementById('targetDisplay' + track).textContent);
+                const fromNote = selectedNotes['from' + track];
+                const toNote = selectedNotes['to' + track];
+                const resultDiv = document.getElementById('result' + track);
+
+                if (!currentBpm || !fromNote || !toNote) {
+                    resultDiv.innerHTML = 'Configure les tonalités et tempos';
+                    resultDiv.style.background = 'rgba(255, 255, 255, 0.05)';
+                    resultDiv.style.color = 'var(--text-muted)';
+                    return;
+                }
+
+                const semitones = calculateSemitones(fromNote, toNote);
+                const multiplier = Math.pow(2, semitones / 12);
+                const perfectBpm = currentBpm * multiplier;
+                
+                let isPerfect = Math.abs(targetBpm - perfectBpm) < 0.001;
+                
+                resultDiv.innerHTML = `
+                    <div>${targetBpm.toFixed(3)} BPM</div>
+                    <div style="font-size: 12px; margin-top: 4px;">${fromNote} → ${toNote} (${semitones > 0 ? '+' : ''}${semitones.toFixed(2)} ST)</div>
+                `;
+
+                if (isPerfect) {
+                    resultDiv.style.background = 'linear-gradient(135deg, var(--success), #007e33)';
+                    resultDiv.classList.add('perfect');
+                } else {
+                    resultDiv.style.background = 'linear-gradient(135deg, var(--warning), #ff6b00)';
+                    resultDiv.classList.remove('perfect');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -5,12 +5,15 @@
     <script>
         const id = new URLSearchParams(window.location.search).get('id') || 'default';
         
-        const redirects = {
-            'qr': 'https://fx-jam.vercel.app/',
-            'default': 'https://example.com'
-        };
-        
-        window.location.href = redirects[id] || redirects['default'];
+        fetch('/config.json')
+            .then(r => r.json())
+            .then(redirects => {
+                const destination = redirects[id] || redirects['default'];
+                window.location.href = destination;
+            })
+            .catch(() => {
+                window.location.href = 'https://fx-jam.vercel.app';
+            });
     </script>
 </head>
 <body>
