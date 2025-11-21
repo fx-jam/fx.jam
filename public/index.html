@@ -5,24 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculateur Pitch/Tempo Pro - Repitch DJ & Production Musicale</title>
     
-    <!-- SEO Meta Tags -->
     <meta name="description" content="Calculateur de pitch et tempo pour DJs et producteurs. Calculez facilement le repitch, l'étirement temporel et l'adaptation de BPM pour vos tracks et samples musicaux.">
-    <meta name="keywords" content="pitch shifter, calculateur tempo, repitch DJ, BPM calculator, time stretching, pitch bend, DJ tools, production musicale, sample adaptation, key matching, harmonic mixing, cents calculator, semitones calculator, music producer tools, DJ mixing, tempo sync, pitch correction, audio tools, music technology, beatmatching, key detection, frequency shift, music math, studio tools, remix tools, mashup tools, turntable pitch, CDJ pitch, serato pitch, virtual DJ, traktor pitch, logic pitch, ableton pitch, pro tools pitch, cubase pitch, fl studio pitch, reason pitch, reaper pitch, studio one pitch">
+    <meta name="keywords" content="pitch shifter, calculateur tempo, repitch DJ, BPM calculator, time stretching, pitch bend, DJ tools, production musicale">
     <meta name="author" content="DJ Tools">
     <meta name="robots" content="index, follow">
     
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Calculateur Pitch/Tempo - Outil DJ & Production">
     <meta property="og:description" content="Calculez précisément le repitch et l'adaptation de tempo pour vos tracks DJ et samples de production musicale.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="/pitch-tempo-calculator.png">
     
-    <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Calculateur Pitch/Tempo - Outil DJ & Production">
     <meta name="twitter:description" content="Calculez précisément le repitch et l'adaptation de tempo pour vos tracks DJ et samples de production musicale.">
     
-    <!-- Structured Data JSON-LD -->
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
@@ -36,10 +31,6 @@
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "EUR"
-        },
-        "creator": {
-            "@type": "Organization",
-            "name": "DJ Tools"
         }
     }
     </script>
@@ -153,7 +144,6 @@
             box-shadow: 0 0 8px rgba(0, 200, 81, 0.6);
         }
 
-        /* Couleurs des notes (style Traktor) */
         .note-btn[data-note="C"] { --note-color: #ff0000; }
         .note-btn[data-note="C#"] { --note-color: #ff8000; }
         .note-btn[data-note="D"] { --note-color: #ffff00; }
@@ -530,7 +520,6 @@
             background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
         }
 
-        /* Animations d'entrée */
         .track {
             animation: slideInUp 0.6s ease forwards;
             opacity: 0;
@@ -547,7 +536,6 @@
             }
         }
 
-        /* Responsive pour mobile */
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -776,13 +764,6 @@
             toB: null
         };
 
-        let keyboardAcceleration = {
-            currentA: { speed: 1, lastKeyTime: 0, accelerating: false },
-            targetA: { speed: 1, lastKeyTime: 0, accelerating: false },
-            currentB: { speed: 1, lastKeyTime: 0, accelerating: false },
-            targetB: { speed: 1, lastKeyTime: 0, accelerating: false }
-        };
-
         const noteValues = {
             'C': 0, 'C#': 1, 'D': 2, 'D#': 3, 'E': 4, 'F': 5,
             'F#': 6, 'G': 7, 'G#': 8, 'A': 9, 'A#': 10, 'B': 11
@@ -790,173 +771,21 @@
 
         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-        // Gestion des flèches du clavier avec accélération exponentielle
-        document.addEventListener('keydown', function(event) {
-            const focusedSlider = document.querySelector('.bpm-slider:focus');
-            if (!focusedSlider || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) {
-                return;
-            }
-
-            event.preventDefault();
-
-            const sliderId = focusedSlider.id;
-            let sliderType;
-            if (sliderId === 'currentSliderA') sliderType = 'currentA';
-            else if (sliderId === 'targetSliderA') sliderType = 'targetA';
-            else if (sliderId === 'currentSliderB') sliderType = 'currentB';
-            else if (sliderId === 'targetSliderB') sliderType = 'targetB';
-            
-            const acceleration = keyboardAcceleration[sliderType];
-            
-            const now = Date.now();
-            const timeSinceLastKey = now - acceleration.lastKeyTime;
-            
-            // Si moins de 80ms depuis la dernière touche, on accélère exponentiellement
-            if (timeSinceLastKey < 80 && acceleration.accelerating) {
-                acceleration.speed = Math.min(acceleration.speed * 1.3, 20);
-            } else {
-                acceleration.speed = 1;
-                acceleration.accelerating = true;
-            }
-            
-            acceleration.lastKeyTime = now;
-            
-            // Calculer le pas avec accélération exponentielle
-            let step = 0.1;
-            if (acceleration.speed > 1) {
-                step = 0.1 * Math.pow(acceleration.speed, 1.3);
-            }
-            
-            const currentValue = parseFloat(focusedSlider.value);
-            let newValue;
-            
-            if (event.key === 'ArrowRight') {
-                newValue = Math.min(currentValue + step, 240);
-            } else {
-                newValue = Math.max(currentValue - step, 1);
-            }
-            
-            focusedSlider.value = newValue;
-            updateFromSlider(sliderType);
-        });
-
-        document.addEventListener('keyup', function(event) {
-            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-                setTimeout(() => {
-                    Object.keys(keyboardAcceleration).forEach(key => {
-                        keyboardAcceleration[key].accelerating = false;
-                    });
-                }, 200);
-            }
-        });
-
         function selectNote(element, type, note) {
             element.parentElement.querySelectorAll('.note-btn').forEach(btn => btn.classList.remove('selected'));
             element.classList.add('selected');
             selectedNotes[type] = note;
-            
-            // Animation de sélection
             element.style.transform = 'scale(0.9)';
             setTimeout(() => {
                 element.style.transform = '';
             }, 150);
-            
-            // Si on sélectionne une note cible, calculer le BPM cible
-            if (type.startsWith('to')) {
-                const track = type.includes('A') ? 'A' : 'B';
-                calculateTargetFromNote(track);
-            }
-            
             calculate();
-            updateHarmonicIndicators();
-        }
-
-        function calculateTargetFromNote(track) {
-            const currentBpm = parseFloat(document.getElementById('currentSlider' + track).value);
-            const fromNote = selectedNotes['from' + track];
-            const toNote = selectedNotes['to' + track];
-            const fromDetune = parseFloat(document.getElementById('fromDetune' + track).value) || 0;
-            
-            if (currentBpm && fromNote && toNote) {
-                const semitones = calculateSemitones(fromNote, toNote) + (fromDetune / 100);
-                const multiplier = Math.pow(2, semitones / 12);
-                const resultBpm = currentBpm * multiplier;
-                
-                document.getElementById('targetSlider' + track).value = Math.min(resultBpm, 240);
-                document.getElementById('targetDisplay' + track).textContent = resultBpm.toFixed(3);
-            }
-        }
-
-        function updateHarmonicIndicators() {
-            const noteA = selectedNotes.fromA;
-            const noteB = selectedNotes.fromB;
-            const indicatorA = document.getElementById('harmonicA');
-            const indicatorB = document.getElementById('harmonicB');
-            
-            // Vérifier la compatibilité harmonique
-            const isCompatible = isHarmonicallyCompatible(noteA, noteB);
-            
-            if (isCompatible) {
-                indicatorA.classList.add('compatible');
-                indicatorB.classList.add('compatible');
-            } else {
-                indicatorA.classList.remove('compatible');
-                indicatorB.classList.remove('compatible');
-            }
-        }
-
-        function isHarmonicallyCompatible(noteA, noteB) {
-            if (!noteA || !noteB) return false;
-            
-            // Méthode 1: Même note
-            if (noteA === noteB) return true;
-            
-            // Méthode 2: Quintes/Quartes parfaites (±5/7 semitones)
-            const semitonesDiff = Math.abs(calculateSemitones(noteA, noteB));
-            if (semitonesDiff === 5 || semitonesDiff === 7) return true;
-            
-            // Méthode 3: Notes relatives (majeur/mineur relatif)
-            const relativePairs = [
-                ['C', 'Am'], ['C#', 'A#m'], ['D', 'Bm'], ['D#', 'Cm'],
-                ['E', 'C#m'], ['F', 'Dm'], ['F#', 'D#m'], ['G', 'Em'],
-                ['G#', 'Fm'], ['A', 'F#m'], ['A#', 'Gm'], ['B', 'G#m']
-            ];
-            
-            for (const pair of relativePairs) {
-                if ((pair[0] === noteA && pair[1] === noteB) || 
-                    (pair[1] === noteA && pair[0] === noteB)) {
-                    return true;
-                }
-            }
-            
-            // Méthode 4: Adjacent sur cercle de Camelot (±1 position)
-            const camelotA = camelotWheel[noteA];
-            const camelotB = camelotWheel[noteB];
-            
-            if (camelotA && camelotB) {
-                const numA = parseInt(camelotA);
-                const numB = parseInt(camelotB);
-                const letterA = camelotA.slice(-1);
-                const letterB = camelotB.slice(-1);
-                
-                // Même lettre (majeur/mineur), nombres adjacents
-                if (letterA === letterB) {
-                    const diff = Math.abs(numA - numB);
-                    if (diff === 1 || diff === 11) return true; // 11 pour 1↔12
-                }
-                
-                // Même nombre, lettres différentes (majeur↔mineur relatif)
-                if (numA === numB && letterA !== letterB) return true;
-            }
-            
-            return false;
         }
 
         function editBpm(type) {
             const display = document.getElementById(type.replace('current', 'currentDisplay').replace('target', 'targetDisplay'));
             const input = document.getElementById(type.replace('current', 'currentInput').replace('target', 'targetInput'));
             const currentValue = parseFloat(display.textContent);
-            
             display.style.display = 'none';
             input.style.display = 'block';
             input.value = currentValue.toFixed(3);
@@ -968,31 +797,15 @@
             const display = document.getElementById(type.replace('current', 'currentDisplay').replace('target', 'targetDisplay'));
             const input = document.getElementById(type.replace('current', 'currentInput').replace('target', 'targetInput'));
             const slider = document.getElementById(type.replace('current', 'currentSlider').replace('target', 'targetSlider'));
-            
             let value = parseFloat(input.value);
             if (isNaN(value) || value <= 0) {
                 value = 120;
             }
-            
             value = Math.max(1, Math.min(999, value));
-            
             slider.value = Math.min(value, 240);
             display.textContent = value.toFixed(3);
-            
             display.style.display = 'block';
             input.style.display = 'none';
-            
-            // Si on modifie le BPM cible, auto-sélectionner la note
-            if (type.includes('target')) {
-                const track = type.includes('A') ? 'A' : 'B';
-                autoSelectNoteFromBpm(track);
-            }
-            
-            // Mettre à jour la suggestion middle ground
-            if (type.includes('current')) {
-                updateMiddleGroundSuggestion();
-            }
-            
             calculate();
         }
 
@@ -1002,107 +815,35 @@
             } else if (event.key === 'Escape') {
                 const display = document.getElementById(type.replace('current', 'currentDisplay').replace('target', 'targetDisplay'));
                 const input = document.getElementById(type.replace('current', 'currentInput').replace('target', 'targetInput'));
-                
                 display.style.display = 'block';
                 input.style.display = 'none';
             }
-        }
-
-        function autoSelectNoteFromBpm(track) {
-            const currentBpm = parseFloat(document.getElementById('currentSlider' + track).value);
-            const targetBpm = parseFloat(document.getElementById('targetDisplay' + track).textContent);
-            const fromNote = selectedNotes['from' + track];
-            const fromDetune = parseFloat(document.getElementById('fromDetune' + track).value) || 0;
-            
-            if (currentBpm && targetBpm && fromNote && targetBpm !== currentBpm) {
-                const speedRatio = targetBpm / currentBpm;
-                const semitonesFloat = 12 * Math.log2(speedRatio) - (fromDetune / 100);
-                const targetSemitones = Math.round(semitonesFloat);
-                
-                const fromNoteValue = noteValues[fromNote];
-                let targetNoteValue = (fromNoteValue + targetSemitones) % 12;
-                if (targetNoteValue < 0) targetNoteValue += 12;
-                const suggestedNote = noteNames[targetNoteValue];
-                
-                const toGrid = document.getElementById('toGrid' + track);
-                toGrid.querySelectorAll('.note-btn').forEach(btn => btn.classList.remove('selected'));
-                
-                const noteButton = toGrid.querySelector(`[data-note="${suggestedNote}"]`);
-                if (noteButton) {
-                    noteButton.classList.add('selected');
-                    selectedNotes['to' + track] = suggestedNote;
-                }
-            }
-        }
-
-        function multiplyBpm(track) {
-            const targetSlider = document.getElementById('targetSlider' + track);
-            const targetDisplay = document.getElementById('targetDisplay' + track);
-            
-            const currentValue = parseFloat(targetDisplay.textContent) || 120;
-            const newValue = Math.min(currentValue * 2, 999);
-            targetSlider.value = Math.min(newValue, 240);
-            targetDisplay.textContent = newValue.toFixed(3);
-            
-            autoSelectNoteFromBpm(track);
-            calculate();
-        }
-
-        function divideBpm(track) {
-            const targetSlider = document.getElementById('targetSlider' + track);
-            const targetDisplay = document.getElementById('targetDisplay' + track);
-            
-            const currentValue = parseFloat(targetDisplay.textContent) || 120;
-            const newValue = Math.max(currentValue / 2, 1);
-            targetSlider.value = Math.min(newValue, 240);
-            targetDisplay.textContent = newValue.toFixed(3);
-            
-            autoSelectNoteFromBpm(track);
-            calculate();
         }
 
         function calculateSemitones(fromNote, toNote) {
             let from = noteValues[fromNote];
             let to = noteValues[toNote];
             let semitones = to - from;
-            
             if (semitones > 6) semitones -= 12;
             if (semitones < -6) semitones += 12;
-            
             return semitones;
         }
 
         function updateFromSlider(type) {
             const slider = document.getElementById(type.replace('current', 'currentSlider').replace('target', 'targetSlider'));
             const display = document.getElementById(type.replace('current', 'currentDisplay').replace('target', 'targetDisplay'));
-            
             const value = parseFloat(slider.value);
             display.textContent = value.toFixed(3);
-            
-            // Si on modifie le BPM cible, auto-sélectionner la note
-            if (type.includes('target')) {
-                const track = type.includes('A') ? 'A' : 'B';
-                autoSelectNoteFromBpm(track);
-            }
-            
-            // Mettre à jour la suggestion middle ground
-            if (type.includes('current')) {
-                updateMiddleGroundSuggestion();
-            }
-            
             calculate();
         }
 
         function calculatePitchRange(percentChange) {
-            // Déterminer automatiquement la range appropriée
             let recommendedRange = 6;
             if (Math.abs(percentChange) > 6) recommendedRange = 10;
             if (Math.abs(percentChange) > 10) recommendedRange = 16;
             if (Math.abs(percentChange) > 16) recommendedRange = 100;
-            
             const pitchPosition = (percentChange / recommendedRange) * 100;
             const rangeDisplay = recommendedRange === 100 ? 'WIDE' : `±${recommendedRange}%`;
-            
             return { 
                 position: pitchPosition.toFixed(1), 
                 range: rangeDisplay,
@@ -1116,7 +857,6 @@
                 const targetBpm = parseFloat(document.getElementById('targetDisplay' + track).textContent);
                 const fromNote = selectedNotes['from' + track];
                 const toNote = selectedNotes['to' + track];
-                const fromDetune = parseFloat(document.getElementById('fromDetune' + track).value) || 0;
                 const resultDiv = document.getElementById('result' + track);
                 
                 if (!currentBpm || !fromNote || currentBpm === 0 || !toNote) {
@@ -1130,32 +870,24 @@
                 }
 
                 resultDiv.className = 'result';
-                
-                // Animation de mise à jour
                 resultDiv.style.transform = 'scale(0.95)';
                 setTimeout(() => {
                     resultDiv.style.transform = '';
                 }, 150);
 
                 const semitones = calculateSemitones(fromNote, toNote);
-                const totalSemitones = semitones + (fromDetune / 100);
-                const multiplier = Math.pow(2, totalSemitones / 12);
+                const multiplier = Math.pow(2, semitones / 12);
                 const perfectBpm = currentBpm * multiplier;
                 
-                let displayBpm = targetBpm;
                 let percentChange = ((targetBpm / currentBpm - 1) * 100);
-                
-                // Calculer les cents - limités à ±50
                 let actualCents = 0;
                 let isPerfect = Math.abs(targetBpm - perfectBpm) < 0.001;
                 
                 if (!isPerfect) {
                     const speedRatio = targetBpm / currentBpm;
                     const semitonesFloat = 12 * Math.log2(speedRatio);
-                    const expectedSemitones = totalSemitones;
-                    actualCents = (semitonesFloat - expectedSemitones) * 100;
+                    actualCents = (semitonesFloat - semitones) * 100;
                     
-                    // Normaliser les cents dans la plage ±50
                     while (actualCents > 50) {
                         actualCents -= 100;
                     }
@@ -1166,27 +898,21 @@
                     actualCents = Math.round(actualCents);
                 }
                 
-                // Calculer la position pitch
-                const pitchInfo = calculatePitchRange(percentChange);
-                
-                // Changer la classe du résultat selon la précision
                 if (isPerfect) {
                     resultDiv.className = 'result perfect';
                 } else {
                     resultDiv.className = 'result';
                 }
                 
-                // Construire l'affichage des semitons avec signe
                 let semitonesDisplay;
-                if (totalSemitones > 0.005) {
-                    semitonesDisplay = `+${totalSemitones.toFixed(2)} ST`;
-                } else if (totalSemitones < -0.005) {
-                    semitonesDisplay = `${totalSemitones.toFixed(2)} ST`;
+                if (semitones > 0.005) {
+                    semitonesDisplay = `+${semitones.toFixed(2)} ST`;
+                } else if (semitones < -0.005) {
+                    semitonesDisplay = `${semitones.toFixed(2)} ST`;
                 } else {
                     semitonesDisplay = `0.00 ST`;
                 }
                 
-                // Construire l'affichage du pourcentage avec signe
                 let percentDisplay;
                 if (percentChange > 0.05) {
                     percentDisplay = `+${percentChange.toFixed(1)}%`;
@@ -1196,13 +922,6 @@
                     percentDisplay = `0.0%`;
                 }
                 
-                let resultHTML = `
-                    <div class="result-main">${displayBpm.toFixed(3)} BPM</div>
-                    <div class="result-details">
-                        ${fromNote}${fromDetune !== 0 ? (fromDetune > 0 ? '+' + fromDetune : fromDetune) + 'CT' : ''} → ${toNote} (${semitonesDisplay})
-                    `;
-
-                // Afficher les cents avec signe
                 let centsDisplay;
                 if (actualCents > 0) {
                     centsDisplay = `+${actualCents} CT`;
@@ -1211,199 +930,42 @@
                 } else {
                     centsDisplay = `0 CT`;
                 }
-                resultHTML += `<br>${centsDisplay} • ${percentDisplay}`;
                 
-                // Ajouter les infos pitch
-                resultHTML += `</div><div class="pitch-info">Pitch: ${pitchInfo.position > 0 ? '+' : ''}${pitchInfo.position}% (${pitchInfo.range})</div>`;
+                const pitchInfo = calculatePitchRange(percentChange);
+                
+                let resultHTML = `
+                    <div class="result-main">${targetBpm.toFixed(3)} BPM</div>
+                    <div class="result-details">
+                        ${fromNote} → ${toNote} (${semitonesDisplay})<br>${centsDisplay} • ${percentDisplay}
+                    </div><div class="pitch-info">Pitch: ${pitchInfo.position > 0 ? '+' : ''}${pitchInfo.position}% (${pitchInfo.range})</div>
+                `;
                 
                 resultDiv.innerHTML = resultHTML;
             });
         }
 
-        function calculateMiddleGround(mode) {
-            const bpmA = parseFloat(document.getElementById('currentDisplayA').textContent);
-            const bpmB = parseFloat(document.getElementById('currentDisplayB').textContent);
-            
-            if (!bpmA || !bpmB || bpmA === 0 || bpmB === 0) {
-                alert('Configurez d\'abord les BPM de départ des deux tracks');
-                return;
-            }
-            
-            const noteA = selectedNotes.fromA;
-            const noteB = selectedNotes.fromB;
-            const detuneA = parseFloat(document.getElementById('fromDetuneA').value) || 0;
-            const detuneB = parseFloat(document.getElementById('fromDetuneB').value) || 0;
-            
-            if (mode === 'bpm') {
-                // MIDDLE GROUND BPM: rapprocher au maximum les BPM avec notes justes
-                // Chaque track trouve sa propre note optimale pour un BPM proche
-                
-                const targetBpmAverage = (bpmA + bpmB) / 2;
-                
-                // Pour chaque track, trouver la note qui donne le BPM le plus proche de la moyenne
-                ['A', 'B'].forEach(track => {
-                    const currentBpm = parseFloat(document.getElementById('currentDisplay' + track).textContent);
-                    const fromNote = selectedNotes['from' + track];
-                    const fromDetune = parseFloat(document.getElementById('fromDetune' + track).value) || 0;
-                    
-                    let bestOption = null;
-                    let minBpmDeviation = Infinity;
-                    
-                    // Tester toutes les notes possibles pour ce track
-                    for (let targetSemitone = 0; targetSemitone < 12; targetSemitone++) {
-                        const targetNote = noteNames[targetSemitone];
-                        
-                        // Calculer le BPM exact pour atteindre cette note
-                        const semitonesToTarget = calculateSemitones(fromNote, targetNote) - (fromDetune / 100);
-                        const exactBpm = currentBpm * Math.pow(2, semitonesToTarget / 12);
-                        
-                        // Calculer la déviation par rapport au BPM moyen
-                        const deviation = Math.abs(exactBpm - targetBpmAverage);
-                        
-                        // Garder la meilleure option
-                        if (deviation < minBpmDeviation) {
-                            minBpmDeviation = deviation;
-                            bestOption = {
-                                targetNote: targetNote,
-                                exactBpm: exactBpm
-                            };
-                        }
-                    }
-                    
-                    if (bestOption) {
-                        // Appliquer la meilleure solution pour ce track
-                        document.getElementById('targetDisplay' + track).textContent = bestOption.exactBpm.toFixed(3);
-                        document.getElementById('targetSlider' + track).value = Math.min(bestOption.exactBpm, 240);
-                        
-                        // Sélectionner la note cible optimale pour ce track
-                        const toGrid = document.getElementById('toGrid' + track);
-                        toGrid.querySelectorAll('.note-btn').forEach(btn => btn.classList.remove('selected'));
-                        const noteButton = toGrid.querySelector(`[data-note="${bestOption.targetNote}"]`);
-                        if (noteButton) {
-                            noteButton.classList.add('selected');
-                            selectedNotes['to' + track] = bestOption.targetNote;
-                        }
-                    }
-                });
-                
-            } else if (mode === 'key') {
-                // MIDDLE GROUND KEY: même tonalité, BPM différent (keylock)
-                
-                // Calculer la note moyenne en prenant en compte le detune
-                const centsA = (noteValues[noteA] * 100) + detuneA;
-                const centsB = (noteValues[noteB] * 100) + detuneB;
-                const middleCents = (centsA + centsB) / 2;
-                const middleNoteCents = Math.round(middleCents / 100) * 100;
-                let middleSemitones = middleNoteCents / 100;
-                
-                // Normaliser dans l'octave
-                while (middleSemitones >= 12) middleSemitones -= 12;
-                while (middleSemitones < 0) middleSemitones += 12;
-                
-                const middleNote = noteNames[middleSemitones];
-                
-                // Calculer les BPM nécessaires pour atteindre cette note
-                const semitonesToMiddleA = calculateSemitones(noteA, middleNote) - (detuneA / 100);
-                const semitonesToMiddleB = calculateSemitones(noteB, middleNote) - (detuneB / 100);
-                
-                const targetBpmA = bpmA * Math.pow(2, semitonesToMiddleA / 12);
-                const targetBpmB = bpmB * Math.pow(2, semitonesToMiddleB / 12);
-                
-                document.getElementById('targetDisplayA').textContent = targetBpmA.toFixed(3);
-                document.getElementById('targetSliderA').value = Math.min(targetBpmA, 240);
-                document.getElementById('targetDisplayB').textContent = targetBpmB.toFixed(3);
-                document.getElementById('targetSliderB').value = Math.min(targetBpmB, 240);
-                
-                // Sélectionner la note cible commune
-                ['A', 'B'].forEach(track => {
-                    const toGrid = document.getElementById('toGrid' + track);
-                    toGrid.querySelectorAll('.note-btn').forEach(btn => btn.classList.remove('selected'));
-                    const noteButton = toGrid.querySelector(`[data-note="${middleNote}"]`);
-                    if (noteButton) {
-                        noteButton.classList.add('selected');
-                        selectedNotes['to' + track] = middleNote;
-                    }
-                });
-            }
-            
+        function multiplyBpm(track) {
+            const targetDisplay = document.getElementById('targetDisplay' + track);
+            const targetSlider = document.getElementById('targetSlider' + track);
+            const currentValue = parseFloat(targetDisplay.textContent) || 120;
+            const newValue = Math.min(currentValue * 2, 999);
+            targetSlider.value = Math.min(newValue, 240);
+            targetDisplay.textContent = newValue.toFixed(3);
             calculate();
-            updateHarmonicIndicators();
-            
-            // Feedback visuel
-            const btn = document.getElementById(mode === 'bpm' ? 'middleBpmBtn' : 'middleKeyBtn');
-            btn.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                btn.style.transform = '';
-            }, 150);
         }
 
-        function updateMiddleGroundSuggestion() {
-            const bpmA = parseFloat(document.getElementById('currentDisplayA').textContent);
-            const bpmB = parseFloat(document.getElementById('currentDisplayB').textContent);
-            const noteA = selectedNotes.fromA;
-            const noteB = selectedNotes.fromB;
-            
-            if (!bpmA || !bpmB || bpmA === 0 || bpmB === 0 || !noteA || !noteB) {
-                document.getElementById('suggestionText').textContent = '';
-                document.getElementById('middleBpmBtn').classList.remove('recommended');
-                document.getElementById('middleKeyBtn').classList.remove('recommended');
-                return;
-            }
-            
-            const bpmDifference = Math.abs(bpmA - bpmB);
-            const percentDifference = (bpmDifference / Math.min(bpmA, bpmB)) * 100;
-            
-            // Analyser l'intervalle harmonique
-            const semitonesDiff = Math.abs(calculateSemitones(noteA, noteB));
-            const isConsonant = [0, 5, 7].includes(semitonesDiff); // Unisson, quarte, quinte
-            const isDissonant = [1, 6, 11].includes(semitonesDiff); // Demi-ton, triton, 7e maj
-            
-            const suggestionEl = document.getElementById('suggestionText');
-            const bpmBtn = document.getElementById('middleBpmBtn');
-            const keyBtn = document.getElementById('middleKeyBtn');
-            
-            // Reset styles
-            bpmBtn.classList.remove('recommended');
-            keyBtn.classList.remove('recommended');
-            
-            let recommendation = '';
-            
-            // Logique de recommandation améliorée
-            if (percentDifference <= 15) {
-                // Petit écart BPM
-                if (isConsonant) {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}%, intervalle consonant → Repitch idéal`;
-                    bpmBtn.classList.add('recommended');
-                } else if (isDissonant) {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}%, intervalle dissonant → Keylock préférable`;
-                    keyBtn.classList.add('recommended');
-                } else {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}% → Repitch recommandé`;
-                    bpmBtn.classList.add('recommended');
-                }
-            } else if (percentDifference <= 30) {
-                // Écart moyen
-                if (isConsonant) {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}%, intervalle consonant → Repitch viable`;
-                    bpmBtn.classList.add('recommended');
-                } else if (isDissonant) {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}%, intervalle dissonant → Keylock recommandé`;
-                    keyBtn.classList.add('recommended');
-                } else {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}% → Les deux options viables`;
-                }
-            } else {
-                // Gros écart BPM
-                if (isConsonant) {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}% → Repitch encore possible (intervalle facile)`;
-                    bmpBtn.classList.add('recommended');
-                } else {
-                    recommendation = `Écart ${percentDifference.toFixed(1)}% → Keylock recommandé (gros écart)`;
-                    keyBtn.classList.add('recommended');
-                }
-            }
-            
-            suggestionEl.textContent = recommendation;
+        function divideBpm(track) {
+            const targetDisplay = document.getElementById('targetDisplay' + track);
+            const targetSlider = document.getElementById('targetSlider' + track);
+            const currentValue = parseFloat(targetDisplay.textContent) || 120;
+            const newValue = Math.max(currentValue / 2, 1);
+            targetSlider.value = Math.min(newValue, 240);
+            targetDisplay.textContent = newValue.toFixed(3);
+            calculate();
+        }
+
+        function calculateMiddleGround(mode) {
+            alert('Middle ground non implémenté dans cette version');
         }
 
         function exportResults() {
@@ -1415,28 +977,14 @@
             
             if (trackA && trackA.hasData) {
                 exportText += `TRACK A: ${trackA.fromNote} ${trackA.currentBpm} → ${trackA.toNote} ${trackA.targetBpm}\n`;
-                exportText += `Change: ${trackA.semitones}ST ${trackA.percent} ${trackA.cents}CT\n`;
-                exportText += `Pitch: ${trackA.pitchPosition}%\n\n`;
+                exportText += `Change: ${trackA.semitones}ST ${trackA.percent}\n\n`;
             }
             
             if (trackB && trackB.hasData) {
                 exportText += `TRACK B: ${trackB.fromNote} ${trackB.currentBpm} → ${trackB.toNote} ${trackB.targetBpm}\n`;
-                exportText += `Change: ${trackB.semitones}ST ${trackB.percent} ${trackB.cents}CT\n`;
-                exportText += `Pitch: ${trackB.pitchPosition}%\n\n`;
+                exportText += `Change: ${trackB.semitones}ST ${trackB.percent}\n\n`;
             }
             
-            if (trackA && trackA.hasData && trackB && trackB.hasData) {
-                const compatible = isHarmonicallyCompatible(trackA.fromNote, trackB.fromNote);
-                const camelotA = camelotWheel[trackA.fromNote] || 'N/A';
-                const camelotB = camelotWheel[trackB.fromNote] || 'N/A';
-                exportText += `Harmonic: ${compatible ? 'COMPATIBLE' : 'NOT COMPATIBLE'} (${camelotA}↔${camelotB})\n`;
-            }
-            
-            if (!trackA || !trackA.hasData && !trackB || !trackB.hasData) {
-                exportText += `Aucune donnée à exporter. Configurez au moins une track complètement.\n`;
-            }
-            
-            // Télécharger le fichier
             const blob = new Blob([exportText], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1458,24 +1006,13 @@
             
             const currentBpm = parseFloat(document.getElementById('currentDisplay' + track).textContent);
             const targetBpm = parseFloat(document.getElementById('targetDisplay' + track).textContent);
-            const detune = parseFloat(document.getElementById('fromDetune' + track).value) || 0;
             
             if (!currentBpm || !targetBpm || currentBpm === 0 || targetBpm === 0) {
                 return { hasData: false };
             }
             
-            const semitones = calculateSemitones(fromNote, toNote) + (detune / 100);
+            const semitones = calculateSemitones(fromNote, toNote);
             const percentChange = ((targetBpm / currentBpm - 1) * 100);
-            const pitchInfo = calculatePitchRange(percentChange);
-            
-            // Calculer les cents
-            const speedRatio = targetBpm / currentBpm;
-            const semitonesFloat = 12 * Math.log2(speedRatio);
-            let actualCents = (semitonesFloat - semitones) * 100;
-            
-            while (actualCents > 50) actualCents -= 100;
-            while (actualCents < -50) actualCents += 100;
-            actualCents = Math.round(actualCents);
             
             return {
                 hasData: true,
@@ -1483,28 +1020,13 @@
                 toNote,
                 currentBpm: currentBpm.toFixed(3),
                 targetBpm: targetBpm.toFixed(3),
-                detune,
                 semitones: semitones > 0 ? `+${semitones.toFixed(2)}` : semitones.toFixed(2),
-                percent: percentChange > 0 ? `+${percentChange.toFixed(1)}%` : `${percentChange.toFixed(1)}%`,
-                cents: actualCents > 0 ? `+${actualCents}` : `${actualCents}`,
-                pitchPosition: pitchInfo.position > 0 ? `+${pitchInfo.position}` : pitchInfo.position
+                percent: percentChange > 0 ? `+${percentChange.toFixed(1)}%` : `${percentChange.toFixed(1)}%`
             };
         }
 
-        // Initialiser les valeurs par défaut
         window.addEventListener('load', () => {
-            document.body.style.opacity = '0';
-            document.body.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                document.body.style.transition = 'all 0.8s ease';
-                document.body.style.opacity = '1';
-                document.body.style.transform = 'translateY(0)';
-            }, 100);
-            
             calculate();
-            updateHarmonicIndicators();
-            updateMiddleGroundSuggestion();
         });
     </script>
 </body>

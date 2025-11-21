@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirect</title>
+    <script>
+        const id = new URLSearchParams(window.location.search).get('id') || 'default';
+        
+        const redirects = {
+            'qr': 'https://www.google.com',
+            'default': 'https://example.com'
+        };
+        
+        window.location.href = redirects[id] || redirects['default'];
+    </script>
+</head>
+<body>
+    Redirection en cours...
+</body>
+</html>
