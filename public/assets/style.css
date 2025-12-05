@@ -155,6 +155,56 @@ nav {
     justify-content: center;
 }
 
+/* Bannières */
+.banner {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--accent-primary);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.banner-warning {
+    background: rgba(255, 149, 0, 0.1);
+    border-color: var(--warning);
+}
+
+.banner h2,
+.banner h3 {
+    margin-bottom: 16px;
+}
+
+.banner p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.banner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    justify-content: center;
+}
+
+.banner-item {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.banner ul {
+    list-style: none;
+    color: var(--text-secondary);
+}
+
+.banner ul li {
+    margin-bottom: 12px;
+}
+
 /* Boutons */
 .btn {
     display: inline-block;
