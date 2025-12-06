@@ -11,57 +11,39 @@
     <div class="app">
         <header>
             <h1 class="logo">Hamcat</h1>
-            <p class="tagline">Producteur électronique, DJ multigenre & créateur d'outils musicaux</p>
+            <p class="tagline">Producteur électronique & DJ</p>
         </header>
 
         <nav class="tabs">
-            <button class="tab active" data-section="production">Production</button>
-            <button class="tab" data-section="dj">DJ Sets</button>
-            <button class="tab" data-section="tools">Outils</button>
-            <button class="tab" data-section="about">À propos</button>
+            <button class="tab active" data-section="dj">DJ</button>
+            <button class="tab" data-section="tools">Outils Audio</button>
+            <button class="tab" data-section="contact">Contact</button>
         </nav>
 
         <main class="content">
-            <section id="production" class="section active">
-                <div class="section-grid">
-                    <div class="info-card">
-                        <h3>EP - Mars 2025</h3>
-                        <p>Quatre tracks représentant les différentes ambiances de festival</p>
-                        <div class="track-list">
-                            <span class="track-tag">Live 120-160 BPM</span>
-                            <span class="track-tag">Alter 170 BPM</span>
-                            <span class="track-tag">Main 140-145 BPM</span>
-                            <span class="track-tag">Chill 90-120 BPM</span>
-                        </div>
-                    </div>
-                    <div class="info-card">
-                        <h3>Roadmap</h3>
-                        <ul class="roadmap">
-                            <li>Production des 4 tracks - <span class="status-green">En cours</span></li>
-                            <li>Mastering - <span class="status-gold">Février 2025</span></li>
-                            <li>Release - <span class="status-gold">Mars 2025</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            <section id="dj" class="section">
-                <div class="section-grid">
-                    <div class="info-card">
+            <section id="dj" class="section active">
+                <div class="dj-grid">
+                    <div class="dj-info">
                         <h3>Festivals & Événements</h3>
                         <div class="festival-list">
                             <span class="festival-tag">Hadra</span>
                             <span class="festival-tag">Musilac</span>
                             <span class="festival-tag">La Belle Électrique</span>
                         </div>
-                    </div>
-                    <div class="info-card">
-                        <h3>Approche DJ</h3>
+                        <h3 style="margin-top: 12px;">Approche DJ</h3>
                         <ul class="approach-list">
-                            <li><strong>Harmonic Mixing:</strong> Compatibilité harmonique des keys</li>
-                            <li><strong>Transitions Fluides:</strong> Pitch-shifting pour adapter les tempos</li>
-                            <li><strong>Roadmap Musical:</strong> Progression émotionnelle cohérente</li>
+                            <li><strong>Harmonic Mixing</strong></li>
+                            <li><strong>Transitions Fluides</strong></li>
+                            <li><strong>Roadmap Musical</strong></li>
                         </ul>
+                    </div>
+                    <div class="dj-embeds">
+                        <div class="embed-item">
+                            <iframe width="100%" height="120" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/373039769&color=%23ffd93d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false"></iframe>
+                        </div>
+                        <div class="embed-item">
+                            <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0HXFBbIxUQD9g7PjRt9gpR?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -83,38 +65,22 @@
                 </div>
             </section>
 
-            <section id="about" class="section">
-                <div class="about-content">
-                    <p>Régisseur son professionnel avec <strong>5+ ans d'expérience</strong> sur les grands festivals (Hadra, Musilac, La Belle Électrique).</p>
-                    <p>Formation en musicologie, spécialisé en <strong>Behringer X32/M32</strong> et <strong>Ableton Live</strong>.</p>
-                    <p>Composition basée sur la théorie musicale classique appliquée à l'électronique : progressions harmoniques, intervalles purs et formes architecturales.</p>
+            <section id="contact" class="section">
+                <div class="contact-grid">
+                    <div class="contact-info">
+                        <h3>À propos</h3>
+                        <p>Régisseur son professionnel avec <strong>5+ ans d'expérience</strong> sur les grands festivals.</p>
+                        <p>Formation en musicologie, spécialisé en <strong>Behringer X32/M32</strong> et <strong>Ableton Live</strong>.</p>
+                    </div>
+                    <div class="instagram-embed">
+                        <a href="https://instagram.com/hamcatmusic" target="_blank" class="follow-btn">
+                            <svg class="instagram-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                            <span>Instagram</span>
+                        </a>
+                    </div>
                 </div>
             </section>
         </main>
-
-        <div class="media-section">
-            <h2 class="section-title">Présence en ligne</h2>
-            <div class="media-container">
-                <div class="media-embed instagram-card">
-                    <a href="https://instagram.com/hamcatmusic" target="_blank" class="follow-btn">
-                        <svg class="instagram-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                        <span>Suivre sur Instagram</span>
-                    </a>
-                </div>
-                <div class="media-embed soundcloud-card">
-                    <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/users/373039769&color=%23ffd93d&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true"></iframe>
-                </div>
-            </div>
-        </div>
-
-        <div class="playlists-section">
-            <h2 class="section-title">Playlists Spotify</h2>
-            <div class="playlists-grid">
-                <div class="playlist-embed">
-                    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0HXFBbIxUQD9g7PjRt9gpR?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-                </div>
-            </div>
-        </div>
 
         <footer class="social-links">
             <a href="https://bandcamp.com" target="_blank" class="social-link" title="Bandcamp">
