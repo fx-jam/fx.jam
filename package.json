@@ -2,24 +2,8 @@
   "name": "fx-jam",
   "version": "1.0.0",
   "description": "Site web personnel - Producteur électronique & DJ",
-  "type": "module",
   "scripts": {
-    "dev": "echo 'Ceci est un site statique. Ouvrez simplement les fichiers HTML dans votre navigateur.'",
-    "build": "echo 'Build non nécessaire pour un site statique.'",
-    "deploy": "echo 'Utilisez la commande update-le-site pour déployer'"
+    "dev": "echo 'Ouvrez simplement les fichiers HTML dans votre navigateur'"
   },
-  "dependencies": {},
-  "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.0.3",
-    "autoprefixer": "^10.4.14",
-    "eslint": "^8.45.0",
-    "eslint-plugin-react": "^7.32.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
-    "postcss": "^8.4.27",
-    "tailwindcss": "^3.3.3",
-    "vite": "^4.4.5"
-  }
+  "dependencies": {}
 }

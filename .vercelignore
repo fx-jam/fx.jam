@@ -1,17 +1,18 @@
 node_modules/
-.vscode/
+.vscnode_modules/
 .git/
-.gitignore
+.vscode/
 *.md
 *.log
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Fichiers de développement
-vite.config.js
+.env
+*.local
+*.bak
+*.tmp
+*~
+.npm
+.yarn/
+.cache/
 tailwind.config.js
 postcss.config.js
 
