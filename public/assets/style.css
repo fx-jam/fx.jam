@@ -160,40 +160,67 @@ header {
     padding: 12px;
     text-align: center;
     font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.dj-info h3 {
+.dates-section {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dates-section:last-of-type {
+    border-bottom: none;
+}
+
+.dates-title {
     color: var(--accent-highlight);
-    font-size: 0.95em;
-    margin-bottom: 6px;
+    font-size: 0.85em;
+    margin-bottom: 4px;
     font-weight: 600;
 }
 
-.festival-list {
+.dates-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    justify-content: center;
-    margin-bottom: 8px;
+    flex-direction: column;
+    gap: 3px;
 }
 
-.festival-tag {
-    background: rgba(102, 126, 234, 0.15);
-    border: 1px solid rgba(102, 126, 234, 0.4);
-    border-radius: 14px;
-    padding: 3px 8px;
+.date-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
     font-size: 0.7em;
-    color: var(--text-primary);
+}
+
+.date-badge {
+    background: rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(255, 217, 61, 0.4);
+    border-radius: 10px;
+    padding: 2px 6px;
+    color: var(--accent-highlight);
+    font-weight: 600;
+    min-width: 50px;
+    text-align: center;
+}
+
+.date-location {
+    color: var(--text-secondary);
 }
 
 .approach-list {
     list-style: none;
     text-align: center;
     font-size: 0.75em;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .approach-list li {
-    padding: 3px 0;
+    padding: 2px 0;
     color: var(--text-secondary);
 }
 
@@ -301,12 +328,43 @@ header {
 }
 
 .contact-info p:last-child {
-    margin-bottom: 0;
+    margin-bottom: 8px;
 }
 
 .contact-info strong {
     color: var(--accent-highlight);
     font-weight: 600;
+}
+
+.contact-social {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.contact-link {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+}
+
+.contact-link:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-highlight);
+    transform: scale(1.08);
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.contact-link svg {
+    width: 14px;
+    height: 14px;
 }
 
 .instagram-embed {
@@ -445,5 +503,9 @@ header {
     .social-link {
         width: 32px;
         height: 32px;
+    }
+    
+    .dj-info {
+        font-size: 0.8em;
     }
 }
