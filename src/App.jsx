@@ -26,7 +26,7 @@ const Header = () => (
       animate={{ opacity: 1, y: 0 }}
       className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-accent-highlight via-orange-400 to-accent-primary mb-2 tracking-tight drop-shadow-lg"
     >
-      Hamcat
+      fx_jam
     </motion.h1>
     <motion.p 
       initial={{ opacity: 0 }}
@@ -95,41 +95,43 @@ const DjSection = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20"
+      className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6"
     >
       {/* Dates Column */}
-      <div className="bg-bg-card/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 flex flex-col gap-6 shadow-2xl hover:border-white/20 transition-all duration-500 h-fit">
-        <div>
-          <h3 className="text-accent-highlight text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
-            <SafeIcon icon={FiCalendar} className="text-lg" /> Prochaines Dates
-          </h3>
-          <div className="space-y-3">
-            {futureDates.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-accent-primary/30 transition-all group">
-                <div className="flex flex-col items-center justify-center bg-accent-primary/20 border border-accent-primary/30 rounded-lg w-14 h-14 shrink-0 group-hover:scale-105 transition-transform">
-                  <span className="text-accent-highlight font-bold text-xs text-center leading-tight">{item.date.split(' ')[0]}<br/>{item.date.split(' ')[1]}</span>
+      <div className="bg-bg-card/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 flex flex-col gap-6 shadow-2xl hover:border-white/20 transition-all duration-500 h-fit max-h-[600px]">
+        <div className="flex-1 flex flex-col">
+          <div>
+            <h3 className="text-accent-highlight text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+              <SafeIcon icon={FiCalendar} className="text-lg" /> Prochaines Dates
+            </h3>
+            <div className="space-y-3">
+              {futureDates.map((item, i) => (
+                <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-accent-primary/30 transition-all group">
+                  <div className="flex flex-col items-center justify-center bg-accent-primary/20 border border-accent-primary/30 rounded-lg w-14 h-14 shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="text-accent-highlight font-bold text-xs text-center leading-tight">{item.date.split(' ')[0]}<br/>{item.date.split(' ')[1]}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-white text-sm font-bold tracking-wide group-hover:text-accent-highlight transition-colors">{item.event}</span>
+                    <span className="text-text-secondary text-xs font-medium bg-black/20 w-fit px-2 py-0.5 rounded mt-1">{item.genre}</span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-white text-sm font-bold tracking-wide group-hover:text-accent-highlight transition-colors">{item.event}</span>
-                  <span className="text-text-secondary text-xs font-medium bg-black/20 w-fit px-2 py-0.5 rounded mt-1">{item.genre}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-        
-        <div className="pt-2">
-          <h3 className="text-text-muted text-xs font-black uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Archives</h3>
-          <div className="space-y-1 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-            {pastDates.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-70 hover:opacity-100 group">
-                <span className="text-text-secondary text-xs font-mono min-w-[70px] text-right border-r border-white/10 pr-3">{item.date}</span>
-                <div className="flex flex-col">
-                  <span className="text-text-primary text-xs font-bold group-hover:text-white">{item.event}</span>
-                  <span className="text-text-muted text-[10px]">{item.genre}</span>
+          
+          <div className="pt-2 flex-1 flex flex-col">
+            <h3 className="text-text-muted text-xs font-black uppercase tracking-widest mb-4 border-b border-white/5 pb-2">Archives</h3>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-1">
+              {pastDates.map((item, i) => (
+                <div key={i} className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 transition-colors opacity-70 hover:opacity-100 group">
+                  <span className="text-text-secondary text-xs font-mono min-w-[70px] text-right border-r border-white/10 pr-3">{item.date}</span>
+                  <div className="flex flex-col">
+                    <span className="text-text-primary text-xs font-bold group-hover:text-white">{item.event}</span>
+                    <span className="text-text-muted text-[10px]">{item.genre}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -265,18 +267,6 @@ const ContactSection = () => {
   );
 };
 
-const Footer = () => (
-  <footer className="w-full text-center py-8 mt-auto border-t border-white/5 bg-bg-card/20 backdrop-blur-md z-10 relative">
-    <div className="flex justify-center gap-8 mb-4">
-      <a href="#" className="text-text-secondary hover:text-accent-highlight hover:scale-110 transition-all duration-300"><SafeIcon icon={FaBandcamp} className="text-lg" /></a>
-      <a href="#" className="text-text-secondary hover:text-accent-highlight hover:scale-110 transition-all duration-300"><SafeIcon icon={FaSoundcloud} className="text-lg" /></a>
-      <a href="#" className="text-text-secondary hover:text-accent-highlight hover:scale-110 transition-all duration-300"><SafeIcon icon={FiInstagram} className="text-lg" /></a>
-      <a href="#" className="text-text-secondary hover:text-accent-highlight hover:scale-110 transition-all duration-300"><SafeIcon icon={FiMail} className="text-lg" /></a>
-    </div>
-    <p className="text-text-muted text-[10px] uppercase tracking-widest opacity-60">© 2025 Hamcat. Créé avec ♫ pour les musiciens numériques.</p>
-  </footer>
-);
-
 function App() {
   const [activeTab, setActiveTab] = useState('dj');
 
@@ -311,8 +301,6 @@ function App() {
               )}
             </AnimatePresence>
           </main>
-          
-          <Footer />
         </div>
       </div>
     </Router>
