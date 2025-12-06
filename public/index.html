@@ -1,54 +1,97 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>FX • Sound Engineer × DJ × Festival Curator</title>
-        <link rel="stylesheet" href="style.css" />
-    </head>
-    <body>
-        <!-- Navigation -->
-        <nav class="navbar">
-            <div class="nav-container">
-                <a href="index.html" class="logo">FX</a>
-                <ul class="nav-menu">
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="music.html">Music</a></li>
-                    <li><a href="#work">Work</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        </nav>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamcat | Producteur Électronique & DJ</title>
+    <meta name="description" content="Producteur électronique, DJ et créateur d'outils musicaux. Psytrance, tekno, folk et punk.">
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="nav-brand">♫ Hamcat</a>
+            <button class="nav-toggle">☰</button>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/" class="nav-link">Accueil</a></li>
+                <li class="nav-item"><a href="/portfolio/tracks.html" class="nav-link">Tracks</a></li>
+                <li class="nav-item"><a href="/portfolio/mixes.html" class="nav-link">Mixes</a></li>
+                <li class="nav-item"><a href="/tools/pitch.html" class="nav-link">Outils</a></li>
+            </ul>
+        </div>
+    </nav>
 
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <div class="hero-tag">HAMCAT</div>
-                <h1 class="hero-title">
-                    Sound Engineer<br />
-                    <span class="accent">×</span> DJ<br />
-                    <span class="accent">×</span> Festival Curator
-                </h1>
-                <p class="hero-subtitle">
-                    5+ years shaping festival soundscapes in the French Alps
-                </p>
-                <div class="hero-cta">
-                    <a href="music.html" class="btn btn-primary">Listen</a>
-                    <a href="contact.html" class="btn btn-secondary">Book Me</a>
-                    <a href="about.html" class="btn btn-outline">Explore</a>
-                </div>
-            </div>
-            <div class="scroll-indicator">
-                <span>Scroll</span>
-                <div class="scroll-line"></div>
-            </div>
-        </section>
+    <div class="container">
+        <h1 class="page-title">Hamcat</h1>
+        <p class="page-subtitle">Producteur électronique, DJ multigenre & créateur d'outils musicaux</p>
 
-        <script src="script.js"></script>
-    </body>
+        <div class="grid">
+            <div class="card">
+                <h3 style="color: var(--accent-highlight); margin-bottom: 12px;">🎵 Production</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Psytrance, tekno, folk et punk. Travail en cours sur EP avec sortie prévue en mars.</p>
+                <a href="/portfolio/tracks.html" class="btn btn-primary">Voir les tracks</a>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--accent-highlight); margin-bottom: 12px;">🎧 DJ Sets</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Mixes live et enregistrements des festivals et événements. Harmonic mixing et transitions fluides.</p>
+                <a href="/portfolio/mixes.html" class="btn btn-primary">Écouter les mixes</a>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--accent-highlight); margin-bottom: 12px;">🛠️ Outils Musicaux</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Calculateurs pitch/tempo, convertisseurs BPM et autres utilitaires pour producteurs et DJs.</p>
+                <a href="/tools/pitch.html" class="btn btn-primary">Accéder aux outils</a>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--accent-highlight); margin-bottom: 12px;">🌲 Mycologie</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">Foraging passionné dans l'Isère. Exploration des écosystèmes forestiers et identification d'espèces.</p>
+                <a href="#" class="btn btn-secondary">En construction</a>
+            </div>
+        </div>
+
+        <div class="banner" style="margin-top: 32px;">
+            <h2 style="color: var(--accent-highlight);">À propos</h2>
+            <p>
+                Régisseur son professionnel avec 5+ ans d'expérience sur les grands festivals (Hadra, Musilac, La Belle Électrique). 
+                Formation en musicologie, spécialisé en console Behringer X32/M32 et Ableton Live.
+            </p>
+            <p style="margin-top: 12px;">
+                Approche de la composition basée sur la théorie musicale classique appliquée à la musique électronique : 
+                progressions harmoniques rigoureuses, intervalles purs et formes architecturales (sonata, arch forms).
+            </p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Navigation</h4>
+                <a href="/">Accueil</a>
+                <a href="/portfolio/tracks.html">Tracks</a>
+                <a href="/portfolio/mixes.html">Mixes</a>
+                <a href="/tools/pitch.html">Outils</a>
+            </div>
+            <div class="footer-section">
+                <h4>Présence</h4>
+                <a href="#">Bandcamp</a>
+                <a href="#">Soundcloud</a>
+                <a href="#">Instagram</a>
+                <a href="#">Email</a>
+            </div>
+            <div class="footer-section">
+                <h4>Outils</h4>
+                <a href="/tools/pitch.html">Pitch/Tempo</a>
+                <a href="/tools/bpm.html">BPM Converter</a>
+                <a href="/tools/samples.html">Sample Manager</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Hamcat. Créé avec ♫ pour les musiciens numériques.</p>
+        </div>
+    </footer>
+
+    <script src="/assets/nav.js"></script>
+</body>
 </html>
