@@ -1,4 +1,30 @@
+﻿# Dependencies
 node_modules/
-.replit
-replit.nix
+dist/
+
+# Environment variables
 .env
+.env.local
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backups
+*.bak
+*.tmp
+*~

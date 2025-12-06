@@ -1,34 +1,41 @@
-// Gestion du menu de navigation mobile
-document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.querySelector('.nav-toggle');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    // Afficher/masquer le menu mobile
-    if (navToggle) {
-        navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            this.setAttribute('aria-expanded', 
-                this.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
-            );
-        });
-    }
-    
-    // Fermer le menu quand un lien est cliqué (pour la navigation)
+// Navigation active highlighting
+function setActiveNav() {
+    const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (window.innerWidth <= 768) {
-                navMenu.classList.remove('active');
-                navToggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-    });
     
-    // Fermer le menu quand on clique en dehors
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.nav-container') && window.innerWidth <= 768) {
-            navMenu.classList.remove('active');
-            navToggle.setAttribute('aria-expanded', 'false');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPath.includes(href) || 
+            (currentPath === '/' && href === '/') ||
+            (currentPath.endsWith('index.html') && href === '/')) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
+}
+
+// Mobile menu toggle
+function initMobileNav() {
+    const toggle = document.querySelector('.nav-toggle');
+    const menu = document.querySelector('.nav-menu');
+    
+    if (toggle) {
+        toggle.addEventListener('click', () => {
+            menu.classList.toggle('active');
+        });
+        
+        // Close menu when link is clicked
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                menu.classList.remove('active');
+            });
+        });
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    setActiveNav();
+    initMobileNav();
 });

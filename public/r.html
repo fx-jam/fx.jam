@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Redirect</title>
+    <script>
+        const id = new URLSearchParams(window.location.search).get('id') || 'default';
+        
+        fetch('/config.json')
+            .then(r => r.json())
+            .then(redirects => {
+                const destination = redirects[id] || redirects['default'];
+                window.location.href = destination;
+            })
+            .catch(() => {
+                window.location.href = 'https://fx-jam.vercel.app';
+            });
+    </script>
+</head>
+<body>
+    Redirection en cours...
+</body>
+</html>
