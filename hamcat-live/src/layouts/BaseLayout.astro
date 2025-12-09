@@ -1,0 +1,167 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} | Hamcat</title>
+  {description && <meta name="description" content={description} />}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  
+  <style>
+    /* Styles pour les modaux */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal-content {
+      background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(90deg);
+    }
+    
+    /* Scrollbar personnalisée */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+  <slot />
+  
+  <script>
+    // Gestion des modaux
+    document.addEventListener('DOMContentLoaded', () => {
+      // Fermer le modal avec la touche ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      });
+      
+      // Gestion des clics sur les boutons de modal
+      document.querySelectorAll('[data-modal]').forEach(button => {
+        button.addEventListener('click', (e) => {
+          if (button.tagName === 'A' && button.href.startsWith('http')) {
+            return; // Laisser les liens externes fonctionner normalement
+          }
+          
+          e.preventDefault();
+          const modalId = button.getAttribute('data-modal');
+          openModal(modalId);
+        });
+      });
+      
+      // Gestion du clic en dehors du modal pour fermer
+      document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal-overlay')) {
+          closeModal();
+        }
+      });
+    });
+    
+    function openModal(modalId) {
+      // Pour l'instant, on affiche juste un message de débogage
+      const modalContainer = document.getElementById('modal-container');
+      modalContainer.innerHTML = `
+        <div class="modal-overlay active">
+          <div class="modal-content relative p-8">
+            <button class="modal-close" onclick="closeModal()">
+              &times;
+            </button>
+            <h2 class="text-3xl font-['Space_Grotesk'] font-bold mb-6 text-white">
+              ${modalId.charAt(0).toUpperCase() + modalId.slice(1)}
+            </h2>
+            <div class="prose prose-invert max-w-none">
+              <p>Contenu du modal pour ${modalId} - À implémenter</p>
+              <p>Ceci est un exemple de contenu qui sera remplacé par le contenu réel de la section.</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    function closeModal() {
+      const modalContainer = document.getElementById('modal-container');
+      modalContainer.innerHTML = '';
+    }
+    
+    // Exposer les fonctions globalement pour les boutons
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+  </script>
+</body>
+</html>
