@@ -1,7 +1,38 @@
 # hamcat.live — Document d'architecture
 
 > Plan directeur de la refonte. Document de référence vivant : on l'amende au fur et à mesure des décisions.
-> Dernière mise à jour : 28/05/2026 (v3 — palette arc-en-ciel + typo Barlow Condensed validées ; face A / face B notée)
+> Dernière mise à jour : 29/05/2026 (v4 — fondations posées : tokens, collections, routes stub)
+
+---
+
+## État courant (29/05/2026)
+
+**Infrastructure** : site déployé sur Cloudflare Workers (`fx-jam.felix-jambon20.workers.dev`), DNS propagé vers Cloudflare, custom domain `hamcat.live` à brancher (étape C non faite). Repo propre, identité git configurée (Hamcat + noreply).
+
+**Fondations design** : tokens CSS centralisés dans `BaseLayout.astro` (palette arc-en-ciel + neutres + typo Barlow Condensed/JetBrains Mono). Tailwind branché sur ces tokens. **Source de vérité unique** : modifier un token = répercussion partout.
+
+**Routes en place** (vraies URL, branchées sur les tokens) :
+- `/` — ancien index (placeholder, sera remplacé par la platine)
+- `/son`, `/regie`, `/cours`, `/outils`, `/contact` — pages stub « en construction »
+- `/blog` — liste d'articles (vide pour l'instant)
+- `/blog/[slug]` — article individuel (rendu Markdown propre)
+- `/404` — page 404 designée
+
+**CMS** : Sveltia opérationnel en local avec deux collections (`blog`, `gigs`). Formulaires GUI alignés sur les schémas Astro. Édition en ligne (OAuth) non branchée.
+
+**Composants réutilisables** :
+- `Tile.astro` — brique de base de la future platine (full-texte, coloré par facette).
+- `src/data/facets.ts` — source de vérité unique de la liste des facettes (ordre = spectre arc-en-ciel).
+- `StubPage.astro` — gabarit temporaire des facettes en chantier.
+
+**Ce qui reste à faire (priorités)** :
+1. Brancher `hamcat.live` sur le Worker (dashboard Cloudflare → Domains → Add custom domain).
+2. Construire la platine (composant central, 3 états, rotation infinie, View Transitions).
+3. Remplacer le `index.astro` actuel par la vraie page d'accueil avec la platine.
+4. Remplir les facettes (contenu réel de Son, Régie, Cours, etc.).
+5. Migrer l'historique des gigs dans la collection.
+6. Brancher l'OAuth GitHub pour l'édition CMS en ligne.
+7. Dégrader le concept pour mobile.
 
 ---
 
