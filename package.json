@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "update-le-site": "npm run build && git add . && git commit -m \"Mise à jour du site\" && git push"
+    "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {
     "astro": "^5.16.4"
@@ -15,6 +15,7 @@
   "devDependencies": {
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/tailwind": "^6.0.2",
-    "@tailwindcss/typography": "^0.5.19"
+    "@tailwindcss/typography": "^0.5.19",
+    "wrangler": "^4.95.0"
   }
 }
