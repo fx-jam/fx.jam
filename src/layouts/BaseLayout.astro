@@ -14,46 +14,70 @@ const { title, description } = Astro.props;
   {description && <meta name="description" content={description} />}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  
+
   <style is:global>
+    /* ============================================================
+       DESIGN TOKENS — hamcat.live
+       Source de vérité unique pour palette + typographie.
+       Modifier ici se répercute partout dans le site.
+       ============================================================ */
+    :root {
+      /* Couleurs des facettes (arc-en-ciel saturé, ordre = spectre) */
+      --facet-son: #ff5b6e;          /* rouge */
+      --facet-regie: #ff8a3d;        /* orange */
+      --facet-enseignement: #ffc933; /* jaune */
+      --facet-blog: #6cd97a;         /* vert */
+      --facet-outils: #3ec9c3;       /* cyan */
+      --facet-contact: #8b5bff;      /* violet */
+
+      /* Neutres (dark theme) */
+      --bg-app: #0b0b10;       /* fond global */
+      --bg-surface: #15151c;   /* surfaces / cartes */
+      --bg-elevated: #1f1f28;  /* surfaces élevées */
+      --border: #2a2a33;       /* bordures discrètes */
+
+      /* Texte */
+      --text-primary: #f0f0f5;
+      --text-secondary: #9a9aac;
+      --text-tertiary: #55555f;
+
+      /* Typographie */
+      --font-display: 'Barlow Condensed', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+
+    /* ============================================================
+       RESET & LAYOUT GLOBAL
+       Viewport fixe, pas de scroll de page entière.
+       Le scroll vit à l'intérieur des composants.
+       ============================================================ */
     html, body {
       height: 100%;
       overflow: hidden;
       margin: 0;
       padding: 0;
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      -webkit-font-smoothing: antialiased;
     }
-    
-    /* Empêcher le bounce sur iOS */
+
     body {
       position: fixed;
       width: 100%;
       overscroll-behavior: none;
     }
-  </style>
-  
-  <style>
-    /* Scrollbar personnalisée */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: #1f2937;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: #4b5563;
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: #6b7280;
-    }
+
+    /* Scrollbar discrète, neutre */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
   </style>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+<body>
   <slot />
 </body>
 </html>
