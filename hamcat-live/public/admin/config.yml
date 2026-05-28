@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/schema/sveltia-cms.json
+backend:
+  name: github
+  repo: fx-jam/fx.jam
+  branch: main
+  # base_url sera ajouté plus tard (worker OAuth Cloudflare) pour l'édition en ligne.
+  # En local, utilise le bouton "Work with Local Repository" — aucune auth requise.
+
+# Le projet Astro vit dans le sous-dossier hamcat-live/ du dépôt.
+media_folder: "hamcat-live/public/images"
+public_folder: "/images"
+
+locale: fr
+
+collections:
+  - name: blog
+    label: Articles de blog
+    label_singular: Article
+    description: Articles techniques (production, son live, psytrance)
+    folder: "hamcat-live/src/content/blog"
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: "Titre", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - { label: "Date de publication", name: "pubDate", widget: "datetime", date_format: "DD/MM/YYYY", time_format: false }
+      - { label: "Tags", name: "tags", widget: "list", required: false, default: [] }
+      - { label: "Image", name: "image", widget: "image", required: false }
+      - { label: "Brouillon", name: "draft", widget: "boolean", default: false }
+      - { label: "Contenu", name: "body", widget: "markdown" }
