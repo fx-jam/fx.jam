@@ -3,21 +3,56 @@ backend:
   name: github
   repo: fx-jam/fx.jam
   branch: main
-  # base_url sera ajouté plus tard (worker OAuth Cloudflare) pour l'édition en ligne.
-  # En local, utilise le bouton "Work with Local Repository" — aucune auth requise.
+  # En local : utiliser le bouton "Work with Local Repository" (aucune auth requise)
+  # base_url sera ajouté plus tard (worker OAuth Cloudflare) pour l'édition en ligne
 
-# Le projet Astro vit dans le sous-dossier hamcat-live/ du dépôt.
-media_folder: "hamcat-live/public/images"
+media_folder: "public/images"
 public_folder: "/images"
 
 locale: fr
 
 collections:
+  - name: gigs
+    label: Dates / gigs
+    label_singular: Gig
+    description: Concerts, sets DJ, lives — passés et à venir
+    folder: "src/content/gigs"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    extension: md
+    format: frontmatter
+    summary: "{{date | date('DD/MM/YYYY')}} — {{title}} ({{venue}})"
+    fields:
+      - { label: "Titre / événement", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime", date_format: "DD/MM/YYYY", time_format: "HH:mm" }
+      - label: "Format"
+        name: "format"
+        widget: "select"
+        options:
+          - { label: "DJ set", value: "dj" }
+          - { label: "Live", value: "live" }
+          - { label: "Hybride (DJ + Live)", value: "hybride" }
+        default: "dj"
+      - { label: "Rôle / précision", name: "role", widget: "string", required: false, hint: "Ex: 'Warm-up', 'B2B avec X', 'Live Sylphyo'" }
+      - { label: "Lieu / festival", name: "venue", widget: "string" }
+      - { label: "Ville", name: "city", widget: "string", required: false }
+      - { label: "Pays", name: "country", widget: "string", default: "France" }
+      - { label: "Genres", name: "genre", widget: "list", required: false, hint: "Ex: psytrance, hi-tech, goa" }
+      - { label: "Durée", name: "duration", widget: "string", required: false, hint: "Ex: 2h, 1h30" }
+      - { label: "Line-up (autres artistes)", name: "lineup", widget: "list", required: false }
+      - { label: "Image", name: "image", widget: "image", required: false }
+      - { label: "Enregistrement (URL)", name: "recording", widget: "string", required: false, hint: "SoundCloud, Mixcloud..." }
+      - { label: "Lien événement (URL)", name: "eventUrl", widget: "string", required: false }
+      - { label: "Mettre en avant", name: "featured", widget: "boolean", default: false }
+      - { label: "Brouillon (caché du site)", name: "draft", widget: "boolean", default: false }
+      - { label: "Notes privées", name: "notes", widget: "text", required: false, hint: "Pour toi, ne s'affiche pas forcément sur le site" }
+      - { label: "Description publique (optionnelle)", name: "body", widget: "markdown", required: false }
+
   - name: blog
     label: Articles de blog
     label_singular: Article
     description: Articles techniques (production, son live, psytrance)
-    folder: "hamcat-live/src/content/blog"
+    folder: "src/content/blog"
     create: true
     slug: "{{slug}}"
     extension: md
