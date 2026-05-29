@@ -27,7 +27,7 @@ const items = facets.map((facet, i) => {
 });
 ---
 
-<div class="scene" data-state="0">
+<div class="scene" data-state="0" data-n-facets={N} data-ring-r={RING_R}>
 
   <!-- Fond coloré (arrière-plan état 1) -->
   <div class="bg-stage" aria-hidden="true"></div>
@@ -295,12 +295,14 @@ const items = facets.map((facet, i) => {
 <script>
   import { navigate } from 'astro:transitions/client';
 
-  // ─── Constantes (immuables) ─────────────────────────────
-  const RING_R_0   = 250;
-  const RING_R_1   = 310;
-  const N_FACETS   = 6;
-  const STEP       = 360 / N_FACETS; // 60°
-  const BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
+  // ─── Constantes (lues depuis le DOM à chaque page-load) ──
+  // Source de vérité : src/data/facets.ts → frontmatter Astro → data-attributes.
+  // Ces variables sont assignées dans le handler astro:page-load ci-dessous.
+  let RING_R_0   = 250;
+  const RING_R_1 = 310;
+  let N_FACETS   = 6;
+  let STEP       = 60;
+  let BASE_ANGLES: number[] = [];
   const FRICTION   = 0.97;
   const VEL_THRESH = 0.5;
 
@@ -327,6 +329,12 @@ const items = facets.map((facet, i) => {
 
     const scene = document.querySelector<HTMLElement>('.scene');
     if (!scene) return; // page sans platine (ex. /son) → rien à faire
+
+    // Lecture des constantes depuis le DOM (source = src/data/facets.ts)
+    N_FACETS = Number(scene.dataset.nFacets) || 6;
+    RING_R_0 = Number(scene.dataset.ringR) || 250;
+    STEP = 360 / N_FACETS;
+    BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
 
     ctrl = new AbortController();
     const sig = ctrl.signal;

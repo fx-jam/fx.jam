@@ -22,6 +22,9 @@ pnpm-debug.log*
 # Cloudflare Workers cache
 .wrangler/
 
+# Claude Code cache local
+.claude/
+
 # OS / editors
 .DS_Store
 .idea/
