@@ -77,3 +77,19 @@ Historique non journalise. Synthese de l'etat atteint (detail dans PLAN.md / ARC
 - Re-clone M2 (en local, pas de cle SSH dessus — normal).
 - Faire valider l'archi par Claude Code sur le VPS (lire CLAUDE.md + journal, confirmer la voie).
 - Phase 1 du PLAN : contenu facette Son.
+
+## 2026-06-05 (suite) — Rituel de synchro X13
+
+**Fait** :
+- Profil PowerShell cree sur X13 (Microsoft.PowerShell_profile.ps1) avec deux fonctions :
+  - **fxstart** : cd repo + git pull --rebase + affiche 3 derniers commits + status. Teste, fonctionne.
+  - **fxstop** [message] : verifie les modifs, commit (message optionnel, defaut horodate) + push origin main.
+- Rituel X13 operationnel : fxstart pour commencer, fxstop pour finir une session. Plus de pull/push manuel a penser.
+
+**Pedagogie notee** : VPS = machine allumee 24/7 qui EXECUTE (Hermes, Claude Code autonome, terminal web). Git STOCKE/versionne. Cloudflare SERT le site statique au public. Le site n'a PAS de backend (Astro static) — pas de serveur applicatif ni BDD, c'est voulu (rapide, robuste, gratuit). Le VPS prend sa valeur avec l'autonomie d'agents, pas pour servir le site.
+
+**EN SUSPENS** :
+- Repliquer fxstart/fxstop sur M2 (zsh) et O+ (Termux/bash) — syntaxe shell differente, a faire en local.
+- VPS : le rituel passera par les instructions de CLAUDE.md (Claude Code les applique), pas un script shell.
+- Faire valider l'archi par Claude Code sur le VPS.
+- Phase 1 du PLAN : contenu facette Son.
