@@ -8,6 +8,40 @@
 
 ---
 
+## 2026-06-05 — Facette Son v1 : charpente + section Gigs (session Claude Code)
+
+**Branche** : `feat/facette-son`
+
+### Fait cette session
+- `src/pages/son.astro` : stub remplacé par vraie page, structure complète.
+- **Header** : label `Son` (var(--facet-son)), titre `DJ & Live`, teaser inline (placeholder bio marqué TODO).
+- **Section Gigs** fonctionnelle :
+  - `getCollection('gigs')` avec filtre `draft: false`.
+  - Split date du jour → "À venir" (ascendant) / "Historique" (descendant).
+  - "À venir" vide → état propre "Prochaines dates bientôt annoncées.".
+  - "Historique" : foldable via `<details open>` / `<summary>`, flèche `▾` animée, compteur de gigs affiché même replié.
+  - Grille 5 colonnes (`100px 1fr 140px 130px 48px`) commune à toutes les lignes → alignement parfait des colonnes date / titre / venue / genres / format.
+  - Venue masquée si identique au titre (cas majoritaire dans les données).
+  - Gigs "à venir" : card accentuée (border-left rouge, fond teinté).
+- **Placeholders** structurés (sections vides, opacité 0.45, TODO en commentaire) : Écoute, Visuels, Presskit.
+- 100% tokens CSS (`var(--facet-son)`, `var(--bg-*)`, `var(--text-*)`, `var(--font-*)`), zéro couleur/police hardcodée.
+- Build validé : 8 pages, aucune erreur.
+
+### Arbitrages pris
+- `<details>/<summary>` natif pour le fold (pas de JS additionnel) — fluide, accessible, sans dépendance.
+- Grille à largeurs fixes (sauf 1fr titre) plutôt que `display: contents` — plus simple, même résultat visuel.
+- Venue toujours rendue (colonne vide si title=venue) pour maintenir l'alignement.
+- Preview workflow : serveur `nohup npm run preview` sur VPS + tunnel SSH `-N` depuis PowerShell X13.
+
+### TODO restant pour cette facette
+- **Bio** : texte d'accroche Fx (header + presskit).
+- **Écoute** : embeds SoundCloud / Mixcloud, liens sets enregistrés.
+- **Visuels** : galerie photos / vidéos.
+- **Presskit** : bio longue, rider technique, contact booking.
+- **Symétrie** : page pas encore 100% symétrique selon Fx — à affiner (chantier transversal noté dans PLAN.md).
+
+---
+
 ## 2026-06-05 — Import historique gigs (session Claude Code)
 
 **Branche** : `feat/import-gigs` (pas encore mergee sur main)

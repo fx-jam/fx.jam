@@ -1,4 +1,344 @@
 ---
-import StubPage from '../layouts/StubPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { getFacet } from '../data/facets.ts';
+
+const f = getFacet('son');
+
+const all = await getCollection('gigs', ({ data }) => !data.draft);
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const upcoming = all
+  .filter(g => g.data.date >= today)
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+
+const past = all
+  .filter(g => g.data.date < today)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const fmtLong  = (d: Date) =>
+  d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+const fmtShort = (d: Date) =>
+  d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 ---
-<StubPage facet="son" />
+
+<BaseLayout title="Son — hamcat.live" description={f?.teaser}>
+  <main class="son">
+
+    <!-- ── HEADER ───────────────────────────────────────────────── -->
+    <header class="hd">
+      <span class="label">Son</span>
+      <h1>DJ &amp; Live</h1>
+      <!-- TODO: bio courte Fx (2–3 lignes) -->
+      <p class="teaser">psytrance · hi-tech · goa</p>
+    </header>
+
+    <!-- ── GIGS ─────────────────────────────────────────────────── -->
+    <section class="section gigs">
+
+      <!-- À venir -->
+      <div class="gig-group">
+        <h2 class="group-label">À venir</h2>
+
+        {upcoming.length === 0 ? (
+          <p class="empty">Prochaines dates bientôt annoncées.</p>
+        ) : (
+          <ul class="gig-list">
+            {upcoming.map(g => (
+              <li class="gig-row gig-upcoming">
+                <time datetime={g.data.date.toISOString()} class="c-date">
+                  {fmtLong(g.data.date)}
+                </time>
+                <span class="c-title">{g.data.title}</span>
+                <span class="c-venue">{g.data.venue !== g.data.title ? `@ ${g.data.venue}` : ''}</span>
+                <span class="c-genres">{g.data.genre.join(' · ')}</span>
+                <span class="c-format">{g.data.format}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <!-- Historique (foldable) -->
+      <details class="gig-group" open>
+        <summary class="group-label">
+          Historique
+          <span class="count">{past.length}</span>
+          <span class="arrow" aria-hidden="true">▾</span>
+        </summary>
+
+        {past.length === 0 ? (
+          <p class="empty">Aucun gig enregistré.</p>
+        ) : (
+          <ul class="gig-list">
+            {past.map(g => (
+              <li class="gig-row">
+                <time datetime={g.data.date.toISOString()} class="c-date">
+                  {fmtShort(g.data.date)}
+                </time>
+                <span class="c-title">{g.data.title}</span>
+                <span class="c-venue">{g.data.venue !== g.data.title ? `@ ${g.data.venue}` : ''}</span>
+                <span class="c-genres">{g.data.genre.join(' · ')}</span>
+                <span class="c-format">{g.data.format}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </details>
+
+    </section>
+
+    <!-- ── ÉCOUTE / STREAMING ────────────────────────────────────── -->
+    <!-- TODO: SoundCloud / Mixcloud embeds, liens vers sets enregistrés -->
+    <section class="section placeholder">
+      <h2 class="section-title">Écoute</h2>
+    </section>
+
+    <!-- ── VISUELS ───────────────────────────────────────────────── -->
+    <!-- TODO: galerie photos, vidéos de sets -->
+    <section class="section placeholder">
+      <h2 class="section-title">Visuels</h2>
+    </section>
+
+    <!-- ── PRESSKIT ──────────────────────────────────────────────── -->
+    <!-- TODO: bio longue, rider technique, contact booking -->
+    <section class="section placeholder">
+      <h2 class="section-title">Presskit</h2>
+    </section>
+
+    <a class="home" href="/">← Accueil</a>
+
+  </main>
+</BaseLayout>
+
+<style>
+  /* ── Conteneur principal ── */
+  .son {
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;       /* symétrie horizontale */
+    padding: 4rem 2rem 3rem;   /* padding symétrique gauche/droite */
+    gap: 3rem;
+  }
+
+  /* ── Header ── */
+  .hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  .label {
+    color: var(--facet-son);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .teaser {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 38ch;
+    margin: 0.5rem 0 0;
+    text-align: center;
+  }
+
+  /* ── Sections génériques ── */
+  .section {
+    width: 100%;
+    max-width: 680px;
+  }
+
+  /* ── GIGS ── */
+  .gigs {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  /* Groupe (À venir / Historique) */
+  .gig-group { display: flex; flex-direction: column; gap: 0; }
+
+  /* Label de groupe — aussi utilisé comme <summary> */
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--facet-son);
+    font-weight: 500;
+    margin: 0 0 0.6rem;
+    list-style: none;   /* masque le triangle natif */
+    cursor: default;
+  }
+  details > .group-label { cursor: pointer; user-select: none; }
+
+  /* Supprime le marqueur natif sur tous navigateurs */
+  .group-label::-webkit-details-marker { display: none; }
+
+  .count {
+    color: var(--text-tertiary);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
+  .arrow {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    transition: transform 0.18s ease;
+  }
+  details[open] .arrow { transform: rotate(180deg); }
+
+  /* ── Table gigs ──
+     5 colonnes identiques sur toutes les lignes → alignement parfait.
+     Colonnes : date | titre | venue | genres | format
+  ── */
+  .gig-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .gig-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 140px 130px 48px;
+    column-gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .gig-row:last-child { border-bottom: 1px solid var(--border); }
+
+  /* Ligne "à venir" : card accentuée */
+  .gig-upcoming {
+    border-top: none;
+    border-left: 3px solid var(--facet-son);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--facet-son) 7%, var(--bg-surface));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--facet-son) 22%, var(--border));
+    padding: 0.7rem 0.9rem 0.7rem 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .gig-upcoming:last-child { border-bottom: none; margin-bottom: 0; }
+
+  /* Cellules communes */
+  .c-date {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .gig-upcoming .c-date { color: var(--text-secondary); font-size: 0.8rem; }
+
+  .c-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.96rem;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .gig-upcoming .c-title { font-size: 1.08rem; }
+
+  .c-venue {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .c-genres {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .c-format {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-tertiary);
+    text-align: right;
+  }
+  .gig-upcoming .c-format {
+    color: color-mix(in srgb, var(--facet-son) 65%, var(--text-tertiary));
+  }
+
+  /* État vide */
+  .empty {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 0.65rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* ── Placeholders ── */
+  .placeholder {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    opacity: 0.45;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  /* ── Retour accueil ── */
+  .home {
+    color: var(--facet-son);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-son);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .home:hover {
+    background: color-mix(in srgb, var(--facet-son) 15%, transparent);
+  }
+</style>
