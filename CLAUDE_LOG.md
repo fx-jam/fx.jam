@@ -151,3 +151,22 @@ Historique non journalise. Synthese de l'etat atteint (detail dans PLAN.md / ARC
 - VPS : le rituel passera par les instructions de CLAUDE.md (Claude Code les applique), pas un script shell.
 - Faire valider l'archi par Claude Code sur le VPS.
 - Phase 1 du PLAN : contenu facette Son.
+
+## 2026-06-05 (cloture) — Phase 1 facette Son LIVE + suspens session suivante
+
+**Fait** :
+- Facette Son v1 relue par le chat web (tokens BaseLayout OK, AUCUN hardcode, color-mix pour les nuances de --facet-son ; logique upcoming/past correcte). Mergee sur main et deployee.
+- brief-facette-son.md supprime (chantier termine, pas de dechet).
+- LECON : le "push" de Claude Code etait reste sur la branche feat/facette-son, jamais merge -> "pas live". D'ou regle : verifier l'etat de main + faire relire par le chat web AVANT de considerer un chantier livre.
+
+**Conventions actees** :
+- Branche dediee par chantier ; brief en fichier .md versionne ; review chat web avant merge sur main ; montrer echantillon + build avant merge.
+
+**EN SUSPENS prochaine session (priorise)** :
+1. Verifier facette Son LIVE sur hamcat.live apres deploiement.
+2. FIX CMS : login GitHub Sveltia renvoie "not found" sur api.netlify.com/auth?provider=github&site_id=hamcat.live&scope=repo,user. Config OAuth Sveltia/Netlify a finaliser (TODO de longue date).
+3. PLATINE TACTILE : faire defiler les facettes par rotation au toucher, comme les fleches clavier le font deja (composant Turntable).
+4. SOCLE MEDIA : bibliotheques photos / videos / audio + integrations RS (Insta, Facebook, SoundCloud, Mixcloud, Spotify). Necessite liens/contenus de Fx.
+5. Entretien : MAJ PLAN.md (perime depuis 29/05), graver "montrer avant merge" dans CLAUDE.md, re-cloner M2 (encore ancien historique).
+
+**Note responsive** : la grille gigs a 5 colonnes fixes sera a l'etroit sur mobile -> chantier responsive Son a prevoir.
