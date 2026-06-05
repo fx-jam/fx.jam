@@ -59,3 +59,21 @@ Historique non journalise. Synthese de l'etat atteint (detail dans PLAN.md / ARC
 - 8 routes propres + 404 designee. CMS Sveltia operationnel en local (collections blog, gigs).
 - Infra : Cloudflare Workers, deploiement auto sur push main, CI GitHub Actions.
 - ~30% du site cible : fondations posees, contenu des facettes a faire.
+
+## 2026-06-05 (apres-midi) — Re-sync VPS + endpoint journal web
+
+**Fait** :
+- Clarifie : les branches "apparues" (archive/ancien-site-bricolage, fix/display-issues) etaient anciennes, redecouvertes apres le git init d'hier. fix/display-issues (vestige Roo Code dec. 2025) supprimee. archive/ancien-site-bricolage conservee.
+- **VPS re-clone et aligne** sur le nouvel historique (HEAD cce36c6, branche main). X13 + GitHub + VPS desormais synchronises.
+- **Endpoint /claude-log.md cree** (src/pages/claude-log.md.ts) : sert CLAUDE_LOG.md en text/markdown, noindex, pas de lien visible. En ligne, verifie 200. Lisible par tout navigateur / Claude Code / agents web depuis n'importe quel appareil.
+
+**Limite confirmee (importante)** : Claude Desktop (chat web) NE PEUT PAS fetcher /claude-log.md ni le raw GitHub — son web_fetch exige une URL deja indexee par un moteur, ce qui n'est pas le cas d'un site neuf/confidentiel. Le lien colle par Fx ne suffit pas non plus (l'outil exige un resultat de recherche). 
+=> Pour donner le contexte a Claude Desktop : soit lecture du fichier local via Windows-MCP sur X13 (marche, methode utilisee en pratique), soit coller le contenu. L'endpoint web sert surtout Fx (navigateur, mobile), Claude Code et Hermes.
+
+**Tunnel SSH** : reconfirme KO depuis Windows-MCP (exit 255) ET depuis le bash isole de Claude Desktop (ssh absent, environnement sans reseau vers le VPS). Le souvenir de Fx = Claude Code dans son terminal local (avant setup VPS), qui utilisait le ssh de sa machine. Pour le VPS : Fx en session SSH, ou Claude Code sur place.
+
+**EN SUSPENS** :
+- Scripts fxstart / fxstop (pull debut / commit+push fin) sur les 3 machines.
+- Re-clone M2 (en local, pas de cle SSH dessus — normal).
+- Faire valider l'archi par Claude Code sur le VPS (lire CLAUDE.md + journal, confirmer la voie).
+- Phase 1 du PLAN : contenu facette Son.
