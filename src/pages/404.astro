@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="404 — hamcat.live">
+  <main class="nf">
+    <span class="code">404</span>
+    <h1>Page introuvable</h1>
+    <p class="msg">Cette page n'existe pas ou plus.</p>
+    <a class="home" href="/">← Accueil</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .nf {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 2rem;
+  }
+  .code {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    letter-spacing: 0.3em;
+    color: var(--facet-son);
+    margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .msg { color: var(--text-secondary); margin: 0.5rem 0 2rem; }
+  .home {
+    color: var(--facet-son);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-son);
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .home:hover { background: color-mix(in srgb, var(--facet-son) 15%, transparent); }
+</style>

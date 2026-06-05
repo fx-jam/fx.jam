@@ -1,0 +1,150 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { getFacet } from '../../data/facets.ts';
+
+const f = getFacet('blog');
+
+// Articles publiés (hors brouillons), triés du plus récent au plus ancien
+const all = await getCollection('blog', ({ data }) => !data.draft);
+const posts = all.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const formatDate = (d: Date) =>
+  d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout title="Blog — hamcat.live" description={f?.teaser}>
+  <main class="blog">
+    <header class="hd">
+      <span class="label">Blog</span>
+      <h1>Notes &amp; articles</h1>
+      <p class="teaser">{f?.teaser}</p>
+    </header>
+
+    {posts.length === 0 ? (
+      <p class="empty">Aucun article publié pour l'instant.</p>
+    ) : (
+      <ul class="list">
+        {posts.map((post) => (
+          <li class="row">
+            <a href={`/blog/${post.id}`} class="link">
+              <time datetime={post.data.pubDate.toISOString()}>
+                {formatDate(post.data.pubDate)}
+              </time>
+              <span class="title">{post.data.title}</span>
+              {post.data.description && <span class="desc">{post.data.description}</span>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <a class="home" href="/">← Accueil</a>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Même structure centrée que StubPage */
+  .blog {
+    height: 100dvh;
+    overflow-y: auto; /* scroll quand des articles sont présents */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 1.5rem;
+    gap: 2rem;
+  }
+
+  .hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  /* Identique à StubPage .label */
+  .label {
+    color: var(--facet-blog);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Identique à StubPage h1 */
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  /* Identique à StubPage .teaser */
+  .teaser {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 38ch;
+    margin: 0.5rem 0 0;
+  }
+
+  /* Identique à StubPage .note */
+  .empty {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  /* Liste d'articles — max-width centré, texte aligné à gauche */
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .row { border-top: 1px solid var(--border); }
+  .row:last-child { border-bottom: 1px solid var(--border); }
+
+  .link {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1.5rem;
+    padding: 1rem 0;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: opacity 0.2s;
+  }
+  .link:hover { opacity: 0.7; }
+
+  time {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  .title { font-weight: 600; }
+  .desc { grid-column: 2; color: var(--text-secondary); font-size: 0.95rem; }
+
+  /* Identique à StubPage .home */
+  .home {
+    color: var(--facet-blog);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-blog);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+  .home:hover { background: color-mix(in srgb, var(--facet-blog) 15%, transparent); }
+</style>

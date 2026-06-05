@@ -1,0 +1,54 @@
+---
+interface Props {
+  id: string;
+}
+const { id } = Astro.props;
+---
+
+<div 
+  id={`modal-${id}`} 
+  class="fixed inset-0 z-50 hidden bg-gray-900/95 backdrop-blur-sm"
+  data-modal-overlay
+>
+  <div class="h-full w-full flex items-center justify-center p-8">
+    
+    <button 
+      data-modal-close
+      class="fixed top-8 right-8 z-50 w-14 h-14 flex items-center justify-center bg-gray-800/90 hover:bg-gray-700 rounded-full transition-all border-2 border-gray-600 hover:border-primary-500 shadow-xl"
+      aria-label="Fermer"
+    >
+      <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Conteneur UNIFORME pour tous les modals -->
+    <div class="w-full max-w-5xl h-[80vh] overflow-y-auto bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/60 shadow-2xl p-10">
+      <slot />
+    </div>
+
+  </div>
+</div>
+
+<style>
+  /* Scrollbar custom */
+  [data-modal-overlay] ::-webkit-scrollbar {
+    width: 10px;
+  }
+  [data-modal-overlay] ::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.3);
+    border-radius: 5px;
+  }
+  [data-modal-overlay] ::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.5);
+    border-radius: 5px;
+  }
+  [data-modal-overlay] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.7);
+  }
+  
+  [data-modal-overlay] * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.5) rgba(31, 41, 55, 0.3);
+  }
+</style>

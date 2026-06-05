@@ -1,0 +1,112 @@
+---
+/**
+ * Tile — composant unitaire de la platine.
+ *
+ * Représente une facette du hub (Son, Régie, Enseignement, Blog, Outils,
+ * Contact, ou futures). Utilise les tokens CSS de la palette pour la couleur.
+ * Conçu full-texte (zéro icône) selon le parti pris design.
+ *
+ * Usage :
+ *   <Tile facet="son" label="DJ & Live" teaser="Psytrance · hi-tech · goa" href="/son" />
+ *
+ * Props :
+ *   - facet  : clé de facette (son | regie | enseignement | blog | outils | contact)
+ *   - label  : nom affiché (court, ex. "Son", "Régie")
+ *   - teaser : phrase d'accroche (1 ligne)
+ *   - href   : lien optionnel vers la page de la facette
+ *   - active : état visuel (mise en avant) — true pour la facette active
+ *   - size   : "sm" | "md" | "lg" — taille relative
+ */
+export interface Props {
+  facet: 'son' | 'regie' | 'enseignement' | 'blog' | 'outils' | 'contact';
+  label: string;
+  teaser?: string;
+  href?: string;
+  active?: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const {
+  facet,
+  label,
+  teaser,
+  href,
+  active = false,
+  size = 'md',
+} = Astro.props;
+
+// Tag : <a> si href, sinon <div>
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag
+  href={href}
+  class:list={['tile', `tile-${size}`, { 'is-active': active }]}
+  data-facet={facet}
+>
+  <span class="tile-label">{label}</span>
+  {teaser && <span class="tile-teaser">{teaser}</span>}
+</Tag>
+
+<style>
+  .tile {
+    /* Couleur de la facette, injectée via data-facet (cf. plus bas) */
+    --tile-color: var(--facet-son);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.25rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--tile-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.25s ease;
+    font-family: var(--font-display);
+  }
+
+  .tile:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 1px var(--tile-color), 0 8px 30px -10px var(--tile-color);
+  }
+
+  .tile.is-active {
+    background: color-mix(in srgb, var(--tile-color) 12%, var(--bg-surface));
+    box-shadow: 0 0 0 2px var(--tile-color), 0 0 30px -5px var(--tile-color);
+    transform: scale(1.05);
+  }
+
+  .tile-label {
+    color: var(--tile-color);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .tile-teaser {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    font-weight: 500;
+  }
+
+  /* Tailles */
+  .tile-sm { padding: 0.6rem 0.75rem; min-height: 70px; }
+  .tile-md { padding: 0.9rem 1rem;    min-height: 100px; }
+  .tile-lg { padding: 1.2rem 1.4rem;  min-height: 140px; }
+  .tile-lg .tile-teaser { font-size: 1.05rem; }
+
+  /* Injection de la couleur de facette via le sélecteur d'attribut.
+     Chaque facette = une teinte de la palette. */
+  .tile[data-facet="son"]          { --tile-color: var(--facet-son); }
+  .tile[data-facet="regie"]        { --tile-color: var(--facet-regie); }
+  .tile[data-facet="enseignement"] { --tile-color: var(--facet-enseignement); }
+  .tile[data-facet="blog"]         { --tile-color: var(--facet-blog); }
+  .tile[data-facet="outils"]       { --tile-color: var(--facet-outils); }
+  .tile[data-facet="contact"]      { --tile-color: var(--facet-contact); }
+</style>

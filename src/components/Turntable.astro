@@ -1,0 +1,581 @@
+---
+/**
+ * Turntable — composant platine vinyle (étape 3 : machine à 3 états)
+ *
+ * État 0 — Accueil  : le disque tourne librement, centre = "Hamcat"
+ * État 1 — Aperçu   : clic sur une pastille → snap + centre s'agrandit
+ *                     + anneau s'écarte (effet diaphragme) + aperçu de la facette
+ * État 2 — Page     : clic sur le centre → navigation vers l'URL de la facette
+ *
+ * Retour : Échap ou clic hors du disque → état 0
+ */
+
+import { visibleFacets } from '../data/facets';
+
+const facets = visibleFacets();
+const N = facets.length;
+const RING_R = 250; // px — doit correspondre à RING_R_0 dans le script JS
+
+const items = facets.map((facet, i) => {
+  const deg = (i * 360 / N) - 90;
+  const rad = (deg * Math.PI) / 180;
+  return {
+    ...facet,
+    x: Math.round(Math.cos(rad) * RING_R),
+    y: Math.round(Math.sin(rad) * RING_R),
+  };
+});
+---
+
+<div class="scene" data-state="0" data-n-facets={N} data-ring-r={RING_R}>
+
+  <!-- Fond coloré (arrière-plan état 1) -->
+  <div class="bg-stage" aria-hidden="true"></div>
+
+  <div class="turntable">
+
+    <!-- Disque plein -->
+    <div class="disk"></div>
+
+    <!-- Anneau de track (mis à jour par JS) -->
+    <div class="disk-track"></div>
+
+    <!-- Centre -->
+    <div class="disk-center" id="disk-center">
+
+      <!-- État 0 : label neutre -->
+      <div class="center-s0">
+        <span class="center-name">Hamcat</span>
+      </div>
+
+      <!-- État 1 : aperçu de la facette sélectionnée -->
+      <div class="center-s1">
+        <span class="preview-label" id="preview-label"></span>
+        <span class="preview-teaser" id="preview-teaser"></span>
+        <span class="preview-cta">ouvrir →</span>
+      </div>
+
+    </div>
+
+    <!-- Pastilles sur la circonférence -->
+    {items.map(({ key, label, teaser, href, x, y }) => (
+      <button
+        class="pastille"
+        data-facet={key}
+        data-label={label}
+        data-teaser={teaser}
+        data-href={href}
+        style={`--x: ${x}px; --y: ${y}px`}
+        type="button"
+        aria-label={label}
+      >
+        {label}
+      </button>
+    ))}
+
+  </div>
+</div>
+
+<style>
+  /* ─── Scène ────────────────────────────────────────────── */
+  .scene {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+  }
+
+  /* ─── Fond coloré (arrière-plan état 1) ──────────────── */
+  .bg-stage {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 80% 80% at center,
+      color-mix(in srgb, var(--stage-c, transparent) 10%, var(--bg-app)) 0%,
+      var(--bg-app) 70%
+    );
+    opacity: 0;
+    transition: opacity 0.5s ease, background 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scene[data-state="1"] .bg-stage {
+    opacity: 1;
+  }
+
+  /* ─── Conteneur de la platine ─────────────────────────── */
+  .turntable {
+    position: relative;
+    width: 620px;
+    height: 620px;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  /* ─── Disque plein ────────────────────────────────────── */
+  .disk {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    transition: box-shadow 0.4s ease;
+  }
+
+  .scene[data-state="1"] .disk {
+    box-shadow: 0 0 80px -20px rgba(0, 0, 0, 0.7);
+  }
+
+  /* ─── Anneau de track (mis à jour par JS) ────────────── */
+  .disk-track {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 500px; /* initial = 2 × RING_R_0 */
+    height: 500px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+
+  /* ─── Cercle central ──────────────────────────────────── */
+  .disk-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 180px;
+    height: 180px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 2;
+    /* Ressort sur l'ouverture */
+    transition:
+      width  0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
+      height 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
+      border-color 0.3s ease;
+  }
+
+  .scene[data-state="1"] .disk-center {
+    width: 260px;
+    height: 260px;
+    border-color: var(--preview-c, var(--border));
+    cursor: pointer;
+  }
+
+  /* ─── Contenu du centre ───────────────────────────────── */
+  .center-s0,
+  .center-s1 {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1.2rem;
+    text-align: center;
+    transition: opacity 0.2s ease;
+  }
+
+  /* État 0 visible par défaut */
+  .center-s0 { opacity: 1; }
+  .center-s1 { opacity: 0; pointer-events: none; }
+
+  .scene[data-state="1"] .center-s0 { opacity: 0; pointer-events: none; }
+  .scene[data-state="1"] .center-s1 { opacity: 1; }
+
+  .center-name {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .preview-label {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--preview-c, var(--text-primary));
+    line-height: 1;
+  }
+
+  .preview-teaser {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+
+  .preview-cta {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--preview-c, var(--text-tertiary));
+    opacity: 0.6;
+    margin-top: 0.2rem;
+  }
+
+  /* ─── Tick 12h ────────────────────────────────────────── */
+  .disk::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 14px;
+    background: var(--border);
+    border-radius: 1px;
+  }
+
+  /* ─── Pastilles ───────────────────────────────────────── */
+  .pastille {
+    --c: var(--text-tertiary);
+    --proximity: 0.5;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform:
+      translate(calc(-50% + var(--x)), calc(-50% + var(--y)))
+      scale(calc(0.82 + 0.30 * var(--proximity)));
+
+    opacity: calc(0.28 + 0.72 * var(--proximity));
+
+    padding: 0.45rem 0.9rem;
+    border-radius: 50px;
+    border: 1px solid var(--c);
+    background: color-mix(in srgb, var(--c) 8%, var(--bg-surface));
+    color: var(--c);
+
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    cursor: pointer;
+    appearance: none;
+
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .pastille.is-active {
+    background: color-mix(in srgb, var(--c) 22%, var(--bg-surface));
+    box-shadow: 0 0 28px -6px var(--c), 0 0 0 1px var(--c);
+  }
+
+  .pastille:focus-visible {
+    outline: 2px solid var(--c);
+    outline-offset: 3px;
+  }
+
+  .pastille[data-facet="son"]          { --c: var(--facet-son); }
+  .pastille[data-facet="regie"]        { --c: var(--facet-regie); }
+  .pastille[data-facet="enseignement"] { --c: var(--facet-enseignement); }
+  .pastille[data-facet="blog"]         { --c: var(--facet-blog); }
+  .pastille[data-facet="outils"]       { --c: var(--facet-outils); }
+  .pastille[data-facet="contact"]      { --c: var(--facet-contact); }
+</style>
+
+<script>
+  import { navigate } from 'astro:transitions/client';
+
+  // ─── Constantes (lues depuis le DOM à chaque page-load) ──
+  // Source de vérité : src/data/facets.ts → frontmatter Astro → data-attributes.
+  // Ces variables sont assignées dans le handler astro:page-load ci-dessous.
+  let RING_R_0   = 250;
+  const RING_R_1 = 310;
+  let N_FACETS   = 6;
+  let STEP       = 60;
+  let BASE_ANGLES: number[] = [];
+  const FRICTION   = 0.97;
+  const VEL_THRESH = 0.5;
+
+  // ─── État persistant entre frames ───────────────────────
+  // (déclaré hors de l'init pour survivre aux View Transitions)
+  let targetAngle  = 0;
+  let currentAngle = 0;
+  let velAngle     = 0;
+  let targetRingR  = RING_R_0;
+  let currentRingR = RING_R_0;
+  let appState     = 0;
+  let activeFacetIdx  = -1;
+  let activeFacetHref = '';
+  let rafId: number | null = null;
+  let ctrl: AbortController | null = null;
+
+  // ─── Ré-init à chaque chargement de page ────────────────
+  // astro:page-load se déclenche au 1er chargement ET après
+  // chaque navigation View Transitions → ré-attache les handlers.
+  document.addEventListener('astro:page-load', () => {
+    // Annuler la boucle rAF et les listeners de l'ancienne instance
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+    ctrl?.abort();
+
+    const scene = document.querySelector<HTMLElement>('.scene');
+    if (!scene) return; // page sans platine (ex. /son) → rien à faire
+
+    // Lecture des constantes depuis le DOM (source = src/data/facets.ts)
+    N_FACETS = Number(scene.dataset.nFacets) || 6;
+    RING_R_0 = Number(scene.dataset.ringR) || 250;
+    STEP = 360 / N_FACETS;
+    BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
+
+    ctrl = new AbortController();
+    const sig = ctrl.signal;
+
+    // Remettre à zéro l'état visuel
+    appState = 0;
+    activeFacetIdx  = -1;
+    activeFacetHref = '';
+    targetAngle  = 0;
+    currentAngle = 0;
+    velAngle     = 0;
+    targetRingR  = RING_R_0;
+    currentRingR = RING_R_0;
+    scene.dataset.state = '0';
+
+    const diskTrack     = document.querySelector<HTMLElement>('.disk-track')!;
+    const centerEl      = document.querySelector<HTMLElement>('#disk-center')!;
+    const bgStage       = document.querySelector<HTMLElement>('.bg-stage')!;
+    const previewLabel  = document.querySelector<HTMLElement>('#preview-label')!;
+    const previewTeaser = document.querySelector<HTMLElement>('#preview-teaser')!;
+    const pastilles     = [...document.querySelectorAll<HTMLElement>('.pastille')];
+
+    // ── Mise à jour DOM ────────────────────────────────────
+    function update(): void {
+      let activeIdx = 0;
+      let minDist   = Infinity;
+
+      for (let i = 0; i < N_FACETS; i++) {
+        const deg = BASE_ANGLES[i] + currentAngle;
+        const rad = (deg * Math.PI) / 180;
+        pastilles[i].style.setProperty('--x', `${(Math.cos(rad) * currentRingR).toFixed(2)}px`);
+        pastilles[i].style.setProperty('--y', `${(Math.sin(rad) * currentRingR).toFixed(2)}px`);
+
+        const norm = ((deg + 90) % 360 + 360) % 360;
+        const dist = Math.min(norm, 360 - norm);
+        pastilles[i].style.setProperty('--proximity', (1 - dist / 180).toFixed(4));
+        if (dist < minDist) { minDist = dist; activeIdx = i; }
+      }
+
+      for (let i = 0; i < N_FACETS; i++) {
+        pastilles[i].classList.toggle('is-active', i === activeIdx);
+      }
+      const d = `${(currentRingR * 2).toFixed(1)}px`;
+      diskTrack.style.width = d;
+      diskTrack.style.height = d;
+    }
+
+    // ── Animation : phase inertie puis phase ressort ───────
+    function animate(): void {
+      const rDiff = targetRingR - currentRingR;
+
+      if (Math.abs(velAngle) > VEL_THRESH) {
+        // Phase inertie : la vitesse pilote, targetAngle suit (pas de snap-back)
+        currentAngle += velAngle;
+        velAngle     *= FRICTION;
+        targetAngle   = currentAngle;
+      } else {
+        velAngle = 0;
+        // Phase ressort : lerp vers targetAngle
+        const aDiff = targetAngle - currentAngle;
+        if (Math.abs(aDiff) < 0.02 && Math.abs(rDiff) < 0.05) {
+          currentAngle = targetAngle;
+          currentRingR = targetRingR;
+          update();
+          rafId = null;
+          return;
+        }
+        currentAngle += aDiff * 0.12;
+      }
+
+      currentRingR += rDiff * 0.08;
+      update();
+      rafId = requestAnimationFrame(animate);
+    }
+
+    function schedule(): void {
+      if (rafId === null) rafId = requestAnimationFrame(animate);
+    }
+
+    // ── Facette au sommet (12h) ────────────────────────────
+    function getActiveIdx(): number {
+      let idx = 0, minDist = Infinity;
+      for (let i = 0; i < N_FACETS; i++) {
+        const deg  = BASE_ANGLES[i] + currentAngle;
+        const norm = ((deg + 90) % 360 + 360) % 360;
+        const dist = Math.min(norm, 360 - norm);
+        if (dist < minDist) { minDist = dist; idx = i; }
+      }
+      return idx;
+    }
+
+    // ── Machine à états ────────────────────────────────────
+    function setState(newState: number, facetIdx = -1): void {
+      appState = newState;
+      scene.dataset.state = String(newState);
+
+      if (newState === 1 && facetIdx >= 0) {
+        activeFacetIdx  = facetIdx;
+        activeFacetHref = pastilles[facetIdx].dataset.href!;
+        const key    = pastilles[facetIdx].dataset.facet!;
+        previewLabel.textContent  = pastilles[facetIdx].dataset.label!;
+        previewTeaser.textContent = pastilles[facetIdx].dataset.teaser!;
+        centerEl.style.setProperty('--preview-c', `var(--facet-${key})`);
+        bgStage.style.setProperty('--stage-c',    `var(--facet-${key})`);
+      }
+
+      targetRingR = newState === 1 ? RING_R_1 : RING_R_0;
+      schedule();
+    }
+
+    // ── Snap (chemin le plus court depuis targetAngle) ──────
+    // Lit targetAngle (pas currentAngle) : les pressions successives
+    // de flèches s'accumulent même si l'animation est en cours.
+    function snapToFacet(idx: number): void {
+      const desired = -90 - BASE_ANGLES[idx];
+      const raw     = desired - targetAngle;
+      const norm    = ((raw % 360) + 360) % 360;
+      targetAngle  += (norm > 180 ? norm - 360 : norm);
+      velAngle = 0;
+      schedule();
+    }
+
+    // ── Facette visée (depuis targetAngle) ──────────────────
+    function getTargetIdx(): number {
+      let idx = 0, minDist = Infinity;
+      for (let i = 0; i < N_FACETS; i++) {
+        const deg  = BASE_ANGLES[i] + targetAngle;
+        const norm = ((deg + 90) % 360 + 360) % 360;
+        const dist = Math.min(norm, 360 - norm);
+        if (dist < minDist) { minDist = dist; idx = i; }
+      }
+      return idx;
+    }
+
+    // ── Clics pastilles ──────────────────────────────────────
+    pastilles.forEach((el, idx) => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation(); snapToFacet(idx); setState(1, idx);
+      }, { signal: sig });
+    });
+
+    // ── Clic centre ──────────────────────────────────────────
+    centerEl.addEventListener('click', () => {
+      if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
+    }, { signal: sig });
+
+    // ── Clavier ──────────────────────────────────────────────
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { setState(0); }
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const idx = (getTargetIdx() + 1) % N_FACETS;
+        snapToFacet(idx); setState(1, idx);
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const idx = (getTargetIdx() - 1 + N_FACETS) % N_FACETS;
+        snapToFacet(idx); setState(1, idx);
+      } else if (e.key === 'Enter') {
+        if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
+      }
+    }, { signal: sig });
+
+    // ── Clic hors disque ─────────────────────────────────────
+    scene.addEventListener('click', (e) => {
+      if (appState > 0 && !(e.target as Element).closest('.turntable')) setState(0);
+    }, { signal: sig });
+
+    // ── Molette / trackpad ───────────────────────────────────
+    scene.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      velAngle = 0;
+      // Plafonner le delta pour éviter les sauts brusques de trackpad
+      const raw = (e as WheelEvent).deltaY;
+      const capped = Math.sign(raw) * Math.min(Math.abs(raw), 80);
+      targetAngle -= capped * 0.25;
+      schedule();
+    }, { passive: false, signal: sig } as AddEventListenerOptions);
+
+    // ── Rotation tactile : jog wheel angulaire + inertie ─────
+    //
+    // Le delta est calculé comme variation d'angle (atan2) du doigt
+    // autour du centre du disque — identique à une vraie platine :
+    // peu importe où le doigt touche, le geste circulaire fait tourner.
+    // À touchend, la vitesse moyenne est injectée en velAngle pour
+    // l'inertie ; FRICTION la décroît jusqu'à arrêt naturel.
+    const VEL_SAMPLES = 4;
+    let touchLastDeg = 0;
+    let touchLastMs  = 0;
+    let velBuf: number[] = [];
+
+    function fingerAngle(t: Touch): number {
+      const cx = window.innerWidth  / 2;
+      const cy = window.innerHeight / 2;
+      return Math.atan2(t.clientY - cy, t.clientX - cx) * (180 / Math.PI);
+    }
+
+    function wrapDelta(d: number): number {
+      while (d >  180) d -= 360;
+      while (d < -180) d += 360;
+      return d;
+    }
+
+    scene.addEventListener('touchstart', (e) => {
+      const te = e as TouchEvent;
+      if (te.touches.length !== 1) return;
+      touchLastDeg = fingerAngle(te.touches[0]);
+      touchLastMs  = performance.now();
+      velAngle = 0; velBuf = [];
+      targetAngle = currentAngle;
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+
+    scene.addEventListener('touchmove', (e) => {
+      const te = e as TouchEvent;
+      if (te.touches.length !== 1) return;
+      e.preventDefault();
+      const newDeg = fingerAngle(te.touches[0]);
+      const now    = performance.now();
+      const dt     = Math.max(now - touchLastMs, 1);
+      const delta  = wrapDelta(newDeg - touchLastDeg);
+
+      // Suivi direct sans lerp pendant le contact
+      currentAngle += delta;
+      targetAngle   = currentAngle;
+
+      // Historique de vitesse pour le lancer (°/frame @ 60 fps)
+      velBuf.push(delta / dt * (1000 / 60));
+      if (velBuf.length > VEL_SAMPLES) velBuf.shift();
+
+      touchLastDeg = newDeg;
+      touchLastMs  = now;
+      schedule();
+    }, { passive: false, signal: sig } as AddEventListenerOptions);
+
+    scene.addEventListener('touchend', () => {
+      if (velBuf.length > 0)
+        velAngle = velBuf.reduce((a, b) => a + b, 0) / velBuf.length;
+      velBuf = [];
+      schedule();
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+
+    // ── Init ─────────────────────────────────────────────────
+    update();
+  });
+</script>
