@@ -8,6 +8,30 @@
 
 ---
 
+## 2026-06-05 — Import historique gigs (session Claude Code)
+
+**Branche** : `feat/import-gigs` (pas encore mergee sur main)
+
+### Fait cette session
+- VPS re-synce via `git pull --rebase` : 3 commits en retard recuperes (endpoint /claude-log.md, fxstart/fxstop deja faits depuis X13).
+- Node.js mis a jour 20 → 22 sur le VPS (Astro 5 requiert >= 22). `npm install` lance.
+- 57 fichiers `.md` generes dans `src/content/gigs/` depuis liste brute fournie par Fx.
+  - Format parse : `YY/MM/JJ - TITRE @ VENUE (GENRE)` ou sans `@`
+  - Champs : title, date, format (live/dj), venue, country, genre[], draft, notes (ligne source brute)
+  - Apostrophes YAML escapees (`DRAK''ART`, `L''AMPERAGE`…)
+  - `format: live` pour 2023-08-24-hadra-festival uniquement (seul LIVE detecte)
+  - `out-of-the-void-festival` : genre corrige `???` → `hi-tech` sur demande de Fx
+- Build valide : 8 pages, Complete, schema Zod OK sur les 57 gigs.
+- Commit `e7a1615` sur `feat/import-gigs`.
+
+### EN SUSPENS
+- **Push bloque** : cle SSH `github_deploy` du VPS non enregistree sur GitHub (perdue apres re-clone). Cle publique a ajouter sur github.com/settings/keys : `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIZ+I0zAPxsK2LtEKMj4eimv4kmGEYmBi5zxjdvWAK0Y deploy@hamcat.live`
+  Fx peut aussi pusher directement depuis X13 : `git fetch && git push origin feat/import-gigs`
+- Gigs 2025 (janvier → juin) a completer : Fx ajoutera via CMS ou en collant une liste dans la prochaine session.
+- Phase 2 terminee une fois la branche mergee. Phase 1 (facette Son) peut demarrer.
+
+---
+
 ## 2026-06-05 — Refonte du systeme de contexte + securisation (session chat web, nuit)
 
 **Objectif** : reparer la "faille memoire" — les instances (chat web / Claude Code / Fx) divergeaient faute de source de verite tenue a jour. Mettre en place un environnement de travail synchronise multi-machines.
