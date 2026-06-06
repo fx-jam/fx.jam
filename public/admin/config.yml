@@ -3,8 +3,8 @@ backend:
   name: github
   repo: fx-jam/fx.jam
   branch: main
+  base_url: https://sveltia-cms-auth.felix-jambon20.workers.dev
   # En local : utiliser le bouton "Work with Local Repository" (aucune auth requise)
-  # base_url sera ajouté plus tard (worker OAuth Cloudflare) pour l'édition en ligne
 
 media_folder: "public/images"
 public_folder: "/images"
