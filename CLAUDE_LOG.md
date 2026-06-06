@@ -8,6 +8,25 @@
 
 ---
 
+## 2026-06-05 (soir) — CMS Sveltia : auth GitHub OPERATIONNELLE
+
+**Fait** : le login GitHub du CMS fonctionne (hamcat.live/admin). Edition en ligne du contenu desormais possible, Fx autonome sur le contenu sans passer par git/Claude Code.
+
+**Diagnostic : 3 bugs empiles (tous corriges)** :
+1. `base_url` manquant dans public/admin/config.yml -> Sveltia tombait par defaut sur Netlify (api.netlify.com/auth -> "not found"). Corrige : `base_url: https://sveltia-cms-auth.felix-jambon20.workers.dev`.
+2. BOM (caractere invisible U+FEFF) devant la valeur de GITHUB_CLIENT_ID dans le Worker -> GitHub recevait `%EF%BB%BF` + client_id et rejetait l'app. Corrige : variable re-saisie proprement (copiee depuis GitHub, pas depuis un fichier texte d'origine incertaine).
+3. Secret nomme `SECRET` dans le Worker alors que le code lit `env.GITHUB_CLIENT_SECRET` -> echange de token echouait. Corrige : nouveau secret genere sur GitHub, enregistre sous `GITHUB_CLIENT_SECRET`, ancienne variable `SECRET` supprimee.
+
+**Infra CMS** : OAuth App GitHub `CMS hamcat.live` (owner fx-jam) ; Worker Cloudflare `sveltia-cms-auth` avec variables GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET (ALLOWED_DOMAINS optionnel, defaut hamcat.live code en dur dans le worker).
+
+**Methode diagnostic cle** : `curl -sI ".../auth?provider=github&site_id=hamcat.live&scope=repo,user"` pour lire la redirection vers GitHub et inspecter le client_id reellement transmis (c'est ainsi qu'on a repere le BOM).
+
+**Lecons** : (1) les BOM invisibles dans les variables d'environnement sont un piege classique, toujours saisir les credentials depuis une source propre (page web) ; (2) verifier les noms de variables attendus en LISANT le code du Worker (Cloudflare -> Edit code), ne pas supposer.
+
+**Reste (optionnel, hygiene secu)** : supprimer l'ancien Client Secret obsolete sur GitHub maintenant qu'un nouveau est actif.
+
+---
+
 ## 2026-06-05 — Facette Son v1 : charpente + section Gigs (session Claude Code)
 
 **Branche** : `feat/facette-son`
