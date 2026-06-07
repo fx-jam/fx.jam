@@ -195,6 +195,25 @@ Astro 5 statique · Tailwind · Sveltia CMS (auth GitHub en ligne opérationnell
 
 ---
 
+
+### Navigation : l'illusion d'une racine unique (état 1 → état 2)
+
+Vision de Fx (à implémenter dans un chantier dédié) : la transition vers une facette (état 2)
+ne doit PAS ressembler à une navigation vers une page radicalement différente. L'objectif est
+de donner l'illusion que tout appartient à une même racine — le jog reste le contexte permanent,
+les facettes sont des couches qui s'ouvrent PAR DESSUS lui (popup/overlay), pas des destinations
+qui le remplacent.
+
+Techniquement : les pages de facettes deviendraient des overlays/drawers sur le jog plutôt que
+de vraies navigations (remplacer navigate(href) par un système de couches in-page). Le fond du
+jog resterait visible en arrière-plan (atténué/flouté). L'utilisateur ne "quitte" jamais le disque.
+
+Objectif UX : l'arborescence du site est instinctivement compréhensible sans perdre l'utilisateur
+dans des sous-pages qui distraient du contexte. On "plonge" dans une facette, on "remonte" au jog.
+
+Vocabulaire acté : état 0 (accueil/jog libre), état 1 (facette sélectionnée/aperçu),
+état 2 (facette ouverte/overlay). Ces trois états forment le coeur de la navigation.
+
 ## 10. Questions ouvertes / à trancher
 - **Sous-niveaux — métaphore « face A / face B »** : chaque facette est un disque qu'on retourne. Ex. Son : face A = DJ, face B = Live, chacune avec ses « tracks » (sous-catégories esthétiques). Mécanique du flip à concevoir (geste, animation). Applicable aussi à d'autres facettes (Régie A=FOH / B=monitors, Enseignement A=cours / B=ressources).
 - **Intégrations cibles** (chantier dédié, plus tard) :
@@ -214,3 +233,4 @@ Astro 5 statique · Tailwind · Sveltia CMS (auth GitHub en ligne opérationnell
 - **Collection `releases`** : au lancement ou plus tard ?
 - **Police de corps long** : à valider à l'arrivée du Blog.
 - **Attribution couleur ↔ facette** : confirmer la proposition initiale (Son=rouge ? jaune ? violet ?).
+
