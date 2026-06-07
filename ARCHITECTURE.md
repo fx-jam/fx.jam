@@ -164,7 +164,7 @@ Routes en français (audience FR ; « MAO » est un terme du métier). Noms enco
 ### Collections Sveltia (édition GUI)
 | Collection | Contenu | Priorité | Statut |
 |------------|---------|----------|--------|
-| `gigs` | Dates : date, nom, lieu, genre, statut, heure | Haute | À créer |
+| `gigs` | Dates : date, nom, lieu, genre, statut, heure | Haute | En place (57 gigs importés) |
 | `blog` | Articles | Moyenne | En place |
 | `releases` *(option)* | Mixes / sorties + embeds | Plus tard | À discuter |
 
@@ -190,7 +190,7 @@ Astro 5 statique · Tailwind · Sveltia CMS (auth GitHub en ligne opérationnell
 4. **Page Son** (facette pilote) : structure DJ/Live + intégrations + dates (collection `gigs`).
 5. **Autres facettes** : Régie, Enseignement, Outils, Contact, Blog.
 6. **Collection `gigs`** : schéma + migration + affichage + Sveltia.
-7. **Mobile** : dégradation du concept (la platine et le viewport-fixe doivent s'adapter au petit écran vertical — probablement scroll vertical autorisé, platine simplifiée ou carrousel linéaire).
+7. **Mobile** : dégradation du concept (le jog et le viewport-fixe doivent s'adapter au petit écran vertical — probablement scroll vertical autorisé, platine simplifiée ou carrousel linéaire).
 8. **Polish** : overscroll, accessibilité (clavier OK, mais la platine doit rester navigable et lisible pour les lecteurs d'écran), perfs.
 
 ---
