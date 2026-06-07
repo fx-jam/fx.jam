@@ -65,3 +65,80 @@ collections:
       - { label: "Image", name: "image", widget: "image", required: false }
       - { label: "Brouillon", name: "draft", widget: "boolean", default: false }
       - { label: "Contenu", name: "body", widget: "markdown" }
+
+  - name: donnees-site
+    label: "Données du site"
+    files:
+      - name: profil
+        label: "Profil & liens globaux"
+        file: src/data/site.json
+        format: json
+        fields:
+          - { label: "Nom affiché", name: displayName, widget: string }
+          - { label: "Tagline", name: tagline, widget: string }
+          - { label: "Bio courte", name: bio, widget: text, required: false }
+          - { label: "Ville", name: location, widget: string, required: false }
+          - label: "Liens"
+            name: links
+            widget: object
+            fields:
+              - { label: SoundCloud, name: soundcloud, widget: string, required: false }
+              - { label: Mixcloud,   name: mixcloud,   widget: string, required: false }
+              - { label: Spotify,    name: spotify,    widget: string, required: false }
+              - { label: Instagram,  name: instagram,  widget: string, required: false }
+              - { label: Facebook,   name: facebook,   widget: string, required: false }
+              - { label: YouTube,    name: youtube,    widget: string, required: false }
+      - name: son
+        label: "Facette Son"
+        file: src/data/son.json
+        format: json
+        fields:
+          - { label: "Titre / accroche", name: headline, widget: string, required: false }
+          - { label: "Bio musicale",     name: bio,      widget: text,   required: false }
+          - label: "Liens"
+            name: links
+            widget: object
+            fields:
+              - { label: SoundCloud, name: soundcloud, widget: string, required: false }
+              - { label: Mixcloud,   name: mixcloud,   widget: string, required: false }
+              - { label: Spotify,    name: spotify,    widget: string, required: false }
+              - { label: Presskit,   name: presskit,   widget: string, required: false }
+      - name: regie
+        label: "Facette Régie"
+        file: src/data/regie.json
+        format: json
+        fields:
+          - { label: "Accroche", name: headline, widget: string, required: false }
+          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - label: "Liens"
+            name: links
+            widget: object
+            fields:
+              - { label: "Lien 1", name: lien1, widget: string, required: false }
+      - name: cours
+        label: "Facette Cours"
+        file: src/data/cours.json
+        format: json
+        fields:
+          - { label: "Accroche", name: headline, widget: string, required: false }
+          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - label: "Liens"
+            name: links
+            widget: object
+            fields:
+              - { label: "Lien inscription", name: inscription, widget: string, required: false }
+      - name: outils
+        label: "Facette Outils"
+        file: src/data/outils.json
+        format: json
+        fields:
+          - { label: "Accroche", name: headline, widget: string, required: false }
+          - { label: "Texte",    name: bio,      widget: text,   required: false }
+      - name: contact
+        label: "Facette Contact"
+        file: src/data/contact.json
+        format: json
+        fields:
+          - { label: "Accroche", name: headline, widget: string, required: false }
+          - { label: "Email",    name: email,    widget: string, required: false }
+          - { label: "Texte",    name: bio,      widget: text,   required: false }
