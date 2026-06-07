@@ -10,7 +10,7 @@
  *   <Tile facet="son" label="DJ & Live" teaser="Psytrance · hi-tech · goa" href="/son" />
  *
  * Props :
- *   - facet  : clé de facette (son | regie | enseignement | blog | outils | contact)
+ *   - facet  : clé de facette (son | regie | cours | blog | outils | contact)
  *   - label  : nom affiché (court, ex. "Son", "Régie")
  *   - teaser : phrase d'accroche (1 ligne)
  *   - href   : lien optionnel vers la page de la facette
@@ -18,7 +18,7 @@
  *   - size   : "sm" | "md" | "lg" — taille relative
  */
 export interface Props {
-  facet: 'son' | 'regie' | 'enseignement' | 'blog' | 'outils' | 'contact';
+  facet: 'son' | 'regie' | 'cours' | 'blog' | 'outils' | 'contact';
   label: string;
   teaser?: string;
   href?: string;
@@ -105,7 +105,7 @@ const Tag = href ? 'a' : 'div';
      Chaque facette = une teinte de la palette. */
   .tile[data-facet="son"]          { --tile-color: var(--facet-son); }
   .tile[data-facet="regie"]        { --tile-color: var(--facet-regie); }
-  .tile[data-facet="enseignement"] { --tile-color: var(--facet-enseignement); }
+  .tile[data-facet="cours"] { --tile-color: var(--facet-cours); }
   .tile[data-facet="blog"]         { --tile-color: var(--facet-blog); }
   .tile[data-facet="outils"]       { --tile-color: var(--facet-outils); }
   .tile[data-facet="contact"]      { --tile-color: var(--facet-contact); }

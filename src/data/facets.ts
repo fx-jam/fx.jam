@@ -18,7 +18,7 @@
 export type FacetKey =
   | 'son'
   | 'regie'
-  | 'enseignement'
+  | 'cours'
   | 'blog'
   | 'outils'
   | 'contact';
@@ -47,8 +47,8 @@ export const FACETS: readonly Facet[] = [
     enabled: true,
   },
   {
-    key: 'enseignement',
-    label: 'Enseignement',
+    key: 'cours',
+    label: 'Cours',
     teaser: 'Cours MAO — Ableton, production',
     href: '/cours',
     enabled: true,

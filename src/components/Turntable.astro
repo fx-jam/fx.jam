@@ -34,6 +34,9 @@ const items = facets.map((facet, i) => {
 
   <div class="turntable">
 
+    <!-- Indicateur fixe 12h (triangle hors disque, ne tourne pas) -->
+    <div class="disk-indicator" aria-hidden="true"></div>
+
     <!-- Disque plein -->
     <div class="disk"></div>
 
@@ -134,7 +137,7 @@ const items = facets.map((facet, i) => {
         from 0deg,
         color-mix(in srgb, var(--facet-son)          22%, var(--bg-surface))   0deg,
         color-mix(in srgb, var(--facet-regie)         18%, var(--bg-surface))  60deg,
-        color-mix(in srgb, var(--facet-enseignement)  18%, var(--bg-surface)) 120deg,
+        color-mix(in srgb, var(--facet-cours)          18%, var(--bg-surface)) 120deg,
         color-mix(in srgb, var(--facet-blog)          18%, var(--bg-surface)) 180deg,
         color-mix(in srgb, var(--facet-outils)        18%, var(--bg-surface)) 240deg,
         color-mix(in srgb, var(--facet-contact)       22%, var(--bg-surface)) 300deg,
@@ -152,11 +155,12 @@ const items = facets.map((facet, i) => {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 500px; /* initial = 2 × RING_R_0 */
+    width: 500px;
     height: 500px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    border: 1px solid var(--border);
+    background: transparent;
+    border: none;
     pointer-events: none;
   }
 
@@ -245,17 +249,20 @@ const items = facets.map((facet, i) => {
     margin-top: 0.2rem;
   }
 
-  /* ─── Tick 12h ────────────────────────────────────────── */
-  .disk::before {
-    content: '';
+  /* ─── Indicateur fixe 12h (triangle, hors disque) ───────── */
+  .disk-indicator {
     position: absolute;
-    top: 12px;
+    top: calc(50% - var(--disk-size, 560px) / 2 - 14px);
     left: 50%;
     transform: translateX(-50%);
-    width: 2px;
-    height: 14px;
-    background: var(--border);
-    border-radius: 1px;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 11px solid var(--text-secondary);
+    pointer-events: none;
+    z-index: 10;
+    transition: border-top-color 0.3s ease;
   }
 
   /* ─── Pastilles ───────────────────────────────────────── */
@@ -294,6 +301,10 @@ const items = facets.map((facet, i) => {
   .pastille.is-active {
     background: color-mix(in srgb, var(--c) 22%, var(--bg-surface));
     box-shadow: 0 0 28px -6px var(--c), 0 0 0 1px var(--c);
+    scale: 1.6;
+    font-weight: 700;
+    font-size: 0.72rem;
+    opacity: 1;
   }
 
   .pastille:focus-visible {
@@ -303,7 +314,7 @@ const items = facets.map((facet, i) => {
 
   .pastille[data-facet="son"]          { --c: var(--facet-son); }
   .pastille[data-facet="regie"]        { --c: var(--facet-regie); }
-  .pastille[data-facet="enseignement"] { --c: var(--facet-enseignement); }
+  .pastille[data-facet="cours"]        { --c: var(--facet-cours); }
   .pastille[data-facet="blog"]         { --c: var(--facet-blog); }
   .pastille[data-facet="outils"]       { --c: var(--facet-outils); }
   .pastille[data-facet="contact"]      { --c: var(--facet-contact); }
@@ -392,6 +403,7 @@ const items = facets.map((facet, i) => {
 
     const diskTrack     = document.querySelector<HTMLElement>('.disk-track')!;
     const centerEl      = document.querySelector<HTMLElement>('#disk-center')!;
+    const indicator     = scene.querySelector<HTMLElement>('.disk-indicator')!;
     const bgStage       = document.querySelector<HTMLElement>('.bg-stage')!;
     const previewLabel  = document.querySelector<HTMLElement>('#preview-label')!;
     const previewTeaser = document.querySelector<HTMLElement>('#preview-teaser')!;
@@ -419,6 +431,10 @@ const items = facets.map((facet, i) => {
       for (let i = 0; i < N_FACETS; i++) {
         pastilles[i].classList.toggle('is-active', i === activeIdx);
       }
+      indicator.style.setProperty(
+        'border-top-color',
+        `var(--facet-${pastilles[activeIdx].dataset.facet})`
+      );
       const d = `${(currentRingR * 2).toFixed(1)}px`;
       diskTrack.style.width = d;
       diskTrack.style.height = d;
@@ -555,6 +571,57 @@ const items = facets.map((facet, i) => {
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
+    // ── Drag souris : jog wheel angulaire + inertie ──────────
+    let mouseDown = false;
+    let mouseDragStartAngle = 0;
+    let mouseDragStartRotation = 0;
+    let mouseDragDist = 0;
+    let mouseDragStartX = 0;
+    let mouseDragStartY = 0;
+    let mouseSamples: Array<{ angle: number; t: number }> = [];
+
+    scene.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      mouseDown = true;
+      mouseDragStartX = e.clientX; mouseDragStartY = e.clientY; mouseDragDist = 0;
+      const rect = scene.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      mouseDragStartAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+      mouseDragStartRotation = currentAngle;
+      velAngle = 0; mouseSamples = [];
+    }, { signal: sig });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!mouseDown) return;
+      mouseDragDist = Math.hypot(e.clientX - mouseDragStartX, e.clientY - mouseDragStartY);
+      const rect = scene.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI);
+      currentAngle = mouseDragStartRotation + (angle - mouseDragStartAngle);
+      targetAngle = currentAngle;
+      const now = performance.now();
+      mouseSamples.push({ angle: currentAngle, t: now });
+      if (mouseSamples.length > 4) mouseSamples.shift();
+      update();
+    }, { signal: sig });
+
+    window.addEventListener('mouseup', (e) => {
+      if (!mouseDown) return;
+      mouseDown = false;
+      if (mouseSamples.length >= 2) {
+        const first = mouseSamples[0];
+        const last  = mouseSamples[mouseSamples.length - 1];
+        const dt = last.t - first.t;
+        if (dt > 0) velAngle = (last.angle - first.angle) / dt * 16;
+      }
+      // TAP souris : si mouvement < 5px et hors .disk-center -> retour accueil
+      if (mouseDragDist < 5 && !(e.target as Element).closest('.disk-center')) setState(0);
+      schedule();
+    }, { signal: sig });
+
     // ── Rotation tactile : jog wheel angulaire + inertie ─────
     //
     // Le delta est calculé comme variation d'angle (atan2) du doigt
@@ -566,6 +633,8 @@ const items = facets.map((facet, i) => {
     let touchLastDeg = 0;
     let touchLastMs  = 0;
     let velBuf: number[] = [];
+    let touchStartX = 0;
+    let touchStartY = 0;
 
     function fingerAngle(t: Touch): number {
       const cx = window.innerWidth  / 2;
@@ -584,6 +653,8 @@ const items = facets.map((facet, i) => {
       if (te.touches.length !== 1) return;
       touchLastDeg = fingerAngle(te.touches[0]);
       touchLastMs  = performance.now();
+      touchStartX  = te.touches[0].clientX;
+      touchStartY  = te.touches[0].clientY;
       velAngle = 0; velBuf = [];
       targetAngle = currentAngle;
     }, { passive: true, signal: sig } as AddEventListenerOptions);
@@ -610,10 +681,17 @@ const items = facets.map((facet, i) => {
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
-    scene.addEventListener('touchend', () => {
+    scene.addEventListener('touchend', (e) => {
       if (velBuf.length > 0)
         velAngle = velBuf.reduce((a, b) => a + b, 0) / velBuf.length;
       velBuf = [];
+      // TAP touch : si mouvement < 5px et cible hors .disk-center -> accueil
+      const te = e as TouchEvent;
+      const touch = te.changedTouches[0];
+      if (touch) {
+        const dist = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
+        if (dist < 5 && !(e.target as Element).closest('.disk-center')) setState(0);
+      }
       schedule();
     }, { passive: true, signal: sig } as AddEventListenerOptions);
 
