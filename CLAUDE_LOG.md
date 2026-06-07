@@ -8,6 +8,26 @@
 
 ---
 
+## 2026-06-07 — Jog CD mobile-first : branche feat/jog-cd-mobile (session Claude Code)
+
+**Branche** : `feat/jog-cd-mobile` — EN ATTENTE DE VALIDATION avant merge sur main.
+
+**Fait** : execution complete du brief `brief-jog-mobile.md` (3 evolutions).
+
+1. **Responsive mobile-first** : `--disk-size` calcule en JS (`Math.min(90vw, 85vh, 560px)`). `calcDiskSize()` + `applyDiskSize()` appeles a l'init et au resize (debounce 100ms). `RING_R_0` et `RING_R_1` deviennent des `let` recalcules dynamiquement. Les tailles du centre (29% du disque) et de l'ouverture (42%) suivent aussi automatiquement. Sur iPhone 390px : le disque tient entierement dans le viewport.
+
+2. **Look CD iris** : `.disk` porte un `conic-gradient` arc-en-ciel (6 facettes couleurs, tout en tokens `color-mix()`). Le disque tourne via `--disk-rotation` mis a jour a chaque frame dans `update()`. Le `::before` (tick 12h) tourne naturellement avec le disque.
+
+3. **Pastilles epurees** : padding `0.35rem 0.75rem`, `border-radius: 6px` (etiquette jog vs pill), `font-size: 0.55rem`, `letter-spacing: 0.20em`.
+
+4. **Trou central approfondi** : `background: var(--bg-app)` (plus sombre que `--bg-elevated`) + bordure adoucie `color-mix(border 60%, transparent)`.
+
+**Build** : passe sans erreur (8 pages). Zero hardcode couleur dans le diff (verifie par grep).
+
+**A faire avant merge** : validation visuelle par Fx/Claude chat web sur navigateur (desktop + responsive 390px). Puis : supprimer `brief-jog-mobile.md`.
+
+---
+
 ## 2026-06-05 (cloture) — Vision jog VALIDEE + brief maj doc pret
 
 **Resume session** : CMS auth debloquee (voir entree dediee ci-dessous) ; vision du concept "jog" capturee et VALIDEE par Fx sans correction ; brief `brief-maj-doc.md` cree+committe pour que Claude Code mette a jour ARCHITECTURE.md (remplacer "platine vinyle" par "jog") et PLAN.md (etat juin 2026, jog mobile-first).
