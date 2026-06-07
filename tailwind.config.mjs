@@ -11,7 +11,7 @@ export default {
         // Facettes (couleurs CMS / arc-en-ciel)
         'facet-son': 'var(--facet-son)',
         'facet-regie': 'var(--facet-regie)',
-        'facet-enseignement': 'var(--facet-enseignement)',
+        'facet-cours': 'var(--facet-cours)',
         'facet-blog': 'var(--facet-blog)',
         'facet-outils': 'var(--facet-outils)',
         'facet-contact': 'var(--facet-contact)',
