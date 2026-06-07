@@ -1,38 +1,40 @@
 # hamcat.live — Document d'architecture
 
 > Plan directeur de la refonte. Document de référence vivant : on l'amende au fur et à mesure des décisions.
-> Dernière mise à jour : 29/05/2026 (v4 — fondations posées : tokens, collections, routes stub)
+> Dernière mise à jour : 05/06/2026 (v5 — gigs importés, facette Son live, CMS auth OK, concept jog)
 
 ---
 
-## État courant (29/05/2026)
+## État courant (07/06/2026)
 
-**Infrastructure** : site déployé sur Cloudflare Workers (`fx-jam.felix-jambon20.workers.dev`), DNS propagé vers Cloudflare, custom domain `hamcat.live` à brancher (étape C non faite). Repo propre, identité git configurée (Hamcat + noreply).
+**Infrastructure** : domaine `hamcat.live` live (Cloudflare Workers, SSL OK, déploiement auto à chaque push). Repo propre, identité git configurée (Hamcat + noreply).
 
 **Fondations design** : tokens CSS centralisés dans `BaseLayout.astro` (palette arc-en-ciel + neutres + typo Barlow Condensed/JetBrains Mono). Tailwind branché sur ces tokens. **Source de vérité unique** : modifier un token = répercussion partout.
 
-**Routes en place** (vraies URL, branchées sur les tokens) :
-- `/` — ancien index (placeholder, sera remplacé par la platine)
-- `/son`, `/regie`, `/cours`, `/outils`, `/contact` — pages stub « en construction »
+**Routes en place** :
+- `/` — ancien index (placeholder, sera remplacé par le jog)
+- `/son` — facette Son v1 live : header + section Gigs (à venir / historique repliable) + placeholders bio, écoute, visuels, presskit
+- `/regie`, `/cours`, `/outils`, `/contact` — pages stub « en construction »
 - `/blog` — liste d'articles (vide pour l'instant)
 - `/blog/[slug]` — article individuel (rendu Markdown propre)
 - `/404` — page 404 designée
 
-**CMS** : Sveltia opérationnel en local avec deux collections (`blog`, `gigs`). Formulaires GUI alignés sur les schémas Astro. Édition en ligne (OAuth) non branchée.
+**CMS** : Sveltia opérationnel en local et en ligne. Auth GitHub (OAuth App `CMS hamcat.live` + Worker Cloudflare `sveltia-cms-auth`) opérationnelle — édition en ligne fonctionnelle.
 
 **Composants réutilisables** :
-- `Tile.astro` — brique de base de la future platine (full-texte, coloré par facette).
+- `Turntable.astro` — composant jog existant (rotation, navigation clavier + View Transitions OK).
+- `Tile.astro` — brique unitaire du jog (full-texte, colorée par facette).
 - `src/data/facets.ts` — source de vérité unique de la liste des facettes (ordre = spectre arc-en-ciel).
 - `StubPage.astro` — gabarit temporaire des facettes en chantier.
 
+**Collection `gigs`** : 57 gigs réels (2018-2025) importés dans `src/content/gigs/`, déployés et affichés dans la facette Son.
+
 **Ce qui reste à faire (priorités)** :
-1. Brancher `hamcat.live` sur le Worker (dashboard Cloudflare → Domains → Add custom domain).
-2. Construire la platine (composant central, 3 états, rotation infinie, View Transitions).
-3. Remplacer le `index.astro` actuel par la vraie page d'accueil avec la platine.
-4. Remplir les facettes (contenu réel de Son, Régie, Cours, etc.).
-5. Migrer l'historique des gigs dans la collection.
-6. Brancher l'OAuth GitHub pour l'édition CMS en ligne.
-7. Dégrader le concept pour mobile.
+1. Construire le jog (mobile-first) : inertie tactile, symétrie radiale, centre = trou CD, diffraction irisée.
+2. Remplacer le `index.astro` actuel par la vraie page d'accueil avec le jog.
+3. Remplir les facettes (contenu réel : Régie, Cours, Outils, Contact, etc.).
+4. Étoffer la facette Son (bio, écoute, visuels, presskit).
+5. Intégrations médias (SoundCloud, Spotify, etc.).
 
 ---
 
@@ -57,37 +59,58 @@ Facettes initiales : **Son** (musique : DJ + Live), **Régie technique** (presta
 
 ---
 
-## 3. Concept d'interface : la platine vinyle
+## 3. Concept d'interface : le jog
 
-L'interface de navigation est une **platine vinyle interactive** — métaphore juste pour un DJ, et volontairement anti-« template IA ».
+> **Vision évolutive** (capturée le 05/06/2026, amenée à bouger). Remplace le concept « platine vinyle » initial : on conserve la mécanique radiale (rotation, symétrie, 3 états, contre-rotation des labels, overscroll), on fait évoluer l'objet et son esthétique.
 
-### Disposition
-- Les facettes sont des **pastilles** (rondes, ou formes proches : hexagones/octogones) réparties **régulièrement** sur la circonférence d'un disque central. N facettes = N points équidistants (360°/N). Ajouter une facette densifie le collier, toujours symétrique.
-- **Symétrie radiale stricte** : équilibre garanti quel que soit le nombre de facettes.
-- Le **centre** du disque = espace polyvalent (voir les 3 états).
+### L'objet : un jog mi-CDJ / mi-vinyle, habillé en CD épuré
 
-### Navigation
-- Le disque **tourne comme un vinyle** : molette/trackpad horizontal, flèches ← →, glisser tactile, ou clic direct sur une pastille.
-- **Scroll infini** : pas de rembobinage. Passer de la dernière facette à la première continue dans le même sens (rotation cumulative, jamais de retour-arrière animé).
-- Pendant la rotation, le **texte des pastilles reste droit** (effet « grande roue » / nacelles : les pastilles contre-tournent pour rester lisibles).
-- La couleur « avance » progressivement vers la facette qui approche de la position active, qui **grossit et s'éclaire**.
+L'interface de navigation centrale est un **jog** (l'organe rotatif d'un lecteur DJ), pensé **à mi-chemin entre le jog d'un CDJ et un disque vinyle**, mais habillé du **look épuré et clean d'un CD**. Ce choix traduit l'identité de Fx, **autant analog que digital**.
 
-### Les 3 états
-- **État 0 — Accueil (rien sélectionné)** : le centre est une **galerie** (photos / vidéos / illustrations en diaporama). L'anneau tourne autour.
-- **État 1 — Facette active** : le centre bascule et affiche un **aperçu synthétique** de la facette (titre + accroche + quelques mots-clés, lisible sans scroll). Le cercle central **s'agrandit modérément** et **l'anneau s'écarte vers l'extérieur** en même temps (effet diaphragme, évite la collision géométrique). La galerie passe en **arrière-plan plein écran flouté**, le disque restant net et au premier plan.
-- **État 2 — Facette ouverte (re-clic au centre)** : **plein écran complet**, 100% du contenu, scroll vertical jusqu'au bout. C'est la page dédiée intégrale (URL propre : `/son`, `/regie`, etc.).
+Deux pièges à éviter explicitement :
+- le **rétro-vinyle** (sillons, étiquette papier, texture poussiéreuse) : daté, étranger au quotidien de Fx.
+- le **CDJ utilitaire** (boutons, écran LCD, plastique d'outil) : fonctionnel mais sans âme, ce n'est pas sa passion.
 
-> Gradation voulue : vitrine (0) → bande-annonce (1) → film complet (2). L'aperçu de l'état 1 reste volontairement bref pour préserver la raison d'être de l'état 2.
+Cible : un disque **lisse, circulaire, contemporain**, qui évoque le CD par sa **surface irisée** et son **trou central**, sans skeuomorphisme appuyé.
 
-### Retour
-- **Overscroll** : tirer au-delà du haut (quand on est en haut) ou du bas (quand on est en bas) ramène à l'état précédent (2 → 1 → 0). Le scroll normal lit le contenu ; seul l'excès en bout de course déclenche le retour.
+### Mécanique physique rigoureuse
+
+Le jog doit donner une **vraie sensation de matière**, pas une simple rotation mécanique :
+- **Inertie** : un geste de lancement communique un élan ; le disque continue puis **décélère progressivement** sous une friction simulée (easing physique, non linéaire). On peut « lancer » le disque et le regarder ralentir.
+- **Réactivité directe 1:1** : doigt/curseur posé sur le disque = le disque suit le geste exactement, sans latence ni décalage.
+- La navigation clavier (flèches gauche/droite) existe déjà et reste ; le tactile/drag s'y ajoute avec cette mécanique d'inertie. **Les deux pilotent la même rotation.**
+
+### Symétrie radiale (primordiale)
+
+Principe **non négociable** pour Fx. Le disque s'y prête :
+- Disque parfaitement circulaire, **trou central concentrique**.
+- Facettes réparties à **360°/N** (équidistantes) via `N_FACETS` — ajouter une facette densifie le collier, toujours symétrique.
+- Tout déséquilibre visuel est à proscrire.
+
+### Couleur : diffraction irisée (arc-en-ciel)
+
+L'arc-en-ciel reste la signature, traité **fidèlement à la physique d'un vrai CD** : la surface **diffracte la lumière** en un **dégradé irisé continu** qui **balaie le disque selon la rotation et l'angle**, plutôt qu'en aplats de couleur par facette.
+- Quand le jog tourne, un **reflet arc-en-ciel se déplace** sur la surface (diffraction).
+- Chaque facette **prend sa teinte dominante** en arrivant en position active.
+- Objectif : **impressionnant sans être pompeux** — beau, smooth, fidèle à l'objet.
+
+*À prototyper : l'irisation est l'effet le plus ambitieux techniquement. Valider en maquette avant engagement. Peut démarrer en version simplifiée (teintes par facette) puis évoluer vers la diffraction continue.*
+
+### Le centre = le trou du CD = zone de contenu
+
+Le **centre du disque** (le « trou » du CD) est la **zone d'affichage de la facette active** : l'objet est **à la fois navigation ET contenu** — on tourne pour choisir, le centre révèle. Réconcilie la métaphore du trou central avec les « 3 états » du concept initial (galerie au repos -> aperçu de la facette -> plein écran).
+
+### Mobile-first (priorité de conception)
+
+La vitrine sera **majoritairement consultée sur mobile** (bookers et fans via lien Instagram/réseaux). Le tactile au pouce est l'usage **naturel** d'un jog.
+-> Le jog est **conçu d'abord pour le doigt sur petit écran vertical**, le desktop ensuite. Cela peut impliquer de **revoir `Turntable.astro`** (commencé en desktop). À acter avant de coder : repenser mobile-first plutôt que dégrader le desktop a posteriori.
 
 ---
 
 ## 4. Parti pris de design
 
 - **Compact** : viewport fixe en desktop, jamais de scroll de page entière au niveau accueil/aperçu. Le scroll vertical n'existe qu'en état 2 (contenu complet) et dans les zones de contenu long.
-- **Symétrie radiale stricte** (cf. platine).
+- **Symétrie radiale stricte** (cf. jog).
 - **Full-texte + média, AUCUNE icône ni emoji.** Pas de pictos contextuels (signature « IA »/template). La **typographie devient l'élément d'identité n°1**. Le média (vraies images, vidéos, players audio) remplace les icônes.
 - **Dark theme**, **chromatiquement riche** : couleur comme système de codage — chaque facette a sa teinte identifiable (« arc-en-ciel maîtrisé »). Résonne avec l'intérêt de Fx pour les systèmes de couleur en musique.
 - **Anti-IA** : pas de dégradés violet-rose flous génériques, pas de glassmorphism, pas de hero centré mou, pas de typo Inter par défaut. Grille/géométrie assumée, typographie forte, interaction distinctive (la platine).
@@ -123,7 +146,7 @@ Vraies URL (`/`, `/son`, `/regie`, `/cours`, `/blog`, …) pour le SEO et les li
 ## 5. Arborescence (cible)
 
 ```
-/            → Accueil : la platine (état 0)
+/            → Accueil : le jog (état 0)
 /son         → Son : DJ + Live (+ sous-catégories esthétiques)
 /regie       → Régie technique
 /cours       → Enseignement MAO
@@ -141,7 +164,7 @@ Routes en français (audience FR ; « MAO » est un terme du métier). Noms enco
 ### Collections Sveltia (édition GUI)
 | Collection | Contenu | Priorité | Statut |
 |------------|---------|----------|--------|
-| `gigs` | Dates : date, nom, lieu, genre, statut, heure | Haute | À créer |
+| `gigs` | Dates : date, nom, lieu, genre, statut, heure | Haute | En place (57 gigs importés) |
 | `blog` | Articles | Moyenne | En place |
 | `releases` *(option)* | Mixes / sorties + embeds | Plus tard | À discuter |
 
@@ -156,18 +179,18 @@ Le placeholder actuel sera remplacé, mais les **données réelles** sont récup
 ---
 
 ## 8. Stack (en place)
-Astro 5 statique · Tailwind · Sveltia CMS (local sans auth ; OAuth GitHub à brancher) · Cloudflare Workers (deploy auto au push) · domaine `hamcat.live` (Porkbun → NS Cloudflare, propagation en cours) · repo `github.com/fx-jam/fx.jam`.
+Astro 5 statique · Tailwind · Sveltia CMS (auth GitHub en ligne opérationnelle — OAuth App + Worker Cloudflare) · Cloudflare Workers (deploy auto au push) · domaine `hamcat.live` live · repo `github.com/fx-jam/fx.jam`.
 
 ---
 
 ## 9. Plan d'implémentation
 1. **Design system** : palette (codage chromatique par facette), typographie (héros visuel), traitement fond/bordures/animations. ← prochaine grande étape.
-2. **Composant platine** : anneau, rotation infinie, contre-rotation des pastilles, 3 états, agrandissement centre + écartement anneau.
+2. **Composant jog (mobile-first)** : inertie tactile, symétrie radiale, centre = trou CD, diffraction irisée en cible (version simplifiée teintes par facette en premier), 3 états, contre-rotation des labels.
 3. **Layout & View Transitions** : routage vraies pages + transitions zoom.
 4. **Page Son** (facette pilote) : structure DJ/Live + intégrations + dates (collection `gigs`).
 5. **Autres facettes** : Régie, Enseignement, Outils, Contact, Blog.
 6. **Collection `gigs`** : schéma + migration + affichage + Sveltia.
-7. **Mobile** : dégradation du concept (la platine et le viewport-fixe doivent s'adapter au petit écran vertical — probablement scroll vertical autorisé, platine simplifiée ou carrousel linéaire).
+7. **Mobile** : dégradation du concept (le jog et le viewport-fixe doivent s'adapter au petit écran vertical — probablement scroll vertical autorisé, platine simplifiée ou carrousel linéaire).
 8. **Polish** : overscroll, accessibilité (clavier OK, mais la platine doit rester navigable et lisible pour les lecteurs d'écran), perfs.
 
 ---
@@ -184,7 +207,10 @@ Astro 5 statique · Tailwind · Sveltia CMS (local sans auth ; OAuth GitHub à b
   - Autres médias son (à voir plus tard).
 - **Centre en état 1** : valeur exacte de l'agrandissement + format précis de l'aperçu (à régler à l'œil dans le code).
 - **Action du centre en état 0** : la galerie est-elle cliquable ? vers quoi ?
-- **Mobile** : stratégie de dégradation à définir.
+- **Inertie du jog** : valeur/feeling de la friction simulée (courbe d'easing, durée de décélération) — à régler à l'œil sur le prototype.
+- **Diffraction irisée** : faisabilité technique à valider en maquette avant engagement. Démarrer en version simplifiée (teintes par facette) puis évoluer.
+- **Mobile-first vs Turntable.astro** : le jog mobile-first implique-t-il de réécrire `Turntable.astro` (commencé en desktop) ou de l'étendre avec un breakpoint tactile ?
+- **Renommage** : `Turntable.astro` → `Jog.astro` ? À trancher avant de réécrire le composant.
 - **Collection `releases`** : au lancement ou plus tard ?
 - **Police de corps long** : à valider à l'arrivée du Blog.
 - **Attribution couleur ↔ facette** : confirmer la proposition initiale (Son=rouge ? jaune ? violet ?).
