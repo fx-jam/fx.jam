@@ -30,12 +30,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
        ============================================================ */
     :root {
       /* Couleurs des facettes (arc-en-ciel saturé, ordre = spectre) */
-      --facet-son: #ff5b6e;          /* rouge */
-      --facet-regie: #ff8a3d;        /* orange */
-      --facet-cours: #ffc933; /* jaune */
-      --facet-blog: #6cd97a;         /* vert */
-      --facet-outils: #3ec9c3;       /* cyan */
-      --facet-contact: #8b5bff;      /* violet */
+      --facet-son:     oklch(0.65 0.22 25);   /* rouge-orange   ~0 deg spectre  */
+      --facet-regie:   oklch(0.75 0.18 80);   /* jaune-or       ~60 deg spectre */
+      --facet-cours:   oklch(0.70 0.17 145);  /* vert           ~120 deg spectre */
+      --facet-blog:    oklch(0.72 0.14 195);  /* cyan           ~180 deg spectre */
+      --facet-outils:  oklch(0.65 0.18 260);  /* bleu           ~240 deg spectre */
+      --facet-contact: oklch(0.68 0.20 320);  /* violet-rose    ~300 deg spectre */
 
       /* Neutres (dark theme) */
       --bg-app: #0b0b10;       /* fond global */
