@@ -26,55 +26,44 @@ Ces critères sont la boussole. Une feature qui ne sert aucun d'eux est probable
 
 ---
 
-## État actuel (29/05/2026, fin de matinée)
+## État actuel (07/06/2026)
 
-✅ Infrastructure complète : domaine branché, SSL OK, déploiement auto à chaque push.
-✅ Platine vinyle fonctionnelle (rotation, 3 états, View Transitions, navigation clavier/tactile).
+✅ Infrastructure complète : domaine `hamcat.live` live, SSL OK, déploiement auto à chaque push.
 ✅ Design system solide (tokens centralisés, palette arc-en-ciel, Barlow Condensed).
 ✅ 8 routes propres avec page 404 designée.
-✅ CMS Sveltia opérationnel en local (collections `blog` et `gigs`).
-✅ Repo propre, doc d'architecture v4, brief Claude Code en place.
+✅ Facette Son v1 live (`/son`) : header + section Gigs (à venir / historique repliable) + placeholders bio, écoute, visuels, presskit.
+✅ 57 gigs réels (2018-2025) importés dans la collection `gigs`, déployés.
+✅ CMS Sveltia : auth GitHub en ligne opérationnelle (OAuth App + Worker Cloudflare `sveltia-cms-auth`).
+✅ Jog fonctionnel (`Turntable.astro`) : rotation, navigation clavier + View Transitions.
 
-❌ **Aucune facette n'a de vrai contenu** — la platine est une coquille fonctionnelle.
-❌ Mobile non traité (la platine 620×620 ne tient pas verticalement).
-❌ Historique des gigs réels pas encore migré.
+❌ **Contenu des facettes** : toutes sauf Son restent « En construction ».
+❌ **Jog à repenser** : mobile-first, inertie tactile, diffraction irisée — `Turntable.astro` est une base desktop.
 ❌ Aucune intégration de média externe.
 
-**Verdict** : on est à environ 30% du site cible. Les fondations valent les 70% restants — c'est juste qu'on en voit peu visuellement.
+**Verdict** : on est à environ 45-50% du site cible. Fondations solides, facette Son v1 live — l'essentiel visible est là, mais la navigation centrale (jog) et le contenu des autres facettes restent à construire.
 
 ---
 
 ## Phases de travail
 
-### Phase 1 — Rendre la facette Son présentable (la plus urgente)
+### Phase 1 — Facette Son : v1 faite, à étoffer ✅ v1
 
-**Pourquoi en premier** : Son est ta facette principale, c'est celle vers laquelle 80% des visiteurs vont aller. Tant qu'elle dit « En construction », la platine ressemble à une démo, pas à un site.
+**Ce qui est fait** : header, section Gigs (à venir / historique repliable), structure de page live.
 
-**Travail à faire** :
-- Concevoir la mise en page de la facette Son en plein écran (chat web, maquette nécessaire).
-- Décider du traitement des sous-niveaux face A / face B (DJ vs Live) — peut-être différé en Phase 4 si trop complexe.
-- Coder le layout (Claude Code).
-- Remplir le contenu : présentation courte, player principal (un mix SoundCloud par défaut), 3 prochaines dates depuis la collection `gigs`, lien booking.
+**Ce qui reste** :
+- Bio courte (texte à rédiger).
+- Player principal (un mix SoundCloud).
+- Visuels (photos live, artwork).
+- Presskit (lien ou PDF).
+- Sous-niveaux face A (DJ) / face B (Live) — peut rester en Phase 5 si trop complexe.
 
-**Pré-requis** : migration des gigs (Phase 2) doit avoir commencé pour qu'on ait des dates à afficher. Sinon on met des dates statiques temporairement.
-
-**Estimation** : 2-3 sessions (1 conception + 1-2 implémentation).
+**Estimation** : 1-2 sessions pour étoffer le contenu (rédaction + intégration).
 
 ---
 
-### Phase 2 — Migrer l'historique des gigs (chantier idéal Claude Code)
+### Phase 2 — Migration des gigs ✅ FAITE
 
-**Pourquoi maintenant** : c'est mécanique, ennuyeux, parfait pour de l'autonomie agent. Et ça débloque la facette Son qui dépend des gigs.
-
-**Travail à faire** :
-- Récupérer le contenu de la branche `archive/ancien-site-bricolage` (les ~40 gigs en HTML).
-- Nettoyer les incohérences (dates 2024 sous header 2018, formats mélangés — tu m'avais signalé toi-même que le contenu était « placeholder à wipe »).
-- Écrire un fichier `.md` par gig dans `src/content/gigs/`, conforme au schéma existant.
-- Vérifier que le build passe et que les dates s'affichent dans la collection.
-
-**Important** : il faudra **trancher au cas par cas** sur les gigs douteux (dates floues, événements jamais confirmés). Claude Code te listera ces cas, tu décides.
-
-**Estimation** : 1 session Claude Code en autonomie (30-60 minutes de calcul, peu d'aller-retours).
+57 gigs réels (2018-2025) importés dans `src/content/gigs/` et déployés. Affichés dans la facette Son.
 
 ---
 
@@ -94,18 +83,19 @@ Ces critères sont la boussole. Une feature qui ne sert aucun d'eux est probable
 
 ---
 
-### Phase 4 — Mobile (incontournable avant de communiquer)
+### Phase 4 — Jog mobile-first (prochain grand chantier produit)
 
-**Pourquoi à cette étape** : sur un site d'artiste, la majorité des visiteurs viennent du tactile (Instagram → lien en bio → téléphone). Lancer sans version mobile = brûler 70% du trafic.
+**Pourquoi fusionner platine + mobile** : le jog se conçoit mobile-first dès le départ — pas de dégradation a posteriori. La contrainte tactile au pouce définit l'objet. Sur un site d'artiste, la majorité des visiteurs viennent du tactile (Instagram → lien en bio → téléphone).
 
 **Travail à faire** :
-- Concevoir la dégradation de la platine sur petit écran vertical (chat web, maquette). Options : platine simplifiée, carrousel linéaire vertical, ou grille — à comparer.
-- Implémenter le breakpoint et la version mobile (Claude Code).
-- Tester sur ton téléphone réellement, ajuster.
+- Décider : réécrire `Turntable.astro` en mobile-first ou l'étendre avec un breakpoint tactile ? (à trancher en chat web avant de coder).
+- Concevoir l'inertie (easing, friction simulée) et la diffraction irisée (prototype en version simplifiée d'abord).
+- Remplacer `index.astro` par le jog.
+- Valider sur téléphone réellement, ajuster.
 
-**Note importante** : la contrainte « viewport fixe, pas de scroll » devra **être relâchée sur mobile**. Documenté dans `ARCHITECTURE.md` comme question ouverte.
+**Note** : la contrainte « viewport fixe, pas de scroll » au niveau accueil est maintenue — le jog se plie au petit écran via une conception mobile-first, pas via un carrousel de remplacement.
 
-**Estimation** : 2 sessions (1 conception + 1 implémentation/itérations).
+**Estimation** : 2-3 sessions (1 conception + 1-2 implémentation).
 
 ---
 
@@ -141,7 +131,6 @@ Ces critères sont la boussole. Une feature qui ne sert aucun d'eux est probable
 ### Phase 7 — Polish & lancement
 
 Avant de communiquer publiquement (annoncer le site sur tes réseaux) :
-- OAuth GitHub branché pour le CMS en ligne (édition depuis le téléphone, en déplacement).
 - `www.hamcat.live` redirigé vers `hamcat.live` (ou inversement).
 - Métadonnées SEO/Open Graph propres (image de preview quand on partage le lien).
 - Favicon personnalisé.
@@ -156,15 +145,13 @@ Avant de communiquer publiquement (annoncer le site sur tes réseaux) :
 
 Ordre logique :
 
-1. Phase 2 (migration gigs) — Claude Code en autonomie, idéal en début de soirée.
-2. Phase 1 (facette Son) — chat web pour conception puis Claude Code pour exécution.
-3. Phase 3 (autres facettes) — par ordre d'importance pour toi : Régie d'abord (la plus rentable pro), puis Enseignement, puis Contact.
-4. Phase 4 (mobile) — **avant toute communication publique du site**.
+1. ~~Phase 2 (migration gigs)~~ — **FAITE.**
+2. Phase 4 (jog mobile-first) — prochain grand chantier produit. Conception en chat web d'abord.
+3. Phase 1 (étoffer Son) — en parallèle du jog si possible (contenu indépendant de l'interface).
+4. Phase 3 (autres facettes) — Régie d'abord (la plus rentable pro), puis Enseignement, puis Contact.
 5. Phase 5 (sous-niveaux Son) — optionnel, après lancement.
 6. Phase 6 (intégrations) — par incréments, au gré du besoin.
 7. Phase 7 (polish) — juste avant communication officielle.
-
-Phases 2 et 3 peuvent se faire en parallèle si tu veux.
 
 ---
 
@@ -194,7 +181,7 @@ Phases 2 et 3 peuvent se faire en parallèle si tu veux.
 
 (Ajoutées au fil des sessions, sans engagement)
 
-- *(rien pour l'instant — à enrichir)*
+- **Intégrations médias** (SoundCloud, Mixcloud, Spotify, Insta, Facebook) = chantier socle média à venir, nécessite liens/contenus de Fx.
 
 ---
 
