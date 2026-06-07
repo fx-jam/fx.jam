@@ -196,6 +196,33 @@ Astro 5 statique · Tailwind · Sveltia CMS (auth GitHub en ligne opérationnell
 ---
 
 
+
+### Étiquettes — rendu iridescent (vision à affiner)
+
+Vision de Fx : les étiquettes de facettes ne doivent pas ressembler à de simples rectangles
+posés sur le disque. L'objectif est un rendu qui "ressemble à une iridescence de disque" —
+centré, beau, lisible. La vision n'est pas encore arrêtée ; pistes à explorer :
+- Texte seul sans fond/bordure (supprimer le rectangle, garder le texte flottant)
+- Effet background-clip: text avec gradient iridescent (texte arc-en-ciel)
+- Luminosité/glow coloré autour du texte selon la facette (text-shadow multicouche)
+- Intégration visuelle dans la surface du disque plutôt que "posé dessus"
+Ce chantier nécessite une session de conception visuelle avant d'être briefé.
+
+### État 2 — Grand cercle plein écran (vision enrichie)
+
+Le principe du cercle s'applique partout sur le site. Quand une facette est ouverte (état 2),
+un grand cercle prend tout l'écran EN CONSERVANT LE FOND du jog (le disque reste visible
+en arrière-plan, atténué). Le contenu de la facette s'ouvre DANS ce grand cercle.
+
+Le grand cercle contient à terme : texte, boutons, liens, images, vidéo, éléments cliquables
+ou décoratifs, de fond — changeant selon la facette sélectionnée. Le cercle est la forme
+fondamentale de l'UI : le jog est un petit cercle (navigation), les pages sont de grands
+cercles (contenu). L'utilisateur ne "quitte" jamais le disque.
+
+Techniquement : animation clip-path circle() de ~30% (jog) à ~150% (plein écran),
+ou overlay circulaire à border-radius: 50% qui grossit via scale(). La couleur du cercle
+dérive de --facet-* actif. View Transitions peut orchestrer l'animation d'ouverture/fermeture.
+
 ### Navigation : l'illusion d'une racine unique (état 1 → état 2)
 
 Vision de Fx (à implémenter dans un chantier dédié) : la transition vers une facette (état 2)
@@ -233,4 +260,5 @@ Vocabulaire acté : état 0 (accueil/jog libre), état 1 (facette sélectionnée
 - **Collection `releases`** : au lancement ou plus tard ?
 - **Police de corps long** : à valider à l'arrivée du Blog.
 - **Attribution couleur ↔ facette** : confirmer la proposition initiale (Son=rouge ? jaune ? violet ?).
+
 
