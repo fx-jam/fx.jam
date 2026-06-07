@@ -8,6 +8,22 @@
 
 ---
 
+## 2026-06-05 (cloture) — Vision jog VALIDEE + brief maj doc pret
+
+**Resume session** : CMS auth debloquee (voir entree dediee ci-dessous) ; vision du concept "jog" capturee et VALIDEE par Fx sans correction ; brief `brief-maj-doc.md` cree+committe pour que Claude Code mette a jour ARCHITECTURE.md (remplacer "platine vinyle" par "jog") et PLAN.md (etat juin 2026, jog mobile-first).
+
+**Concept jog (resume)** : disque mi-CDJ/vinyle look CD epure (analog+digital) ; evite retro-vinyle ET CDJ utilitaire ; inertie physique + reactivite 1:1 ; symetrie radiale (trou central, 360/N) ; arc-en-ciel par DIFFRACTION irisee facon CD reel (pas d'aplats, demarrage simplifie possible) ; centre = trou = zone de contenu (navigation + contenu) ; MOBILE-FIRST prioritaire (peut impliquer de revoir Turntable.astro). Vision marquee evolutive.
+
+**Prochaine session** :
+1. Claude Code : executer `brief-maj-doc.md` (branche `docs/maj-architecture-jog`) -> maj ARCHITECTURE + PLAN, montrer diff avant merge.
+2. Puis conception fine du jog en chat AVANT de coder (feeling inertie, prototype diffraction, strategie mobile-first).
+3. Nettoyage : branches mergees (feat/import-gigs, feat/facette-son) ; dossier suspect `hamcat-live/` a la racine (investiguer avant suppression) ; ancien Client Secret GitHub obsolete a supprimer (hygiene).
+4. Etoffer facette Son (bio, ecoute, visuels, presskit) — necessite contenus de Fx.
+5. Graver convention "montrer avant merge" dans CLAUDE.md.
+6. M2 : finaliser synchro.
+
+---
+
 ## 2026-06-05 (soir) — CMS Sveltia : auth GitHub OPERATIONNELLE
 
 **Fait** : le login GitHub du CMS fonctionne (hamcat.live/admin). Edition en ligne du contenu desormais possible, Fx autonome sur le contenu sans passer par git/Claude Code.
