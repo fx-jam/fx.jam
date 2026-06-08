@@ -40,6 +40,8 @@ Ces choix sont validés et documentés dans `ARCHITECTURE.md`. Ne pas les remett
 TOUJOURS montrer `git diff` + confirmer `npm run build` à Fx AVANT de merger sur main.
 Ne jamais merger une branche feature sans validation explicite de Fx ou du chat web (Claude architecte).
 Le merge sur main = déploiement automatique sur hamcat.live. Chaque merge compte.
+Apres tout merge ou commit final : **toujours git push origin <branche> immediatement**.
+Ne pas attendre que Fx ou le chat web le demande — le push fait partie du livrable.
 
 ## Source de vérité des facettes
 
@@ -88,4 +90,5 @@ L'utilisateur (Fx) préfère :
 - **Commits incrémentaux** avec un message clair par étape, plutôt qu'un gros commit final.
 - **Build de validation** après chaque modification importante (`npm run build` pour s'assurer que rien n'est cassé).
 - **Pas de sur-ingénierie** : ne pas introduire des abstractions, dépendances ou patterns qui ne servent pas un besoin actuel. Le projet est petit, garder simple.
+
 
