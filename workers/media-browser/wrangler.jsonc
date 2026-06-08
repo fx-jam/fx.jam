@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hamcat-media-browser",
+  "compatibility_date": "2026-06-09",
+  "main": "src/index.js",
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "hamcat-media"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "media.hamcat.live/*",
+      "zone_name": "hamcat.live"
+    }
+  ]
+}
