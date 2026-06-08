@@ -230,6 +230,26 @@ const fmtShort = (d: Date) =>
   }
   .gig-row:last-child { border-bottom: 1px solid var(--border); }
 
+  /* ── Responsive mobile ── */
+  @media (max-width: 640px) {
+    .gig-row {
+      grid-template-columns: 80px 1fr 44px;
+    }
+    .c-venue,
+    .c-genres {
+      display: none;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .gig-row {
+      grid-template-columns: 1fr 44px;
+    }
+    .c-date {
+      display: none;
+    }
+  }
+
   /* Ligne "à venir" : card accentuée */
   .gig-upcoming {
     border-top: none;
