@@ -262,3 +262,15 @@ Vocabulaire acté : état 0 (accueil/jog libre), état 1 (facette sélectionnée
 - **Attribution couleur ↔ facette** : confirmer la proposition initiale (Son=rouge ? jaune ? violet ?).
 
 
+
+
+### Session cybersécurité (à planifier)
+
+Chantier dédié à planifier. Points à couvrir :
+- Audit des tokens Cloudflare existants (rclone, Workers, build) : portées, rotation, révocation
+- Token MCP Cloudflare dédié avec permissions minimales
+- Tokens OAuth Google Drive (rclone) : rotation périodique
+- Clés SSH : inventaire X13/M2/VPS, droits, known_hosts
+- Credentials exposés dans les conversations Claude.ai à révoquer
+- Revue access.local.md et .gitignore
+- Cloudflare Access sur media.hamcat.live (protection par email OTP)
