@@ -8,6 +8,62 @@
 
 ---
 
+## Session 09/06/2026 — Maintenance : responsive Son + docs + nettoyage
+
+**Branche** : `fix/maintenance-09-06` → mergee sur main.
+
+**Fait** : execution du brief `brief-maintenance-09-06.md`.
+
+1. **Responsive grille gigs** (`son.astro`) : media query < 640px → 3 colonnes (80px 1fr 44px), venue + genres masques ; media query < 420px → 2 colonnes (1fr 44px), date masquee aussi.
+2. **CLAUDE.md mis a jour** : "platine vinyle" → "jog" dans la description projet ; "Enseignement" → "Cours" dans la palette et la liste des facettes ; regle "validation avant merge" ajoutee apres la section Conventions design.
+3. **CLAUDE_LOG.md** : entree 08/06 ajoutee (resumant jog-cd-mobile + jog-groupe2 + cms-complet).
+4. **hamcat-live/** : dossier absent depuis la racine — rien a faire.
+
+**Build** : 8 pages, zero erreur.
+
+---
+
+## Session 08/06/2026 — Jog complet + CMS etendu
+
+### Travaux realises
+
+**Jog CD mobile-first — feat/jog-cd-mobile (merged) :**
+- Disque responsive : --disk-size = min(90vw, 85vh, 560px), RING_R dynamique en JS
+- Conic-gradient irise : transform rotate sur .disk, --disk-rotation mis a jour a chaque frame
+- Indicateur fixe triangulaire (.disk-indicator) hors du disque, colore par facette active
+- Drag souris : mousedown/mousemove/mouseup, logique atan2 identique au tactile
+- Tap hors .disk-center → setState(0), tap souris identique
+- disk-track invisible : background transparent, border none
+- "Cours" remplace "Enseignement" dans tout le systeme (key, label, token CSS, cours.astro)
+- Scale unifie : scale(0.70 + 0.90 * proximity), font-size graduelle calc(0.44rem + 0.28rem * proximity)
+- Pastille .is-active : scale: 1.6 supprime (conflictuait avec scale dans transform)
+
+**Jog Groupe 2 — feat/jog-groupe2 (merged) :**
+- Tokens --facet-* : 6 teintes oklch equidistantes (~60 deg spectre, ex: son=oklch(0.65 0.22 25))
+- Conic-gradient : spectre oklch pur 10%, color-mix(in oklch) → transitions douces sans secteurs
+- Pastilles en arc : --text-rotation = norm + flip demi-inferieure (texte droit en 12h seulement)
+- Inertie clavier : velAngle = STEP * 0.35 injecte avant snapToFacet()
+- Drag etat 1 : setState(1, activeIdx) si facette change pendant le drag
+
+**CMS complet — feat/cms-complet (merged) :**
+- 6 fichiers JSON crees dans src/data/ : site.json + son/regie/cours/outils/contact.json
+- config.yml : collection donnees-site avec profil global + 5 facettes editables dans Sveltia
+
+### Architecture mise a jour
+- Vision etat 2 gravee : grand cercle plein ecran, fond jog conserve, contenu riche par facette
+- Vision etiquettes iridescentes notee (a concevoir)
+- Cercle comme forme fondamentale : jog = petit cercle, pages = grands cercles
+- Vocabulaire acte : etat 0 (jog libre), etat 1 (apercu facette), etat 2 (overlay plein ecran)
+- Principe spectral acte : couleurs facettes = spectre oklch equidistant (preserver si reorg)
+
+### Prochains chantiers
+- Conception etat 2 (grand cercle) — session de conception avant tout code
+- Etiquettes : rendu iridescent (vision a preciser)
+- Facette Son : etoffer avec vrais contenus (bio, SoundCloud, photos)
+- Remplir les JSON via hamcat.live/admin
+
+---
+
 ## 2026-06-07 — Jog CD mobile-first : branche feat/jog-cd-mobile (session Claude Code)
 
 **Branche** : `feat/jog-cd-mobile` — EN ATTENTE DE VALIDATION avant merge sur main.

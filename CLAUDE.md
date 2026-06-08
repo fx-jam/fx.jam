@@ -4,7 +4,7 @@ Ce fichier est lu automatiquement par Claude Code au démarrage. Il contient le 
 
 ## Le projet en une phrase
 
-Site personnel multi-facettes de **Fx / Hamcat** (DJ psytrance, ingénieur son, prof MAO) : un **hub extensible** où chaque facette (Son, Régie, Enseignement, Blog, Outils, Contact, et plus à venir) est de même niveau, navigable via une **interface "platine vinyle"**.
+Site personnel multi-facettes de **Fx / Hamcat** (DJ psytrance, ingénieur son, prof MAO) : un **hub extensible** où chaque facette (Son, Régie, Cours, Blog, Outils, Contact, et plus à venir) est de même niveau, navigable via une **interface "jog"**.
 
 ## Document de référence prioritaire
 
@@ -30,10 +30,16 @@ Ces choix sont validés et documentés dans `ARCHITECTURE.md`. Ne pas les remett
 - **Tokens CSS centralisés** dans `src/layouts/BaseLayout.astro` (variables `--facet-*`, `--bg-*`, `--text-*`, `--font-*`). **Toujours** utiliser les tokens, jamais de couleur/police codée en dur.
 - **Tailwind** est branché sur ces tokens (cf. `tailwind.config.mjs`). Classes `bg-bg-app`, `text-text-primary`, `text-facet-son` etc. disponibles. Pas de `bg-gray-900`, `text-indigo-500`, etc. — bannis.
 - **Polices** : Barlow Condensed (display) + JetBrains Mono (technique). Pas d'Inter, pas de Space Grotesk, pas de système.
-- **Palette arc-en-ciel saturée** : Son=rouge, Régie=orange, Enseignement=jaune, Blog=vert, Outils=cyan, Contact=violet. Ordre = spectre.
+- **Palette arc-en-ciel saturée** : Son=rouge, Régie=orange, Cours=jaune, Blog=vert, Outils=cyan, Contact=violet. Ordre = spectre.
 - **Pas d'icônes/emojis** dans l'interface (signature "IA générique" à éviter). Full-texte + média (vraies images/vidéos/audio).
 - **Viewport fixe** en desktop : pas de scroll de page entière au niveau accueil/aperçu. Scroll uniquement à l'intérieur des composants ou en plein écran d'une facette.
 - **Symétrie stricte** dans la disposition.
+
+## Règle : validation avant merge
+
+TOUJOURS montrer `git diff` + confirmer `npm run build` à Fx AVANT de merger sur main.
+Ne jamais merger une branche feature sans validation explicite de Fx ou du chat web (Claude architecte).
+Le merge sur main = déploiement automatique sur hamcat.live. Chaque merge compte.
 
 ## Source de vérité des facettes
 
