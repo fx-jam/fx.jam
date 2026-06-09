@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { getFacet } from '../data/facets.ts';
+import sonData from '../data/son.json';
 
 const f = getFacet('son');
 
@@ -30,10 +31,10 @@ const fmtShort = (d: Date) =>
 
     <!-- ── HEADER ───────────────────────────────────────────────── -->
     <header class="hd">
-      <span class="label">Son</span>
-      <h1>DJ &amp; Live</h1>
-      <!-- TODO: bio courte Fx (2–3 lignes) -->
-      <p class="teaser">psytrance · hi-tech · goa</p>
+      <span class="label">{sonData.label || 'Son'}</span>
+      <h1>{sonData.headline || 'DJ & Live'}</h1>
+      {sonData.bio && <p class="bio">{sonData.bio}</p>}
+      <p class="teaser">{sonData.genres?.join(' · ') || sonData.teaser || 'psytrance · hi-tech · goa'}</p>
     </header>
 
     <!-- ── GIGS ─────────────────────────────────────────────────── -->
