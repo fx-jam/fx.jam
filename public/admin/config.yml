@@ -93,8 +93,12 @@ collections:
         file: src/data/son.json
         format: json
         fields:
-          - { label: "Titre / accroche", name: headline, widget: string, required: false }
-          - { label: "Bio musicale",     name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)", name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
+          - { label: "Titre / accroche",  name: headline, widget: string, required: false }
+          - { label: "Genres",            name: genres,   widget: list,   required: false, hint: "Ex: psytrance, hi-tech, goa" }
+          - { label: "Note stub",         name: note_stub, widget: string, required: false, hint: "Affiché sur la page stub tant que la facette est en chantier" }
+          - { label: "Bio musicale",      name: bio,      widget: text,   required: false }
           - label: "Liens"
             name: links
             widget: object
@@ -108,8 +112,11 @@ collections:
         file: src/data/regie.json
         format: json
         fields:
-          - { label: "Accroche", name: headline, widget: string, required: false }
-          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)", name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
+          - { label: "Accroche",          name: headline, widget: string, required: false }
+          - { label: "Note stub",         name: note_stub, widget: string, required: false }
+          - { label: "Texte",             name: bio,      widget: text,   required: false }
           - label: "Liens"
             name: links
             widget: object
@@ -120,8 +127,11 @@ collections:
         file: src/data/cours.json
         format: json
         fields:
-          - { label: "Accroche", name: headline, widget: string, required: false }
-          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)", name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
+          - { label: "Accroche",          name: headline, widget: string, required: false }
+          - { label: "Note stub",         name: note_stub, widget: string, required: false }
+          - { label: "Texte",             name: bio,      widget: text,   required: false }
           - label: "Liens"
             name: links
             widget: object
@@ -132,13 +142,19 @@ collections:
         file: src/data/outils.json
         format: json
         fields:
-          - { label: "Accroche", name: headline, widget: string, required: false }
-          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)", name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
+          - { label: "Accroche",          name: headline, widget: string, required: false }
+          - { label: "Note stub",         name: note_stub, widget: string, required: false }
+          - { label: "Texte",             name: bio,      widget: text,   required: false }
       - name: contact
         label: "Facette Contact"
         file: src/data/contact.json
         format: json
         fields:
-          - { label: "Accroche", name: headline, widget: string, required: false }
-          - { label: "Email",    name: email,    widget: string, required: false }
-          - { label: "Texte",    name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)", name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
+          - { label: "Accroche",          name: headline, widget: string, required: false }
+          - { label: "Note stub",         name: note_stub, widget: string, required: false }
+          - { label: "Email",             name: email,    widget: string, required: false }
+          - { label: "Texte",             name: bio,      widget: text,   required: false }

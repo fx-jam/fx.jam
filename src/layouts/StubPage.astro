@@ -10,6 +10,10 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getFacet, type FacetKey } from '../data/facets.ts';
+import regieData from '../data/regie.json';
+import coursData from '../data/cours.json';
+import outilsData from '../data/outils.json';
+import contactData from '../data/contact.json';
 
 export interface Props {
   facet: FacetKey;
@@ -18,15 +22,28 @@ export interface Props {
 
 const { facet, title } = Astro.props;
 const f = getFacet(facet);
-const pageTitle = title ?? `${f?.label ?? facet} — hamcat.live`;
+
+const dataMap: Record<string, { label?: string; teaser?: string; note_stub?: string }> = {
+  regie: regieData,
+  cours: coursData,
+  outils: outilsData,
+  contact: contactData,
+};
+
+const d = dataMap[facet] ?? {};
+
+const displayLabel = d.label || f?.label || facet;
+const displayTeaser = d.teaser || f?.teaser || '';
+const displayNote = d.note_stub || 'Cette page sera bientôt développée. En attendant, retour à l\'accueil.';
+const pageTitle = title ?? `${displayLabel} — hamcat.live`;
 ---
 
-<BaseLayout title={pageTitle} description={f?.teaser}>
+<BaseLayout title={pageTitle} description={displayTeaser}>
   <main class="stub">
-    <span class="label">{f?.label}</span>
+    <span class="label">{displayLabel}</span>
     <h1>En construction</h1>
-    <p class="teaser">{f?.teaser}</p>
-    <p class="note">Cette page sera bientôt développée. En attendant, retour à l'accueil.</p>
+    <p class="teaser">{displayTeaser}</p>
+    <p class="note">{displayNote}</p>
     <a class="home" href="/">← Accueil</a>
   </main>
 </BaseLayout>

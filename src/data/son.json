@@ -1,5 +1,14 @@
 {
-  "headline": "",
+  "label": "Son",
+  "teaser": "DJ & Live — psytrance, hi-tech, goa",
+  "headline": "DJ & Live",
+  "genres": ["psytrance", "hi-tech", "goa"],
+  "note_stub": "Facette Son : discographie, mixes, presskit à venir.",
   "bio": "",
-  "links": {}
+  "links": {
+    "soundcloud": "",
+    "mixcloud": "",
+    "spotify": "",
+    "presskit": ""
+  }
 }

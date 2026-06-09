@@ -1,5 +1,10 @@
 {
-  "headline": "",
+  "label": "Cours",
+  "teaser": "Cours MAO — Ableton, production",
+  "headline": "Cours MAO",
+  "note_stub": "Facette Cours : programme, tarifs, inscription à venir.",
   "bio": "",
-  "links": {}
+  "links": {
+    "inscription": ""
+  }
 }

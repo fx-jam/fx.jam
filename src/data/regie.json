@@ -1,5 +1,10 @@
 {
-  "headline": "",
+  "label": "Régie",
+  "teaser": "Ingénierie son — FOH, X32/M32, festivals",
+  "headline": "Régie technique",
+  "note_stub": "Facette Régie : références, équipement, contact à venir.",
   "bio": "",
-  "links": {}
+  "links": {
+    "lien1": ""
+  }
 }
