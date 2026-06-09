@@ -18,6 +18,7 @@
 import sonData from './son.json';
 import regieData from './regie.json';
 import coursData from './cours.json';
+import blogData from './blog.json';
 import outilsData from './outils.json';
 import contactData from './contact.json';
 
@@ -61,8 +62,8 @@ export const FACETS: readonly Facet[] = [
   },
   {
     key: 'blog',
-    label: 'Blog',
-    teaser: 'Notes & articles — son, prod, théorie',
+    label: blogData.label || 'Blog',
+    teaser: blogData.teaser || 'Notes & articles',
     href: '/blog',
     enabled: true,
   },

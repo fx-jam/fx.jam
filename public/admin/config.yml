@@ -158,3 +158,13 @@ collections:
           - { label: "Note stub",         name: note_stub, widget: string, required: false }
           - { label: "Email",             name: email,    widget: string, required: false }
           - { label: "Texte",             name: bio,      widget: text,   required: false }
+      - name: blog
+        label: "Facette Blog"
+        file: src/data/blog.json
+        format: json
+        fields:
+          - { label: "Label (nom court)",       name: label,    widget: string, required: false }
+          - { label: "Teaser (1 ligne)",         name: teaser,   widget: string, required: false }
+          - { label: "Titre de page",            name: headline, widget: string, required: false }
+          - { label: "Message avant ouverture",  name: note_stub, widget: text,  required: false }
+          - { label: "Description du blog",      name: bio,      widget: text,   required: false }

@@ -1,11 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { getFacet } from '../../data/facets.ts';
+import blogData from '../../data/blog.json';
 
-const f = getFacet('blog');
+const label    = blogData.label    || 'Blog';
+const headline = blogData.headline || 'Blog';
+const teaser   = blogData.teaser   || 'Notes & articles';
+const noteStub = blogData.note_stub || 'Articles à venir. Revenez bientôt.';
 
-// Articles publiés (hors brouillons), triés du plus récent au plus ancien
 const all = await getCollection('blog', ({ data }) => !data.draft);
 const posts = all.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
@@ -13,16 +15,16 @@ const formatDate = (d: Date) =>
   d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 ---
 
-<BaseLayout title="Blog — hamcat.live" description={f?.teaser}>
+<BaseLayout title={`${label} — hamcat.live`} description={teaser}>
   <main class="blog">
     <header class="hd">
-      <span class="label">Blog</span>
-      <h1>Notes &amp; articles</h1>
-      <p class="teaser">{f?.teaser}</p>
+      <span class="label">{label}</span>
+      <h1>{headline}</h1>
+      <p class="teaser">{teaser}</p>
     </header>
 
     {posts.length === 0 ? (
-      <p class="empty">Aucun article publié pour l'instant.</p>
+      <p class="empty">{noteStub}</p>
     ) : (
       <ul class="list">
         {posts.map((post) => (

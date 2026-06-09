@@ -93,9 +93,35 @@ const fmtShort = (d: Date) =>
     </section>
 
     <!-- ── ÉCOUTE / STREAMING ────────────────────────────────────── -->
-    <!-- TODO: SoundCloud / Mixcloud embeds, liens vers sets enregistrés -->
-    <section class="section placeholder">
+    <section class="section ecoute">
       <h2 class="section-title">Écoute</h2>
+
+      {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify) ? (
+        <div class="links-streaming">
+          {sonData.links.soundcloud && (
+            <a href={sonData.links.soundcloud} target="_blank" rel="noopener" class="link-btn">
+              SoundCloud
+            </a>
+          )}
+          {sonData.links.mixcloud && (
+            <a href={sonData.links.mixcloud} target="_blank" rel="noopener" class="link-btn">
+              Mixcloud
+            </a>
+          )}
+          {sonData.links.spotify && (
+            <a href={sonData.links.spotify} target="_blank" rel="noopener" class="link-btn">
+              Spotify
+            </a>
+          )}
+          {sonData.links.presskit && (
+            <a href={sonData.links.presskit} target="_blank" rel="noopener" class="link-btn link-btn--secondary">
+              Presskit
+            </a>
+          )}
+        </div>
+      ) : (
+        <p class="empty">Liens à venir.</p>
+      )}
     </section>
 
     <!-- ── VISUELS ───────────────────────────────────────────────── -->
@@ -324,6 +350,42 @@ const fmtShort = (d: Date) =>
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     margin: 0;
+  }
+
+  /* ── Écoute / Streaming ── */
+  .ecoute {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .links-streaming {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .link-btn {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--facet-son);
+    border-radius: 8px;
+    color: var(--facet-son);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    transition: background 0.2s ease;
+  }
+  .link-btn:hover {
+    background: color-mix(in srgb, var(--facet-son) 15%, transparent);
+  }
+  .link-btn--secondary {
+    border-color: var(--text-tertiary);
+    color: var(--text-secondary);
+  }
+  .link-btn--secondary:hover {
+    background: color-mix(in srgb, var(--text-tertiary) 12%, transparent);
   }
 
   /* ── Placeholders ── */
