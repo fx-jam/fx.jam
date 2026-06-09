@@ -8,6 +8,26 @@
 
 ---
 
+## Session 09/06/2026 — CMS complet : zéro texte hardcodé (feat/cms-complet)
+
+**Branche** : `feat/cms-complet` — EN ATTENTE DE VALIDATION avant merge sur main.
+
+**Fait** : execution integrale du brief `brief-cms-complet.md` en 5 etapes, chacune commitee et pushee.
+
+1. **JSON enrichis** : son/regie/cours/outils/contact.json recus les champs `label`, `teaser`, `headline`, `note_stub` (+ `genres` pour son, `email` pour contact). Valeurs initiales reprises depuis facets.ts.
+2. **facets.ts** : importe les 5 JSON, utilise `data.label || 'fallback'` et `data.teaser || 'fallback'` pour chaque facette (sauf Blog hardcode, pas de JSON blog).
+3. **son.astro** : importe son.json, remplace `<h1>DJ & Live</h1>` et `<p>psytrance...` par `{sonData.headline}` et `{sonData.genres?.join(' · ')}`. Affiche `bio` si renseignee.
+4. **StubPage.astro** : importe les 4 JSON (regie/cours/outils/contact), dataMap par facette, utilise `d.label`, `d.teaser`, `d.note_stub` avec fallback sur facets.ts.
+5. **config.yml** : champs `label`, `teaser`, `headline`, `note_stub` ajoutes dans chaque sous-collection donnees-site ; `genres` (list) ajoute pour Son.
+
+**Build** : 8 pages, zero erreur (verifie apres chaque etape).
+
+**Verification finale a faire avant merge** :
+- hamcat.live/admin → chaque facette affiche ses champs label/teaser/headline editables
+- Valider visuellement que son.astro et les stubs affichent bien le contenu des JSON
+
+---
+
 ## Session 09/06/2026 — Maintenance : responsive Son + docs + nettoyage
 
 **Branche** : `fix/maintenance-09-06` → mergee sur main.
