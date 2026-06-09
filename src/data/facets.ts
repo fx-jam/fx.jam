@@ -15,6 +15,12 @@
  * (sous-niveaux face A / face B, intégrations, etc.) au fil de la refonte.
  */
 
+import sonData from './son.json';
+import regieData from './regie.json';
+import coursData from './cours.json';
+import outilsData from './outils.json';
+import contactData from './contact.json';
+
 export type FacetKey =
   | 'son'
   | 'regie'
@@ -34,22 +40,22 @@ export interface Facet {
 export const FACETS: readonly Facet[] = [
   {
     key: 'son',
-    label: 'Son',
-    teaser: 'DJ & Live — psytrance, hi-tech, goa',
+    label: sonData.label || 'Son',
+    teaser: sonData.teaser || 'DJ & Live — psytrance, hi-tech, goa',
     href: '/son',
     enabled: true,
   },
   {
     key: 'regie',
-    label: 'Régie',
-    teaser: 'Ingénierie son — FOH, X32/M32, festivals',
+    label: regieData.label || 'Régie',
+    teaser: regieData.teaser || 'Ingénierie son — FOH, X32/M32, festivals',
     href: '/regie',
     enabled: true,
   },
   {
     key: 'cours',
-    label: 'Cours',
-    teaser: 'Cours MAO — Ableton, production',
+    label: coursData.label || 'Cours',
+    teaser: coursData.teaser || 'Cours MAO — Ableton, production',
     href: '/cours',
     enabled: true,
   },
@@ -62,19 +68,19 @@ export const FACETS: readonly Facet[] = [
   },
   {
     key: 'outils',
-    label: 'Outils',
-    teaser: 'Utilitaires — BPM, pitch, samples',
+    label: outilsData.label || 'Outils',
+    teaser: outilsData.teaser || 'Utilitaires — BPM, pitch, samples',
     href: '/outils',
     enabled: true,
   },
   {
     key: 'contact',
-    label: 'Contact',
-    teaser: 'Booking, liens, réseaux',
+    label: contactData.label || 'Contact',
+    teaser: contactData.teaser || 'Booking, liens, réseaux',
     href: '/contact',
     enabled: true,
   },
-] as const;
+];
 
 /** Retourne la liste des facettes affichables (enabled === true). */
 export const visibleFacets = (): readonly Facet[] =>
