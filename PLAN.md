@@ -186,3 +186,4 @@ Ordre logique :
 ---
 
 *Document maintenu par Fx + Claude. Source de vérité conceptuelle = `ARCHITECTURE.md`. Brief Claude Code = `CLAUDE.md`.*
+
