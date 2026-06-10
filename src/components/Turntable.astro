@@ -1,6 +1,13 @@
 ---
 import { visibleFacets } from '../data/facets';
 import siteData from '../data/site.json';
+import { getCollection } from 'astro:content';
+import sonJson    from '../data/son.json';
+import regieJson  from '../data/regie.json';
+import coursJson  from '../data/cours.json';
+import blogJson   from '../data/blog.json';
+import outilsJson from '../data/outils.json';
+import contactJson from '../data/contact.json';
 
 const facets = visibleFacets();
 const N = facets.length;
@@ -28,6 +35,41 @@ function arcPath(angleDeg: number, r: number): string {
     : `M ${ex.toFixed(3)},${ey.toFixed(3)} A ${r},${r} 0 0 0 ${sx.toFixed(3)},${sy.toFixed(3)}`;
 }
 
+// ── Données overlay par facette ───────────────────────────────────────────
+const OVERLAY_GIGS_COUNT = 3;
+const facetJsonMap: Record<string, Record<string, unknown>> = {
+  son: sonJson as Record<string, unknown>,
+  regie: regieJson as Record<string, unknown>,
+  cours: coursJson as Record<string, unknown>,
+  blog: blogJson as Record<string, unknown>,
+  outils: outilsJson as Record<string, unknown>,
+  contact: contactJson as Record<string, unknown>,
+};
+
+const allGigs = await getCollection('gigs', ({ data }) => !data.draft);
+const today = new Date(); today.setHours(0, 0, 0, 0);
+const upcomingGigs = allGigs
+  .filter(g => g.data.date >= today)
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf())
+  .slice(0, OVERLAY_GIGS_COUNT);
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+const STREAM_KEYS = ['soundcloud', 'mixcloud', 'spotify'] as const;
+
+interface OverlayData {
+  key: string;
+  label: string;
+  teaser: string;
+  href: string;
+  headline: string;
+  streamLinks: { key: string; url: string; label: string }[];
+  otherLinks:  { key: string; url: string }[];
+  photos: string[];
+  isSon: boolean;
+}
+
 const labelItems = facets.map((facet, i) => ({
   key:      facet.key,
   label:    facet.label,
@@ -36,6 +78,32 @@ const labelItems = facets.map((facet, i) => ({
   angleDeg: i * 360 / N,
   arcD:     arcPath(i * 360 / N, rBaseline),
 }));
+
+const overlayItems: OverlayData[] = labelItems.map(item => {
+  const d = facetJsonMap[item.key] || {};
+  const links = (d.links || {}) as Record<string, string>;
+  const streamLinks = STREAM_KEYS
+    .filter(k => links[k])
+    .map(k => ({
+      key: k,
+      url: links[k],
+      label: k === 'soundcloud' ? 'SoundCloud' : k === 'mixcloud' ? 'Mixcloud' : 'Spotify',
+    }));
+  const otherLinks = Object.entries(links)
+    .filter(([k, v]) => !(STREAM_KEYS as readonly string[]).includes(k) && v)
+    .map(([k, v]) => ({ key: k, url: v }));
+  return {
+    key:         item.key,
+    label:       item.label,
+    teaser:      item.teaser,
+    href:        item.href,
+    headline:    String(d.headline || item.label),
+    streamLinks,
+    otherLinks,
+    photos:      Array.isArray(d.photos) ? (d.photos as string[]) : [],
+    isSon:       item.key === 'son',
+  };
+});
 ---
 
 <div class="scene" data-state="0" data-n-facets={N}>
@@ -143,6 +211,96 @@ const labelItems = facets.map((facet, i) => ({
     ))}
 
   </div>
+
+  <!-- ── Overlays état 2 (un par facette) ───────────────────── -->
+  {overlayItems.map(ov => (
+    <div
+      class="facet-overlay"
+      id={`overlay-${ov.key}`}
+      data-facet={ov.key}
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${ov.label} — aperçu`}
+    >
+      <button class="overlay-close" aria-label="Fermer">×</button>
+      <div class="overlay-inner">
+        <header class="overlay-hd">
+          <span class={`overlay-chip chip--${ov.key}`}>{ov.label}</span>
+          <h2 class="overlay-headline">{ov.headline}</h2>
+          <p class="overlay-teaser">{ov.teaser}</p>
+        </header>
+
+        {ov.isSon && (
+          <details class="overlay-block" open>
+            <summary class="overlay-block-title">Gigs</summary>
+            {upcomingGigs.length > 0 ? (
+              <ul class="overlay-gig-list">
+                {upcomingGigs.map(g => (
+                  <li class="overlay-gig-row">
+                    <time class="og-date">{fmtDate(g.data.date)}</time>
+                    <span class="og-title">{g.data.title}</span>
+                    <span class="og-format">{g.data.format}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="overlay-empty">Prochaines dates bientôt annoncées.</p>
+            )}
+            <a href="/son" class="overlay-link-more">Voir tous →</a>
+          </details>
+        )}
+
+        {ov.streamLinks.length > 0 && (
+          <details class="overlay-block">
+            <summary class="overlay-block-title">Écoute</summary>
+            <div class="overlay-stream-btns">
+              {ov.streamLinks.map(sl => (
+                <a href={sl.url} target="_blank" rel="noopener" class={`overlay-btn obtn--${ov.key}`}>
+                  {sl.label}
+                </a>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {ov.photos.length > 0 && (
+          <details class="overlay-block">
+            <summary class="overlay-block-title">Visuels</summary>
+            <div class="overlay-photos">
+              {ov.photos.map((url, pi) => (
+                <button class="overlay-photo-btn" data-src={url} aria-label={`Photo ${pi + 1}`} type="button">
+                  <img src={url} alt="" loading="lazy"/>
+                </button>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {ov.otherLinks.length > 0 && (
+          <details class="overlay-block">
+            <summary class="overlay-block-title">Liens</summary>
+            <ul class="overlay-links-list">
+              {ov.otherLinks.map(ol => (
+                <li><a href={ol.url} target="_blank" rel="noopener" class="overlay-link">{ol.key}</a></li>
+              ))}
+            </ul>
+          </details>
+        )}
+
+        <a href={ov.href} class={`overlay-explore explore--${ov.key}`}>
+          Explorer la page complète →
+        </a>
+      </div>
+    </div>
+  ))}
+
+  <!-- Lightbox photos -->
+  <div id="tt-lightbox" class="tt-lightbox" aria-hidden="true" role="dialog" aria-modal="true">
+    <button class="tt-lb-close" aria-label="Fermer">×</button>
+    <img id="tt-lb-img" src="" alt="" class="tt-lb-img"/>
+  </div>
+
 </div>
 
 <style>
@@ -374,6 +532,310 @@ const labelItems = facets.map((facet, i) => ({
     outline: 2px solid var(--border);
     outline-offset: 3px;
   }
+
+  /* ─── Overlay état 2 ─────────────────────────────────────────── */
+  .facet-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-app);
+    clip-path: circle(0px at var(--ov-cx, 50vw) var(--ov-cy, 50vh));
+    transition: clip-path 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+    overflow-y: auto;
+    pointer-events: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .facet-overlay.is-open {
+    clip-path: circle(150vmax at var(--ov-cx, 50vw) var(--ov-cy, 50vh));
+    pointer-events: auto;
+  }
+
+  .overlay-close {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  .overlay-close:hover { background: var(--bg-surface); }
+
+  .overlay-inner {
+    width: 100%;
+    max-width: 640px;
+    padding: 5rem 2rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .overlay-hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  .overlay-chip {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    border: 1px solid currentColor;
+  }
+  .chip--son     { color: var(--facet-son); }
+  .chip--regie   { color: var(--facet-regie); }
+  .chip--cours   { color: var(--facet-cours); }
+  .chip--blog    { color: var(--facet-blog); }
+  .chip--outils  { color: var(--facet-outils); }
+  .chip--contact { color: var(--facet-contact); }
+
+  .overlay-headline {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .overlay-teaser {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    max-width: 36ch;
+    margin: 0;
+    text-align: center;
+  }
+
+  /* ─── Blocs accordéon ───────────────────────────────────────── */
+  .overlay-block {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .overlay-block-title {
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    user-select: none;
+    transition: color 0.15s ease;
+  }
+  .overlay-block-title::-webkit-details-marker { display: none; }
+  .overlay-block-title::after {
+    content: '▾';
+    margin-left: auto;
+    transition: transform 0.18s ease;
+  }
+  .overlay-block[open] .overlay-block-title::after { transform: rotate(180deg); }
+  .overlay-block[open] .overlay-block-title { color: var(--text-secondary); }
+
+  /* Gigs */
+  .overlay-gig-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 1.2rem;
+  }
+  .overlay-gig-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 48px;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .og-date {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  .og-title {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .og-format {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    text-align: right;
+  }
+  .overlay-empty {
+    padding: 0.65rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+  .overlay-link-more {
+    display: block;
+    padding: 0.65rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--facet-son);
+    text-decoration: none;
+    border-top: 1px solid var(--border);
+  }
+  .overlay-link-more:hover { text-decoration: underline; }
+
+  /* Streaming */
+  .overlay-stream-btns {
+    padding: 0.75rem 1.2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+  }
+  .overlay-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  .obtn--son     { color: var(--facet-son); }
+  .obtn--regie   { color: var(--facet-regie); }
+  .obtn--cours   { color: var(--facet-cours); }
+  .obtn--blog    { color: var(--facet-blog); }
+  .obtn--outils  { color: var(--facet-outils); }
+  .obtn--contact { color: var(--facet-contact); }
+  .overlay-btn:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+
+  /* Photos */
+  .overlay-photos {
+    padding: 0.75rem 1.2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+  }
+  .overlay-photo-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 4px;
+    overflow: hidden;
+    aspect-ratio: 1;
+  }
+  .overlay-photo-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.2s ease;
+  }
+  .overlay-photo-btn:hover img { opacity: 0.8; }
+
+  /* Liens */
+  .overlay-links-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 1.2rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .overlay-link {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .overlay-link:hover { color: var(--text-primary); text-decoration: underline; }
+
+  /* Bouton Explorer */
+  .overlay-explore {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: background 0.2s ease;
+    text-align: center;
+  }
+  .explore--son     { color: var(--facet-son); }
+  .explore--regie   { color: var(--facet-regie); }
+  .explore--cours   { color: var(--facet-cours); }
+  .explore--blog    { color: var(--facet-blog); }
+  .explore--outils  { color: var(--facet-outils); }
+  .explore--contact { color: var(--facet-contact); }
+  .overlay-explore:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+
+  /* ─── Lightbox photos ────────────────────────────────────────── */
+  .tt-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .tt-lightbox.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .tt-lb-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+  .tt-lb-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>
 
 <script>
@@ -585,13 +1047,78 @@ const labelItems = facets.map((facet, i) => ({
       }, { signal: sig });
     });
 
+    // Overlay état 2
+    const overlays = [...document.querySelectorAll<HTMLElement>('.facet-overlay')];
+    const lightbox = document.getElementById('tt-lightbox')!;
+    const lightboxImg = document.getElementById('tt-lb-img') as HTMLImageElement;
+
+    function openOverlay(facetKey: string): void {
+      const rect = centerEl.getBoundingClientRect();
+      const cx = Math.round(rect.left + rect.width  / 2);
+      const cy = Math.round(rect.top  + rect.height / 2);
+      const ov = document.getElementById(`overlay-${facetKey}`);
+      if (!ov) return;
+      overlays.forEach(o => { o.classList.remove('is-open'); o.setAttribute('aria-hidden', 'true'); });
+      ov.style.setProperty('--ov-cx', `${cx}px`);
+      ov.style.setProperty('--ov-cy', `${cy}px`);
+      ov.classList.add('is-open');
+      ov.setAttribute('aria-hidden', 'false');
+      appState = 2;
+      scene.dataset.state = '2';
+    }
+
+    function closeOverlay(): void {
+      overlays.forEach(o => { o.classList.remove('is-open'); o.setAttribute('aria-hidden', 'true'); });
+      appState = 1;
+      scene.dataset.state = '1';
+    }
+
     centerEl.addEventListener('click', () => {
-      if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
+      if (appState === 1 && activeFacetIdx >= 0) {
+        openOverlay(pastilles[activeFacetIdx].dataset.facet!);
+      }
+    }, { signal: sig });
+
+    // Fermer overlay : × ou clic hors .overlay-inner ou Escape
+    overlays.forEach(ov => {
+      ov.querySelector('.overlay-close')?.addEventListener('click', () => closeOverlay(), { signal: sig });
+      ov.addEventListener('click', (e) => {
+        if (!(e.target as Element).closest('.overlay-inner') &&
+            !(e.target as Element).closest('.overlay-close')) {
+          closeOverlay();
+        }
+      }, { signal: sig });
+    });
+
+    // Lightbox photos
+    document.querySelectorAll<HTMLElement>('.overlay-photo-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const src = btn.dataset.src || '';
+        if (!src) return;
+        lightboxImg.src = src;
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+      }, { signal: sig });
+    });
+    lightbox.querySelector('.tt-lb-close')?.addEventListener('click', () => {
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+    }, { signal: sig });
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) {
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+      }
     }, { signal: sig });
 
     // Accélération clavier progressive
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { keyHeldDir = 0; keyHeldFrames = 0; setState(0); return; }
+      if (e.key === 'Escape') {
+        keyHeldDir = 0; keyHeldFrames = 0;
+        if (appState === 2) closeOverlay();
+        else setState(0);
+        return;
+      }
       if (e.key === 'Enter')  { if (appState === 1 && activeFacetHref) navigate(activeFacetHref); return; }
 
       const isRight = e.key === 'ArrowRight' || e.key === 'ArrowDown';
