@@ -8,6 +8,29 @@
 
 ---
 
+## Session 10/06/2026 — Jog état 2 : labels SVG + overlay + comportement (feat/jog-etat2)
+
+**Branche** : `feat/jog-etat2` — EN ATTENTE DE VALIDATION avant merge sur main.
+
+**Fait** : execution integrale du brief `brief-jog-etat2.md` en 5 etapes, chacune commitee et pushee.
+
+1. **Étape 1 — Typographie textPath** : labels facettes remplacés par des `<text><textPath>` SVG calculés dynamiquement (rBaseline, fontSize, arcPath). Fond disque passé à oklch luminosité 0.25-0.35 (effet CD sombre). Pastilles devenues zones de clic invisibles.
+2. **Étape 2 — Logo centre** : champ `logo_url` dans site.json. Si rempli → SVG image 44×44 au centre. Sinon → texte HAMCAT. Champ ajouté dans config.yml Sveltia.
+3. **Étape 3 — Comportement** : état 0 strict (activeIdx=-1 par défaut). Accélération clavier progressive (BASE_STEP=2.5°, MAX_STEP=12°, frames_held * 0.15). Contour coloré `--active-facet-color` sur :root + radial gradient `::after` sur .turntable avec transition 0.7s.
+4. **Étape 4 — Overlay état 2** : clic .disk-center en état 1 → clip-path circle(0→150vmax) depuis position centre jog. 4 blocs accordéon (Gigs/Écoute/Visuels/Liens) + bouton Explorer. Lightbox photos. Fermeture : Escape, ×, clic hors .overlay-inner. Champs `photos[]` et `image_fond` ajoutés dans tous les JSON facettes.
+5. **Étape 5 — Symétrie** : son.astro `.section` → flex col align-items center margin auto. `.links-streaming` → justify-content center. `.home` → align-self center. Stubs/blog/404 déjà centrés.
+
+**Build** : 8 pages, zéro erreur (vérifié après chaque étape).
+
+**Vérification avant merge** :
+- hamcat.live/feat/jog-etat2 → labels textPath arc lisibles, fond CD sombre
+- Rotation jog → accélération progressive au clavier
+- Clic centre en état 1 → overlay s'ouvre en cercle depuis ce point
+- Escape / × / clic hors → fermeture
+- Logo visible si site.json.logo_url rempli (URLs disponibles : fond.png / logo.jpg sur media.hamcat.live)
+
+---
+
 ## Session 09/06/2026 — CMS complet : zéro texte hardcodé (feat/cms-complet)
 
 **Branche** : `feat/cms-complet` — EN ATTENTE DE VALIDATION avant merge sur main.

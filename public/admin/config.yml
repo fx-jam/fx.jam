@@ -78,6 +78,7 @@ collections:
           - { label: "Tagline", name: tagline, widget: string }
           - { label: "Bio courte", name: bio, widget: text, required: false }
           - { label: "Ville", name: location, widget: string, required: false }
+          - { label: "Logo (URL)", name: logo_url, widget: string, required: false, hint: "URL d'une image PNG/SVG pour le centre du jog (44×44 SVG units)" }
           - label: "Liens"
             name: links
             widget: object
