@@ -174,3 +174,103 @@ centrale d'un CD :
 4. Stroke 2px + SourceGraphic dans les filtres
 5. Fond disque plus irisé
 6. npm run build → push feat/jog-etat2
+
+---
+
+## Corrections supplémentaires (ajout post-review)
+
+### 6. Clic pastille → overlay direct (supprime l'état 1.5 parasite)
+
+Actuellement : clic pastille → setState(1) → centre s'agrandit → clic sur centre → overlay.
+Attendu : clic pastille → overlay direct (un seul clic).
+
+Dans le handler des pastilles, remplacer :
+```javascript
+pastilles.forEach((el, idx) => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation(); snapToFacet(idx); setState(1, idx);
+  }, { signal: sig });
+});
+```
+Par :
+```javascript
+pastilles.forEach((el, idx) => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    snapToFacet(idx);
+    setState(1, idx);               // facette active pour la logique interne
+    openOverlay(pastilles[idx].dataset.facet!);  // overlay immédiat
+  }, { signal: sig });
+});
+```
+
+L'état 1 reste fonctionnel pour le drag et le clavier (le disque tourne, une facette
+est mise en surbrillance), mais un clic direct sur une pastille ouvre l'overlay sans
+passer par l'affichage intermédiaire du centre agrandi.
+
+### 7. Simplifier l'état 1 visuellement
+
+L'état 1 agrandit le centre à --center-size-open (42% du jog) et affiche
+un label/teaser dans le centre — ce "mini-overlay" est confus.
+
+- Supprimer l'agrandissement du centre en état 1 :
+  `.scene[data-state="1"] .disk-center` → garder la même taille qu'en état 0
+- Supprimer ou réduire le contenu `.center-s1` (label/teaser/cta dans le centre)
+- L'état 1 = uniquement : indicateur coloré, fond subtle, label actif sur le disque
+
+Si on veut garder une indication visuelle du nom de la facette en état 1,
+afficher juste le label coloré en petit texte centré dans le cercle central
+(pas le teaser, pas la CTA "ouvrir →").
+
+### 8. Hitbox des pastilles → secteurs couvrant tout le mot
+
+Les pastilles font 72×72px → trop petit.
+Deux options, choisir la plus simple :
+
+Option A — Zones de clic SVG en secteur (dans le SVG overlay fixe, après fix architecture) :
+Ajouter des `<path>` de secteur invisibles dans le SVG overlay, mis à jour
+à chaque frame en même temps que les arcs :
+
+```javascript
+// Dans update(), à chaque frame, après le recalcul des arcs :
+const sectorPath = (angleDeg: number, inner = 12, outer = 100): string => {
+  const toRad = (d: number) => (d - 90) * Math.PI / 180;
+  const half = ARC_DEG / 2;
+  const s = toRad(angleDeg - half), e = toRad(angleDeg + half);
+  const p = (r: number, a: number) => [r*Math.cos(a), r*Math.sin(a)];
+  const [osx,osy]=p(outer,s), [oex,oey]=p(outer,e);
+  const [isx,isy]=p(inner,s), [iex,iey]=p(inner,e);
+  return `M${osx},${osy} A${outer},${outer} 0 0 1 ${oex},${oey} L${iex},${iey} A${inner},${inner} 0 0 0 ${isx},${isy} Z`;
+};
+// Mettre à jour les paths de hit à chaque frame :
+hitPaths[i].setAttribute('d', sectorPath(absAngleDeg));
+```
+
+Option B — Agrandir les pastilles divs (rapide) :
+Remplacer les pastilles carrées 72px par des ellipses plus larges :
+```css
+.pastille {
+  width: 140px;
+  height: 80px;
+  border-radius: 50%;
+  /* ... reste inchangé */
+}
+```
+
+Choisir Option A car elle sera recalculée dynamiquement avec la rotation,
+et l'Option B laisserait des zones de clic qui se chevauchent en cas de
+beaucoup de facettes.
+
+### 9. Logo et fond : remplir dans site.json
+
+Mettre à jour src/data/site.json :
+```json
+{
+  "logo_url": "https://media.hamcat.live/logos/logo.jpg"
+}
+```
+
+Note : fond.png dans R2 n'a pas de champ dédié dans le code actuel.
+Si Fx veut l'utiliser comme fond global de la page ou du disque,
+ajouter un champ "fond_url" dans site.json et câbler dans BaseLayout ou Turntable.
+À confirmer avec Fx.
