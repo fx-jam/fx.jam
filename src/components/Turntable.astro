@@ -181,6 +181,21 @@ const labelItems = facets.map((facet, i) => ({
     flex-shrink: 0;
     z-index: 1;
   }
+  /* Contour coloré par facette active */
+  .turntable::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 60%,
+      color-mix(in srgb, var(--active-facet-color, transparent) 10%, transparent) 100%
+    );
+    pointer-events: none;
+    transition: background 0.7s ease;
+    z-index: 0;
+  }
 
   /* ─── Disque : fond CD sombre (oklch luminosité 0.25-0.35) ─── */
   .disk {
@@ -367,8 +382,10 @@ const labelItems = facets.map((facet, i) => ({
   let N_FACETS   = 6;
   let STEP       = 60;
   let BASE_ANGLES: number[] = [];
-  const FRICTION   = 0.97;
-  const VEL_THRESH = 0.5;
+  const FRICTION    = 0.97;
+  const VEL_THRESH  = 0.5;
+  const BASE_STEP   = 2.5;   // deg/press initial
+  const MAX_STEP    = 12;    // deg/press max
 
   let targetAngle  = 0;
   let currentAngle = 0;
@@ -382,6 +399,10 @@ const labelItems = facets.map((facet, i) => ({
   let activeFacetHref = '';
   let rafId: number | null = null;
   let ctrl: AbortController | null = null;
+
+  // Accélération clavier
+  let keyHeldFrames = 0;
+  let keyHeldDir    = 0; // +1 / -1 / 0
 
   document.addEventListener('astro:page-load', () => {
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
@@ -529,6 +550,9 @@ const labelItems = facets.map((facet, i) => ({
         previewTeaser.textContent = pastilles[facetIdx].dataset.teaser!;
         centerEl.style.setProperty('--preview-c', `var(--facet-${key})`);
         bgStage.style.setProperty('--stage-c',    `var(--facet-${key})`);
+        document.documentElement.style.setProperty('--active-facet-color', `var(--facet-${key})`);
+      } else if (newState === 0) {
+        document.documentElement.style.setProperty('--active-facet-color', 'transparent');
       }
 
       targetRingR = newState === 1 ? RING_R_1 : RING_R_0;
@@ -565,20 +589,30 @@ const labelItems = facets.map((facet, i) => ({
       if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
     }, { signal: sig });
 
+    // Accélération clavier progressive
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { setState(0); }
-      else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        const idx = (getTargetIdx() + 1) % N_FACETS;
-        velAngle = STEP * 0.35;
-        snapToFacet(idx); setState(1, idx);
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const idx = (getTargetIdx() - 1 + N_FACETS) % N_FACETS;
-        velAngle = -STEP * 0.35;
-        snapToFacet(idx); setState(1, idx);
-      } else if (e.key === 'Enter') {
-        if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
+      if (e.key === 'Escape') { keyHeldDir = 0; keyHeldFrames = 0; setState(0); return; }
+      if (e.key === 'Enter')  { if (appState === 1 && activeFacetHref) navigate(activeFacetHref); return; }
+
+      const isRight = e.key === 'ArrowRight' || e.key === 'ArrowDown';
+      const isLeft  = e.key === 'ArrowLeft'  || e.key === 'ArrowUp';
+      if (!isRight && !isLeft) return;
+      e.preventDefault();
+
+      const dir = isRight ? 1 : -1;
+      if (dir !== keyHeldDir) { keyHeldDir = dir; keyHeldFrames = 0; }
+      keyHeldFrames++;
+
+      const step  = Math.min(BASE_STEP + keyHeldFrames * 0.15, MAX_STEP);
+      velAngle = dir * step * 0.35;
+      const idx = (getTargetIdx() + dir + N_FACETS) % N_FACETS;
+      snapToFacet(idx); setState(1, idx);
+    }, { signal: sig });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' ||
+          e.key === 'ArrowLeft'  || e.key === 'ArrowUp') {
+        keyHeldDir = 0; keyHeldFrames = 0;
       }
     }, { signal: sig });
 
