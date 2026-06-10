@@ -1,5 +1,6 @@
 ---
 import { visibleFacets } from '../data/facets';
+import siteData from '../data/site.json';
 
 const facets = visibleFacets();
 const N = facets.length;
@@ -112,7 +113,13 @@ const labelItems = facets.map((facet, i) => ({
 
     <div class="disk-center" id="disk-center">
       <div class="center-s0">
-        <span class="center-name">Hamcat</span>
+        {siteData.logo_url ? (
+          <svg viewBox="-22 -22 44 44" class="center-logo" aria-label={siteData.displayName}>
+            <image href={siteData.logo_url} x="-22" y="-22" width="44" height="44" preserveAspectRatio="xMidYMid meet"/>
+          </svg>
+        ) : (
+          <span class="center-name">{siteData.displayName}</span>
+        )}
       </div>
       <div class="center-s1">
         <span class="preview-label" id="preview-label"></span>
@@ -285,6 +292,11 @@ const labelItems = facets.map((facet, i) => ({
     letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--text-tertiary);
+  }
+  .center-logo {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
   }
   .preview-label {
     font-family: var(--font-display);
