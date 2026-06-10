@@ -1,4 +1,85 @@
-# CLAUDE_LOG.md — Journal de bord hamcat.live
+# CL
+## Session 10/06/2026 (suite) — Conception état 2 + correctifs jog (feat/jog-fix2)
+
+**Branches mergées** : `feat/jog-etat2` (merge 20h) puis `feat/jog-fix2` (merge en fin de session).
+
+### Chantier de conception (Claude chat web)
+
+Plusieurs cycles d'itération sur le design du jog avant de briefer Claude Code :
+
+**Typographie :**
+- Labels en arc `textPath` SVG, taille uniforme calculée depuis le plus long label :
+  `fontSize = R_CAP / (longestLen * COND_RATIO / ARC_RAD + CAP_RATIO)` — zéro hardcode
+- COND_RATIO final : 0.62 (valeur empirique Barlow Condensed réel dans le navigateur)
+- Même `rBaseline` pour tous les labels (aligne les caps sur le même cercle)
+- Stroke : `paint-order: stroke fill`, stroke-width 2, couleur var(--bg-app)
+- Glow en cône : masque `radialGradient` transparent au centre → opaque au bord,
+  appliqué sur le label actif. feGaussianBlur `in="SourceGraphic"` (pas SourceAlpha)
+
+**Fond du disque :**
+- CSS `conic-gradient` pur avec oklch L=0.50-0.55 (irisé, plus lumineux que l'ancien)
+- `radial-gradient` argent centré superposé (brillance CD)
+- Aucun séparateur ni cercle concentrique
+
+**Comportement :**
+- État 0 = accueil pur (activeIdx=-1, aucune facette)
+- État 1 = facette active : center-s1 (label+teaser compact) SANS agrandissement du cercle
+- Clic pastille → overlay direct (saute l'état 1.5 parasite)
+- Accélération clavier : step = min(BASE_STEP + frames_held * 0.15, MAX_STEP)
+- Contour coloré : CSS var `--active-facet-color` → fond subtil + halo disque (transition 0.7s)
+
+**Overlay état 2 :**
+- `clip-path: circle(0% → 150vmax)` depuis `--ov-cx / --ov-cy` (position centre jog)
+- 4 blocs accordéon `<details>` : Gigs / Écoute / Visuels / Liens
+- Lightbox photos : champ `photos[]` ajouté dans tous les JSON facettes
+- Fermeture : Escape, ×, clic hors `.overlay-inner`
+
+**Logo et fond :**
+- `logo_url` dans site.json → `<img class="center-logo-bg">` `object-fit: cover` dans le cercle central
+- `fond_url` dans site.json → image de fond page entière, opacity 0.22
+
+### Bug racine identifié et corrigé (feat/jog-fix2)
+
+**Cause** : décalage de convention d'angles entre pastilles et arcs SVG.
+- Pastilles : `rad = deg * PI/180` (convention SVG, -90°=haut)
+- arcPathJS : `toRad = (d-90)*PI/180` (convention "0°=haut")
+- Avec `BASE_ANGLES[i] = i * STEP - 90`, les deux systèmes étaient décalés de 90°
+
+**Symptômes** : hitbox décalée d'une facette, flip déclenché à la position sélecteur,
+navigation flèches entre les mots, arcs mal positionnés.
+
+**Correction** : une seule ligne — `arcPathJS(absAngleDeg + 90, R_BASELINE)` au lieu de
+`arcPathJS(absAngleDeg, R_BASELINE)`. Plus suppression du `+90` parasite dans la formule de flip interne.
+
+**Corrections accompagnatrices** :
+- Logo cover dans cercle central (taille 100% du cercle, z-index derrière center-s1)
+- Fond page opacity 0.22
+- Glow JS dynamique : `labelEls[i].setAttribute('filter', isActive ? 'url(#tt-glow-l)' : 'url(#tt-glow-s)')`
+- Suppression agrandissement disk-center en état 1
+
+### État après merge
+
+- `feat/jog-fix2` mergé sur main, branche supprimée
+- `brief-jog-etat2-fix.md` et `brief-jog-fix2.md` présents à la racine (à nettoyer si souhaité)
+- Déploiement Cloudflare en cours au moment de la clôture
+
+### À faire sessions suivantes
+
+- [ ] Remplir `logo_url` et `fond_url` dans le CMS (`hamcat.live/admin`)
+- [ ] Tester rendu final (glow, chevauchement lettres, flip, logo, fond)
+- [ ] Déformation trapézoïdale du texte (haut plus large que bas) — feature déférée, Canvas API ou SVG lettre par lettre
+- [ ] Fond de page par facette (champ `image_fond` câblé dans overlay, pas encore dans le fond global)
+- [ ] Contenu médias : 20 mixes Mixcloud/SoundCloud à poster (attente plan de com Fx)
+- [ ] fxsync M2 : chemin corrigé → `gdrive:1_PROJETS/hamcat.live` (majuscules obligatoires)
+- [ ] SSH X13 : known_hosts opérationnel, `ssh fx "echo OK"` fonctionne
+
+### Infra / outils
+
+- `brief-jog-etat2.md` : brief initial de conception état 2
+- `brief-jog-etat2-fix.md` : correctifs post-review (SVG labels fixe, COND_RATIO, SourceGraphic)
+- `brief-jog-fix2.md` : correctif final (bug +90, flip, logo cover, état 1)
+
+AUDE_LOG.md — Journal de bord hamcat.live
 
 > **Journal chronologique des sessions de travail.** Une entree par session : ce qui a ete fait, decide, ou laisse en cours.
 > Ne decrit PAS l'etat courant du projet (role de PLAN.md) ni l'architecture (role d'ARCHITECTURE.md). C'est la memoire partagee entre les instances (Fx, Claude chat web, Claude Code).
@@ -324,3 +405,4 @@ Historique non journalise. Synthese de l'etat atteint (detail dans PLAN.md / ARC
 5. Entretien : MAJ PLAN.md (perime depuis 29/05), graver "montrer avant merge" dans CLAUDE.md, re-cloner M2 (encore ancien historique).
 
 **Note responsive** : la grille gigs a 5 colonnes fixes sera a l'etroit sur mobile -> chantier responsive Son a prevoir.
+
