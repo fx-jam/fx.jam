@@ -1,86 +1,145 @@
 ---
-/**
- * Turntable — composant platine vinyle (étape 3 : machine à 3 états)
- *
- * État 0 — Accueil  : le disque tourne librement, centre = "Hamcat"
- * État 1 — Aperçu   : clic sur une pastille → snap + centre s'agrandit
- *                     + anneau s'écarte (effet diaphragme) + aperçu de la facette
- * État 2 — Page     : clic sur le centre → navigation vers l'URL de la facette
- *
- * Retour : Échap ou clic hors du disque → état 0
- */
-
 import { visibleFacets } from '../data/facets';
 
 const facets = visibleFacets();
 const N = facets.length;
-const RING_R = 250; // px — doit correspondre à RING_R_0 dans le script JS
 
-const items = facets.map((facet, i) => {
-  const deg = (i * 360 / N) - 90;
-  const rad = (deg * Math.PI) / 180;
-  return {
-    ...facet,
-    x: Math.round(Math.cos(rad) * RING_R),
-    y: Math.round(Math.sin(rad) * RING_R),
-  };
-});
+// ── Labels en arc : calcul dynamique (zéro hardcode) ──────────────────────
+const longestLen = Math.max(...facets.map(f => [...f.label].length));
+const COND_RATIO = 0.42;
+const CAP_RATIO  = 0.72;
+const R_CAP      = 92;
+const ARC_DEG    = 360 / N - 4;
+const ARC_RAD    = ARC_DEG * Math.PI / 180;
+const fontSize   = R_CAP / (longestLen * COND_RATIO / ARC_RAD + CAP_RATIO);
+const rBaseline  = R_CAP - CAP_RATIO * fontSize;
+
+function arcPath(angleDeg: number, r: number): string {
+  const toRad = (d: number) => (d - 90) * Math.PI / 180;
+  const half = ARC_DEG / 2;
+  const s = toRad(angleDeg - half);
+  const e = toRad(angleDeg + half);
+  const upper = angleDeg <= 90 || angleDeg >= 270;
+  const sx = r * Math.cos(s), sy = r * Math.sin(s);
+  const ex = r * Math.cos(e), ey = r * Math.sin(e);
+  return upper
+    ? `M ${sx.toFixed(3)},${sy.toFixed(3)} A ${r},${r} 0 0 1 ${ex.toFixed(3)},${ey.toFixed(3)}`
+    : `M ${ex.toFixed(3)},${ey.toFixed(3)} A ${r},${r} 0 0 0 ${sx.toFixed(3)},${sy.toFixed(3)}`;
+}
+
+const labelItems = facets.map((facet, i) => ({
+  key:      facet.key,
+  label:    facet.label,
+  teaser:   facet.teaser,
+  href:     facet.href,
+  angleDeg: i * 360 / N,
+  arcD:     arcPath(i * 360 / N, rBaseline),
+}));
 ---
 
-<div class="scene" data-state="0" data-n-facets={N} data-ring-r={RING_R}>
+<div class="scene" data-state="0" data-n-facets={N}>
 
-  <!-- Fond coloré (arrière-plan état 1) -->
   <div class="bg-stage" aria-hidden="true"></div>
 
   <div class="turntable">
 
-    <!-- Indicateur fixe 12h (triangle hors disque, ne tourne pas) -->
     <div class="disk-indicator" aria-hidden="true"></div>
 
-    <!-- Disque plein -->
-    <div class="disk"></div>
+    <!-- Disque : fond CD sombre + labels textPath SVG -->
+    <div class="disk">
+      <svg
+        class="disk-labels"
+        viewBox="-100 -100 200 200"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <!-- Masque CD : opacité croît du centre vers le bord -->
+          <radialGradient id="tt-cd-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="25%" stop-color="black"/>
+            <stop offset="100%" stop-color="white"/>
+          </radialGradient>
+          <mask id="tt-cd-mask">
+            <rect x="-100" y="-100" width="200" height="200" fill="url(#tt-cd-grad)"/>
+          </mask>
 
-    <!-- Anneau de track (mis à jour par JS) -->
+          <!-- Glow large (label actif) -->
+          <filter id="tt-glow-l" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4"   result="b1"/>
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="b2"/>
+            <feMerge>
+              <feMergeNode in="b1"/>
+              <feMergeNode in="b2"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Glow subtil (labels inactifs) -->
+          <filter id="tt-glow-s" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="b"/>
+            <feMerge>
+              <feMergeNode in="b"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Arc path par facette -->
+          {labelItems.map(item => (
+            <path id={`tt-arc-${item.key}`} d={item.arcD} fill="none"/>
+          ))}
+        </defs>
+
+        {labelItems.map(item => (
+          <text
+            class={`disk-label disk-label--${item.key}`}
+            font-family="Barlow Condensed, Arial Narrow, sans-serif"
+            font-weight="800"
+            font-size={fontSize.toFixed(2)}
+            fill={`var(--facet-${item.key})`}
+            stroke="var(--bg-app)"
+            stroke-width="3"
+            paint-order="stroke fill"
+          >
+            <textPath href={`#tt-arc-${item.key}`} startOffset="50%" text-anchor="middle">
+              {item.label}
+            </textPath>
+          </text>
+        ))}
+      </svg>
+    </div>
+
     <div class="disk-track"></div>
 
-    <!-- Centre -->
     <div class="disk-center" id="disk-center">
-
-      <!-- État 0 : label neutre -->
       <div class="center-s0">
         <span class="center-name">Hamcat</span>
       </div>
-
-      <!-- État 1 : aperçu de la facette sélectionnée -->
       <div class="center-s1">
         <span class="preview-label" id="preview-label"></span>
         <span class="preview-teaser" id="preview-teaser"></span>
         <span class="preview-cta">ouvrir →</span>
       </div>
-
     </div>
 
-    <!-- Pastilles sur la circonférence -->
-    {items.map(({ key, label, teaser, href, x, y }) => (
+    <!-- Zones de clic invisibles (une par facette) -->
+    {labelItems.map(item => (
       <button
         class="pastille"
-        data-facet={key}
-        data-label={label}
-        data-teaser={teaser}
-        data-href={href}
-        style={`--x: ${x}px; --y: ${y}px`}
+        data-facet={item.key}
+        data-label={item.label}
+        data-teaser={item.teaser}
+        data-href={item.href}
+        style="--x: 0px; --y: 0px"
         type="button"
-        aria-label={label}
-      >
-        {label}
-      </button>
+        aria-label={item.label}
+      />
     ))}
 
   </div>
 </div>
 
 <style>
-  /* ─── Scène ────────────────────────────────────────────── */
+  /* ─── Scène ──────────────────────────────────────────────────── */
   .scene {
     position: relative;
     width: 100%;
@@ -91,7 +150,7 @@ const items = facets.map((facet, i) => {
     touch-action: none;
   }
 
-  /* ─── Fond coloré (arrière-plan état 1) ──────────────── */
+  /* ─── Fond coloré (état 1) ───────────────────────────────────── */
   .bg-stage {
     position: absolute;
     inset: 0;
@@ -105,12 +164,9 @@ const items = facets.map((facet, i) => {
     pointer-events: none;
     z-index: 0;
   }
+  .scene[data-state="1"] .bg-stage { opacity: 1; }
 
-  .scene[data-state="1"] .bg-stage {
-    opacity: 1;
-  }
-
-  /* ─── Conteneur de la platine ─────────────────────────── */
+  /* ─── Conteneur platine ──────────────────────────────────────── */
   .turntable {
     position: relative;
     width:  var(--disk-size, 560px);
@@ -119,7 +175,7 @@ const items = facets.map((facet, i) => {
     z-index: 1;
   }
 
-  /* ─── Disque irisé (conic-gradient rotatif) ───────────── */
+  /* ─── Disque : fond CD sombre (oklch luminosité 0.25-0.35) ─── */
   .disk {
     position: absolute;
     inset: 0;
@@ -131,22 +187,42 @@ const items = facets.map((facet, i) => {
       radial-gradient(circle at center, var(--bg-elevated) 0%, transparent 62%),
       conic-gradient(
         from 0deg,
-        color-mix(in oklch, oklch(0.65 0.22   0) 10%, var(--bg-surface))   0deg,
-        color-mix(in oklch, oklch(0.75 0.18  60) 10%, var(--bg-surface))  60deg,
-        color-mix(in oklch, oklch(0.70 0.17 120) 10%, var(--bg-surface)) 120deg,
-        color-mix(in oklch, oklch(0.72 0.14 180) 10%, var(--bg-surface)) 180deg,
-        color-mix(in oklch, oklch(0.65 0.18 240) 10%, var(--bg-surface)) 240deg,
-        color-mix(in oklch, oklch(0.68 0.20 300) 10%, var(--bg-surface)) 300deg,
-        color-mix(in oklch, oklch(0.65 0.22 360) 10%, var(--bg-surface)) 360deg
+        oklch(0.28 0.22   0)   0deg,
+        oklch(0.32 0.18  60)  60deg,
+        oklch(0.30 0.17 120) 120deg,
+        oklch(0.28 0.14 180) 180deg,
+        oklch(0.28 0.18 240) 240deg,
+        oklch(0.30 0.20 300) 300deg,
+        oklch(0.28 0.22 360) 360deg
       );
     transition: box-shadow 0.4s ease;
   }
-
   .scene[data-state="1"] .disk {
     box-shadow: 0 0 80px -20px rgba(0, 0, 0, 0.7);
   }
 
-  /* ─── Anneau de track (mis à jour par JS) ────────────── */
+  /* ─── SVG labels en arc ───────────────────────────────────────── */
+  .disk-labels {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .disk-label {
+    opacity: 0.65;
+    filter: url('#tt-glow-s');
+    transition: opacity 0.25s ease;
+  }
+  .disk-label.is-active {
+    opacity: 1;
+    filter: url('#tt-glow-l');
+    mask: url('#tt-cd-mask');
+  }
+
+  /* ─── Anneau de track ────────────────────────────────────────── */
   .disk-track {
     position: absolute;
     top: 50%;
@@ -160,7 +236,7 @@ const items = facets.map((facet, i) => {
     pointer-events: none;
   }
 
-  /* ─── Cercle central (trou de CD) ────────────────────── */
+  /* ─── Centre ─────────────────────────────────────────────────── */
   .disk-center {
     position: absolute;
     top: 50%;
@@ -173,13 +249,11 @@ const items = facets.map((facet, i) => {
     border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
     overflow: hidden;
     z-index: 2;
-    /* Ressort sur l'ouverture */
     transition:
       width  0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
       height 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
       border-color 0.3s ease;
   }
-
   .scene[data-state="1"] .disk-center {
     width:  var(--center-size-open, 260px);
     height: var(--center-size-open, 260px);
@@ -187,7 +261,6 @@ const items = facets.map((facet, i) => {
     cursor: pointer;
   }
 
-  /* ─── Contenu du centre ───────────────────────────────── */
   .center-s0,
   .center-s1 {
     position: absolute;
@@ -201,11 +274,8 @@ const items = facets.map((facet, i) => {
     text-align: center;
     transition: opacity 0.2s ease;
   }
-
-  /* État 0 visible par défaut */
   .center-s0 { opacity: 1; }
   .center-s1 { opacity: 0; pointer-events: none; }
-
   .scene[data-state="1"] .center-s0 { opacity: 0; pointer-events: none; }
   .scene[data-state="1"] .center-s1 { opacity: 1; }
 
@@ -216,7 +286,6 @@ const items = facets.map((facet, i) => {
     text-transform: uppercase;
     color: var(--text-tertiary);
   }
-
   .preview-label {
     font-family: var(--font-display);
     font-size: 1.3rem;
@@ -226,7 +295,6 @@ const items = facets.map((facet, i) => {
     color: var(--preview-c, var(--text-primary));
     line-height: 1;
   }
-
   .preview-teaser {
     font-family: var(--font-display);
     font-size: 0.78rem;
@@ -234,7 +302,6 @@ const items = facets.map((facet, i) => {
     color: var(--text-secondary);
     line-height: 1.35;
   }
-
   .preview-cta {
     font-family: var(--font-mono);
     font-size: 0.55rem;
@@ -245,7 +312,7 @@ const items = facets.map((facet, i) => {
     margin-top: 0.2rem;
   }
 
-  /* ─── Indicateur fixe 12h (triangle, hors disque) ───────── */
+  /* ─── Indicateur fixe 12h ────────────────────────────────────── */
   .disk-indicator {
     position: absolute;
     top: calc(50% - var(--disk-size, 560px) / 2 - 14px);
@@ -261,78 +328,41 @@ const items = facets.map((facet, i) => {
     transition: border-top-color 0.3s ease;
   }
 
-  /* ─── Pastilles ───────────────────────────────────────── */
+  /* ─── Zones de clic invisibles ───────────────────────────────── */
   .pastille {
-    --c: var(--text-tertiary);
-    --proximity: 0.5;
-
     position: absolute;
     top: 50%;
     left: 50%;
-    transform:
-      translate(calc(-50% + var(--x)), calc(-50% + var(--y)))
-      rotate(var(--text-rotation, 0deg))
-      scale(calc(0.70 + 0.90 * var(--proximity)));
-
-    opacity: calc(0.28 + 0.72 * var(--proximity));
-    font-size: calc(0.44rem + 0.28rem * var(--proximity));
-
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    border: 1px solid var(--c);
-    background: color-mix(in srgb, var(--c) 8%, var(--bg-surface));
-    color: var(--c);
-
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    font-weight: 500;
-    letter-spacing: 0.20em;
-    text-transform: uppercase;
-    white-space: nowrap;
-
+    width: 72px;
+    height: 72px;
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
+    border-radius: 50%;
+    background: transparent;
+    border: none;
     cursor: pointer;
     appearance: none;
-
-    transition: background 0.15s ease, box-shadow 0.15s ease;
+    padding: 0;
   }
-
-  .pastille.is-active {
-    background: color-mix(in srgb, var(--c) 22%, var(--bg-surface));
-    box-shadow: 0 0 28px -6px var(--c), 0 0 0 1px var(--c);
-    font-weight: 700;
-    opacity: 1;
-  }
-
   .pastille:focus-visible {
-    outline: 2px solid var(--c);
+    outline: 2px solid var(--border);
     outline-offset: 3px;
   }
-
-  .pastille[data-facet="son"]          { --c: var(--facet-son); }
-  .pastille[data-facet="regie"]        { --c: var(--facet-regie); }
-  .pastille[data-facet="cours"]        { --c: var(--facet-cours); }
-  .pastille[data-facet="blog"]         { --c: var(--facet-blog); }
-  .pastille[data-facet="outils"]       { --c: var(--facet-outils); }
-  .pastille[data-facet="contact"]      { --c: var(--facet-contact); }
 </style>
 
 <script>
   import { navigate } from 'astro:transitions/client';
 
-  // ─── Constantes (calculées dynamiquement à chaque page-load) ──
-  let RING_R_0   = 250;
-  let RING_R_1   = 310;
   let N_FACETS   = 6;
   let STEP       = 60;
   let BASE_ANGLES: number[] = [];
   const FRICTION   = 0.97;
   const VEL_THRESH = 0.5;
 
-  // ─── État persistant entre frames ───────────────────────
-  // (déclaré hors de l'init pour survivre aux View Transitions)
   let targetAngle  = 0;
   let currentAngle = 0;
   let velAngle     = 0;
+  let RING_R_0     = 250;
+  let RING_R_1     = 310;
   let targetRingR  = RING_R_0;
   let currentRingR = RING_R_0;
   let appState     = 0;
@@ -341,18 +371,13 @@ const items = facets.map((facet, i) => {
   let rafId: number | null = null;
   let ctrl: AbortController | null = null;
 
-  // ─── Ré-init à chaque chargement de page ────────────────
-  // astro:page-load se déclenche au 1er chargement ET après
-  // chaque navigation View Transitions → ré-attache les handlers.
   document.addEventListener('astro:page-load', () => {
-    // Annuler la boucle rAF et les listeners de l'ancienne instance
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
     ctrl?.abort();
 
     const scene = document.querySelector<HTMLElement>('.scene');
-    if (!scene) return; // page sans platine (ex. /son) → rien à faire
+    if (!scene) return;
 
-    // Lecture du nombre de facettes
     N_FACETS = Number(scene.dataset.nFacets) || 6;
     STEP = 360 / N_FACETS;
     BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
@@ -360,7 +385,6 @@ const items = facets.map((facet, i) => {
     ctrl = new AbortController();
     const sig = ctrl.signal;
 
-    // Remettre à zéro l'état visuel
     appState = 0;
     activeFacetIdx  = -1;
     activeFacetHref = '';
@@ -369,7 +393,6 @@ const items = facets.map((facet, i) => {
     velAngle     = 0;
     scene.dataset.state = '0';
 
-    // Taille du disque : calculée dynamiquement selon le viewport
     function calcDiskSize(): number {
       return Math.min(
         document.documentElement.clientWidth  * 0.90,
@@ -404,8 +427,8 @@ const items = facets.map((facet, i) => {
     const previewLabel  = document.querySelector<HTMLElement>('#preview-label')!;
     const previewTeaser = document.querySelector<HTMLElement>('#preview-teaser')!;
     const pastilles     = [...document.querySelectorAll<HTMLElement>('.pastille')];
+    const labelEls      = [...document.querySelectorAll<Element>('.disk-label')];
 
-    // ── Mise à jour DOM ────────────────────────────────────
     function update(): void {
       scene.style.setProperty('--disk-rotation', `${currentAngle.toFixed(2)}deg`);
 
@@ -420,20 +443,20 @@ const items = facets.map((facet, i) => {
 
         const norm = ((deg + 90) % 360 + 360) % 360;
         const dist = Math.min(norm, 360 - norm);
-        pastilles[i].style.setProperty('--proximity', (1 - dist / 180).toFixed(4));
-        let textRot = norm;
-        if (norm > 90 && norm < 270) textRot = norm + 180;
-        pastilles[i].style.setProperty('--text-rotation', textRot.toFixed(1) + 'deg');
         if (dist < minDist) { minDist = dist; activeIdx = i; }
       }
 
       for (let i = 0; i < N_FACETS; i++) {
-        pastilles[i].classList.toggle('is-active', i === activeIdx);
+        const active = i === activeIdx;
+        pastilles[i].classList.toggle('is-active', active);
+        labelEls[i]?.classList.toggle('is-active', active);
       }
+
       indicator.style.setProperty(
         'border-top-color',
         `var(--facet-${pastilles[activeIdx].dataset.facet})`
       );
+
       if (appState === 1 && activeIdx !== activeFacetIdx) {
         setState(1, activeIdx);
       }
@@ -442,18 +465,15 @@ const items = facets.map((facet, i) => {
       diskTrack.style.height = d;
     }
 
-    // ── Animation : phase inertie puis phase ressort ───────
     function animate(): void {
       const rDiff = targetRingR - currentRingR;
 
       if (Math.abs(velAngle) > VEL_THRESH) {
-        // Phase inertie : la vitesse pilote, targetAngle suit (pas de snap-back)
         currentAngle += velAngle;
         velAngle     *= FRICTION;
         targetAngle   = currentAngle;
       } else {
         velAngle = 0;
-        // Phase ressort : lerp vers targetAngle
         const aDiff = targetAngle - currentAngle;
         if (Math.abs(aDiff) < 0.02 && Math.abs(rDiff) < 0.05) {
           currentAngle = targetAngle;
@@ -474,7 +494,6 @@ const items = facets.map((facet, i) => {
       if (rafId === null) rafId = requestAnimationFrame(animate);
     }
 
-    // ── Facette au sommet (12h) ────────────────────────────
     function getActiveIdx(): number {
       let idx = 0, minDist = Infinity;
       for (let i = 0; i < N_FACETS; i++) {
@@ -486,7 +505,6 @@ const items = facets.map((facet, i) => {
       return idx;
     }
 
-    // ── Machine à états ────────────────────────────────────
     function setState(newState: number, facetIdx = -1): void {
       appState = newState;
       scene.dataset.state = String(newState);
@@ -505,9 +523,6 @@ const items = facets.map((facet, i) => {
       schedule();
     }
 
-    // ── Snap (chemin le plus court depuis targetAngle) ──────
-    // Lit targetAngle (pas currentAngle) : les pressions successives
-    // de flèches s'accumulent même si l'animation est en cours.
     function snapToFacet(idx: number): void {
       const desired = -90 - BASE_ANGLES[idx];
       const raw     = desired - targetAngle;
@@ -517,7 +532,6 @@ const items = facets.map((facet, i) => {
       schedule();
     }
 
-    // ── Facette visée (depuis targetAngle) ──────────────────
     function getTargetIdx(): number {
       let idx = 0, minDist = Infinity;
       for (let i = 0; i < N_FACETS; i++) {
@@ -529,19 +543,16 @@ const items = facets.map((facet, i) => {
       return idx;
     }
 
-    // ── Clics pastilles ──────────────────────────────────────
     pastilles.forEach((el, idx) => {
       el.addEventListener('click', (e) => {
         e.stopPropagation(); snapToFacet(idx); setState(1, idx);
       }, { signal: sig });
     });
 
-    // ── Clic centre ──────────────────────────────────────────
     centerEl.addEventListener('click', () => {
       if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
     }, { signal: sig });
 
-    // ── Clavier ──────────────────────────────────────────────
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { setState(0); }
       else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -559,23 +570,19 @@ const items = facets.map((facet, i) => {
       }
     }, { signal: sig });
 
-    // ── Clic hors disque ─────────────────────────────────────
     scene.addEventListener('click', (e) => {
       if (appState > 0 && !(e.target as Element).closest('.turntable')) setState(0);
     }, { signal: sig });
 
-    // ── Molette / trackpad ───────────────────────────────────
     scene.addEventListener('wheel', (e) => {
       e.preventDefault();
       velAngle = 0;
-      // Plafonner le delta pour éviter les sauts brusques de trackpad
       const raw = (e as WheelEvent).deltaY;
       const capped = Math.sign(raw) * Math.min(Math.abs(raw), 80);
       targetAngle -= capped * 0.25;
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
-    // ── Drag souris : jog wheel angulaire + inertie ──────────
     let mouseDown = false;
     let mouseDragStartAngle = 0;
     let mouseDragStartRotation = 0;
@@ -621,18 +628,10 @@ const items = facets.map((facet, i) => {
         const dt = last.t - first.t;
         if (dt > 0) velAngle = (last.angle - first.angle) / dt * 16;
       }
-      // TAP souris : si mouvement < 5px et hors .disk-center -> retour accueil
       if (mouseDragDist < 5 && !(e.target as Element).closest('.disk-center')) setState(0);
       schedule();
     }, { signal: sig });
 
-    // ── Rotation tactile : jog wheel angulaire + inertie ─────
-    //
-    // Le delta est calculé comme variation d'angle (atan2) du doigt
-    // autour du centre du disque — identique à une vraie platine :
-    // peu importe où le doigt touche, le geste circulaire fait tourner.
-    // À touchend, la vitesse moyenne est injectée en velAngle pour
-    // l'inertie ; FRICTION la décroît jusqu'à arrêt naturel.
     const VEL_SAMPLES = 4;
     let touchLastDeg = 0;
     let touchLastMs  = 0;
@@ -671,15 +670,10 @@ const items = facets.map((facet, i) => {
       const now    = performance.now();
       const dt     = Math.max(now - touchLastMs, 1);
       const delta  = wrapDelta(newDeg - touchLastDeg);
-
-      // Suivi direct sans lerp pendant le contact
       currentAngle += delta;
       targetAngle   = currentAngle;
-
-      // Historique de vitesse pour le lancer (°/frame @ 60 fps)
       velBuf.push(delta / dt * (1000 / 60));
       if (velBuf.length > VEL_SAMPLES) velBuf.shift();
-
       touchLastDeg = newDeg;
       touchLastMs  = now;
       schedule();
@@ -689,7 +683,6 @@ const items = facets.map((facet, i) => {
       if (velBuf.length > 0)
         velAngle = velBuf.reduce((a, b) => a + b, 0) / velBuf.length;
       velBuf = [];
-      // TAP touch : si mouvement < 5px et cible hors .disk-center -> accueil
       const te = e as TouchEvent;
       const touch = te.changedTouches[0];
       if (touch) {
@@ -699,7 +692,6 @@ const items = facets.map((facet, i) => {
       schedule();
     }, { passive: true, signal: sig } as AddEventListenerOptions);
 
-    // ── Init ─────────────────────────────────────────────────
     update();
   });
 </script>
