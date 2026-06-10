@@ -14,7 +14,7 @@ const N = facets.length;
 
 // ── Labels en arc : calcul dynamique (zéro hardcode) ──────────────────────
 const longestLen = Math.max(...facets.map(f => [...f.label].length));
-const COND_RATIO = 0.42;
+const COND_RATIO = 0.55;  // valeur empirique Barlow Condensed réel
 const CAP_RATIO  = 0.72;
 const R_CAP      = 92;
 const ARC_DEG    = 360 / N - 4;
@@ -106,7 +106,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 });
 ---
 
-<div class="scene" data-state="0" data-n-facets={N}>
+<div class="scene" data-state="0" data-n-facets={N} data-r-baseline={rBaseline.toFixed(3)}>
 
   <div class="bg-stage" aria-hidden="true"></div>
 
@@ -114,68 +114,69 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     <div class="disk-indicator" aria-hidden="true"></div>
 
-    <!-- Disque : fond CD sombre + labels textPath SVG -->
-    <div class="disk">
-      <svg
-        class="disk-labels"
-        viewBox="-100 -100 200 200"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <defs>
-          <!-- Masque CD : opacité croît du centre vers le bord -->
-          <radialGradient id="tt-cd-grad" cx="50%" cy="50%" r="50%">
-            <stop offset="25%" stop-color="black"/>
-            <stop offset="100%" stop-color="white"/>
-          </radialGradient>
-          <mask id="tt-cd-mask">
-            <rect x="-100" y="-100" width="200" height="200" fill="url(#tt-cd-grad)"/>
-          </mask>
+    <!-- Disque : fond CD irisé seulement (ne tourne PAS les labels) -->
+    <div class="disk"></div>
 
-          <!-- Glow large (label actif) -->
-          <filter id="tt-glow-l" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="4"   result="b1"/>
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b2"/>
-            <feMerge>
-              <feMergeNode in="b1"/>
-              <feMergeNode in="b2"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
+    <!-- Labels textPath FIXES : SVG overlay qui ne tourne pas -->
+    <svg
+      class="disk-labels"
+      viewBox="-100 -100 200 200"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <!-- Masque CD : opacité croît du centre vers le bord -->
+        <radialGradient id="tt-cd-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="25%" stop-color="black"/>
+          <stop offset="100%" stop-color="white"/>
+        </radialGradient>
+        <mask id="tt-cd-mask">
+          <rect x="-100" y="-100" width="200" height="200" fill="url(#tt-cd-grad)"/>
+        </mask>
 
-          <!-- Glow subtil (labels inactifs) -->
-          <filter id="tt-glow-s" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="b"/>
-            <feMerge>
-              <feMergeNode in="b"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
+        <!-- Glow large (label actif) -->
+        <filter id="tt-glow-l" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4"   result="b1"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="b2"/>
+          <feMerge>
+            <feMergeNode in="b1"/>
+            <feMergeNode in="b2"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
 
-          <!-- Arc path par facette -->
-          {labelItems.map(item => (
-            <path id={`tt-arc-${item.key}`} d={item.arcD} fill="none"/>
-          ))}
-        </defs>
+        <!-- Glow subtil (labels inactifs) -->
+        <filter id="tt-glow-s" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="b"/>
+          <feMerge>
+            <feMergeNode in="b"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
 
+        <!-- Arcs mis à jour par JS à chaque frame -->
         {labelItems.map(item => (
-          <text
-            class={`disk-label disk-label--${item.key}`}
-            font-family="Barlow Condensed, Arial Narrow, sans-serif"
-            font-weight="800"
-            font-size={fontSize.toFixed(2)}
-            fill={`var(--facet-${item.key})`}
-            stroke="var(--bg-app)"
-            stroke-width="3"
-            paint-order="stroke fill"
-          >
-            <textPath href={`#tt-arc-${item.key}`} startOffset="50%" text-anchor="middle">
-              {item.label}
-            </textPath>
-          </text>
+          <path id={`tt-arc-${item.key}`} d="" fill="none"/>
         ))}
-      </svg>
-    </div>
+      </defs>
+
+      {labelItems.map(item => (
+        <text
+          class={`disk-label disk-label--${item.key}`}
+          font-family="Barlow Condensed, Arial Narrow, sans-serif"
+          font-weight="800"
+          font-size={fontSize.toFixed(2)}
+          fill={`var(--facet-${item.key})`}
+          stroke="var(--bg-app)"
+          stroke-width="2"
+          paint-order="stroke fill"
+        >
+          <textPath href={`#tt-arc-${item.key}`} startOffset="50%" text-anchor="middle">
+            {item.label}
+          </textPath>
+        </text>
+      ))}
+    </svg>
 
     <div class="disk-track"></div>
 
@@ -364,16 +365,20 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     transform: rotate(var(--disk-rotation, 0deg));
     will-change: transform;
     background:
-      radial-gradient(circle at center, var(--bg-elevated) 0%, transparent 62%),
+      radial-gradient(circle at 50% 50%,
+        oklch(0.95 0.00 0 / 0.25) 0%,
+        oklch(0.80 0.00 0 / 0.12) 20%,
+        transparent 55%
+      ),
       conic-gradient(
         from 0deg,
-        oklch(0.28 0.22   0)   0deg,
-        oklch(0.32 0.18  60)  60deg,
-        oklch(0.30 0.17 120) 120deg,
-        oklch(0.28 0.14 180) 180deg,
-        oklch(0.28 0.18 240) 240deg,
-        oklch(0.30 0.20 300) 300deg,
-        oklch(0.28 0.22 360) 360deg
+        oklch(0.50 0.28   0),
+        oklch(0.55 0.24  60),
+        oklch(0.52 0.24 120),
+        oklch(0.50 0.20 180),
+        oklch(0.50 0.24 240),
+        oklch(0.52 0.26 300),
+        oklch(0.50 0.28 360)
       );
     transition: box-shadow 0.4s ease;
   }
@@ -381,12 +386,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     box-shadow: 0 0 80px -20px rgba(0, 0, 0, 0.7);
   }
 
-  /* ─── SVG labels en arc ───────────────────────────────────────── */
+  /* ─── SVG labels en arc (FIXE, ne tourne pas) ────────────────── */
   .disk-labels {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
+    z-index: 3;
     overflow: visible;
     pointer-events: none;
   }
@@ -877,6 +883,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     STEP = 360 / N_FACETS;
     BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
 
+    const R_BASELINE  = Number(scene.dataset.rBaseline) || 74;
+    const ARC_DEG_JS  = 360 / N_FACETS - 4;
+
+    function arcPathJS(angleDeg: number, r: number): string {
+      const toRad = (d: number) => (d - 90) * Math.PI / 180;
+      const half = ARC_DEG_JS / 2;
+      const s = toRad(angleDeg - half), e = toRad(angleDeg + half);
+      const sx = r * Math.cos(s), sy = r * Math.sin(s);
+      const ex = r * Math.cos(e), ey = r * Math.sin(e);
+      const absAngle = ((angleDeg + 90) % 360 + 360) % 360;
+      const upper = absAngle <= 90 || absAngle >= 270;
+      return upper
+        ? `M ${sx.toFixed(3)},${sy.toFixed(3)} A ${r},${r} 0 0 1 ${ex.toFixed(3)},${ey.toFixed(3)}`
+        : `M ${ex.toFixed(3)},${ey.toFixed(3)} A ${r},${r} 0 0 0 ${sx.toFixed(3)},${sy.toFixed(3)}`;
+    }
+
     ctrl = new AbortController();
     const sig = ctrl.signal;
 
@@ -923,9 +945,18 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     const previewTeaser = document.querySelector<HTMLElement>('#preview-teaser')!;
     const pastilles     = [...document.querySelectorAll<HTMLElement>('.pastille')];
     const labelEls      = [...document.querySelectorAll<Element>('.disk-label')];
+    const arcPathEls    = Array.from({ length: N_FACETS }, (_, i) =>
+      document.getElementById(`tt-arc-${pastilles[i]?.dataset.facet}`) as SVGPathElement | null
+    );
 
     function update(): void {
       scene.style.setProperty('--disk-rotation', `${currentAngle.toFixed(2)}deg`);
+
+      // Recalculer les arcs textPath selon la rotation courante
+      for (let i = 0; i < N_FACETS; i++) {
+        const absAngleDeg = BASE_ANGLES[i] + currentAngle;
+        arcPathEls[i]?.setAttribute('d', arcPathJS(absAngleDeg, R_BASELINE));
+      }
 
       let activeIdx = 0;
       let minDist   = Infinity;
