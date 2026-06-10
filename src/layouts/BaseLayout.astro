@@ -1,6 +1,7 @@
 ---
 import { ViewTransitions } from 'astro:transitions';
 import { visibleFacets } from '../data/facets';
+import siteData from '../data/site.json';
 
 interface Props {
   title: string;
@@ -73,6 +74,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
       position: fixed;
       width: 100%;
       overscroll-behavior: none;
+    }
+
+    /* Fond de page (image avec opacité réduite) */
+    .bg-fond {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.10;
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* Scrollbar discrète, neutre */
@@ -156,6 +169,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
   </script>
 </head>
 <body>
+  <!-- Fond de page (si fond_url rempli dans site.json) -->
+  {siteData.fond_url && (
+    <div
+      class="bg-fond"
+      style={`background-image: url('${siteData.fond_url}')`}
+      aria-hidden="true"
+    ></div>
+  )}
   <!-- Hrefs des facettes pour la navigation clavier globale -->
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />

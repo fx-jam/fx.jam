@@ -190,11 +190,6 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
           <span class="center-name">{siteData.displayName}</span>
         )}
       </div>
-      <div class="center-s1">
-        <span class="preview-label" id="preview-label"></span>
-        <span class="preview-teaser" id="preview-teaser"></span>
-        <span class="preview-cta">ouvrir →</span>
-      </div>
     </div>
 
     <!-- Zones de clic invisibles (une par facette) -->
@@ -435,20 +430,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
     overflow: hidden;
     z-index: 2;
-    transition:
-      width  0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
-      height 0.45s cubic-bezier(0.34, 1.4, 0.64, 1),
-      border-color 0.3s ease;
-  }
-  .scene[data-state="1"] .disk-center {
-    width:  var(--center-size-open, 260px);
-    height: var(--center-size-open, 260px);
-    border-color: var(--preview-c, var(--border));
     cursor: pointer;
   }
 
-  .center-s0,
-  .center-s1 {
+  .center-s0 {
     position: absolute;
     inset: 0;
     display: flex;
@@ -458,12 +443,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     gap: 0.4rem;
     padding: 1.2rem;
     text-align: center;
-    transition: opacity 0.2s ease;
   }
-  .center-s0 { opacity: 1; }
-  .center-s1 { opacity: 0; pointer-events: none; }
-  .scene[data-state="1"] .center-s0 { opacity: 0; pointer-events: none; }
-  .scene[data-state="1"] .center-s1 { opacity: 1; }
 
   .center-name {
     font-family: var(--font-mono);
@@ -476,31 +456,6 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     width: 44px;
     height: 44px;
     flex-shrink: 0;
-  }
-  .preview-label {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--preview-c, var(--text-primary));
-    line-height: 1;
-  }
-  .preview-teaser {
-    font-family: var(--font-display);
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    line-height: 1.35;
-  }
-  .preview-cta {
-    font-family: var(--font-mono);
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--preview-c, var(--text-tertiary));
-    opacity: 0.6;
-    margin-top: 0.2rem;
   }
 
   /* ─── Indicateur fixe 12h ────────────────────────────────────── */
@@ -524,10 +479,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 72px;
-    height: 72px;
+    width: 160px;
+    height: 80px;
     transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y)));
-    border-radius: 50%;
+    border-radius: 40px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -922,7 +877,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       const size = calcDiskSize();
       scene.style.setProperty('--disk-size',        size + 'px');
       scene.style.setProperty('--center-size',      Math.round(size * 0.29) + 'px');
-      scene.style.setProperty('--center-size-open', Math.round(size * 0.42) + 'px');
+      // center-size-open supprimé (plus d'expansion état 1)
       RING_R_0 = size / 2 * 0.80;
       RING_R_1 = size / 2 * 0.99;
       targetRingR  = appState === 1 ? RING_R_1 : RING_R_0;
@@ -941,8 +896,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     const centerEl      = document.querySelector<HTMLElement>('#disk-center')!;
     const indicator     = scene.querySelector<HTMLElement>('.disk-indicator')!;
     const bgStage       = document.querySelector<HTMLElement>('.bg-stage')!;
-    const previewLabel  = document.querySelector<HTMLElement>('#preview-label')!;
-    const previewTeaser = document.querySelector<HTMLElement>('#preview-teaser')!;
+    // preview-label/teaser supprimés (plus d'état 1.5 visuel)
     const pastilles     = [...document.querySelectorAll<HTMLElement>('.pastille')];
     const labelEls      = [...document.querySelectorAll<Element>('.disk-label')];
     const arcPathEls    = Array.from({ length: N_FACETS }, (_, i) =>
@@ -1039,8 +993,6 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         activeFacetIdx  = facetIdx;
         activeFacetHref = pastilles[facetIdx].dataset.href!;
         const key    = pastilles[facetIdx].dataset.facet!;
-        previewLabel.textContent  = pastilles[facetIdx].dataset.label!;
-        previewTeaser.textContent = pastilles[facetIdx].dataset.teaser!;
         centerEl.style.setProperty('--preview-c', `var(--facet-${key})`);
         bgStage.style.setProperty('--stage-c',    `var(--facet-${key})`);
         document.documentElement.style.setProperty('--active-facet-color', `var(--facet-${key})`);
@@ -1074,7 +1026,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     pastilles.forEach((el, idx) => {
       el.addEventListener('click', (e) => {
-        e.stopPropagation(); snapToFacet(idx); setState(1, idx);
+        e.stopPropagation(); snapToFacet(idx); setState(1, idx); openOverlay(pastilles[idx].dataset.facet!);
       }, { signal: sig });
     });
 
