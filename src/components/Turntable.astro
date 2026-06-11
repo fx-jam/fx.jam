@@ -22,12 +22,13 @@ const ARC_RAD    = ARC_DEG * Math.PI / 180;
 const fontSize   = R_CAP / (longestLen * COND_RATIO / ARC_RAD + CAP_RATIO);
 const rBaseline  = R_CAP - CAP_RATIO * fontSize;
 
-function arcPath(angleDeg: number, r: number): string {
+function arcPath(angleDeg: number, rUpper: number, rLower: number): string {
+  const upper = angleDeg <= 90 || angleDeg >= 270;
+  const r = upper ? rUpper : rLower;
   const toRad = (d: number) => (d - 90) * Math.PI / 180;
   const half = ARC_DEG / 2;
   const s = toRad(angleDeg - half);
   const e = toRad(angleDeg + half);
-  const upper = angleDeg <= 90 || angleDeg >= 270;
   const sx = r * Math.cos(s), sy = r * Math.sin(s);
   const ex = r * Math.cos(e), ey = r * Math.sin(e);
   return upper
@@ -76,7 +77,7 @@ const labelItems = facets.map((facet, i) => ({
   teaser:   facet.teaser,
   href:     facet.href,
   angleDeg: i * 360 / N,
-  arcD:     arcPath(i * 360 / N, rBaseline),
+  arcD:     arcPath(i * 360 / N, rBaseline, R_CAP),
 }));
 
 const overlayItems: OverlayData[] = labelItems.map(item => {
@@ -106,7 +107,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 });
 ---
 
-<div class="scene" data-state="0" data-n-facets={N} data-r-baseline={rBaseline.toFixed(3)}>
+<div class="scene" data-state="0" data-n-facets={N} data-r-baseline={rBaseline.toFixed(3)} data-r-cap={R_CAP.toFixed(3)}>
 
   <div class="bg-stage" aria-hidden="true"></div>
 
@@ -886,16 +887,18 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     BASE_ANGLES = Array.from({ length: N_FACETS }, (_, i) => (i * STEP) - 90);
 
     const R_BASELINE  = Number(scene.dataset.rBaseline) || 74;
+    const R_CAP_JS    = Number(scene.dataset.rCap) || 92;
     const ARC_DEG_JS  = 360 / N_FACETS - 4;
 
-    function arcPathJS(angleDeg: number, r: number): string {
+    function arcPathJS(angleDeg: number, rUpper: number, rLower: number): string {
+      const normAngle = ((angleDeg % 360) + 360) % 360;
+      const upper = normAngle <= 90 || normAngle >= 270;
+      const r = upper ? rUpper : rLower;
       const toRad = (d: number) => (d - 90) * Math.PI / 180;
       const half = ARC_DEG_JS / 2;
       const s = toRad(angleDeg - half), e = toRad(angleDeg + half);
       const sx = r * Math.cos(s), sy = r * Math.sin(s);
       const ex = r * Math.cos(e), ey = r * Math.sin(e);
-      const normAngle = ((angleDeg % 360) + 360) % 360;
-      const upper = normAngle <= 90 || normAngle >= 270;
       return upper
         ? `M ${sx.toFixed(3)},${sy.toFixed(3)} A ${r},${r} 0 0 1 ${ex.toFixed(3)},${ey.toFixed(3)}`
         : `M ${ex.toFixed(3)},${ey.toFixed(3)} A ${r},${r} 0 0 0 ${sx.toFixed(3)},${sy.toFixed(3)}`;
@@ -957,7 +960,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       // Recalculer les arcs textPath selon la rotation courante
       for (let i = 0; i < N_FACETS; i++) {
         const absAngleDeg = BASE_ANGLES[i] + currentAngle;
-        arcPathEls[i]?.setAttribute('d', arcPathJS(absAngleDeg + 90, R_BASELINE));
+        arcPathEls[i]?.setAttribute('d', arcPathJS(absAngleDeg + 90, R_BASELINE, R_CAP_JS));
       }
 
       let activeIdx = 0;
