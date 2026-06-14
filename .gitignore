@@ -22,8 +22,10 @@ pnpm-debug.log*
 # Cloudflare Workers cache
 .wrangler/
 
-# Claude Code cache local
-.claude/
+# Claude Code — ignorer uniquement les fichiers sensibles/locaux
+.claude/access.local.md
+.claude/__pycache__/
+.claude/*.local.*
 
 # OS / editors
 .DS_Store
