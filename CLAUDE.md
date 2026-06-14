@@ -14,6 +14,8 @@ Site personnel multi-facettes de **Fx / Hamcat** (DJ psytrance, ingénieur son, 
 
 **Lire CLAUDE_LOG.md en debut de session** (entrees anti-chronologiques, la plus recente en haut) pour savoir ce qui a ete fait/decide aux sessions precedentes.
 
+**Lire MEMORY.md en debut de session** — memoire persistante partagee entre Claude Desktop et Hermes (profil utilisateur, decisions, journal de synchro). Mettre a jour en fin de session si de nouvelles informations utiles ont ete decouvertes.
+
 **Ajouter une entree en fin de session** : date, ce qui a ete fait, decisions, ce qui reste en cours. C'est la memoire partagee entre Fx, le chat web et Claude Code. Pas de secrets dedans (acces dans .claude/access.local.md, non versionne).
 
 ## Stack
