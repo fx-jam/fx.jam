@@ -61,6 +61,11 @@ Cf. `CLAUDE.md` et `ARCHITECTURE.md` pour le contexte technique détaillé.
 
 ## 🔄 Journal de synchro bilatérale
 
+### 2026-06-24 — Cron sync (Hermes)
+- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ MEMORY.md inchangé** : dernière entrée 2026-06-14
+
+
 ### 2026-06-14 — Initialisation
 - **→ Import mémoire Claude** : 699 conversations, memories.json, projets.json — ingérés dans Hermes
 - **→ MEMORY.md créé** : fichier partagé dans le projet fx.jam
