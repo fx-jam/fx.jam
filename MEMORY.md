@@ -80,6 +80,10 @@ Cf. `CLAUDE.md` et `ARCHITECTURE.md` pour le contexte technique détaillé.
 2. Mettre à jour `CLAUDE_LOG.md` (si travail sur le projet)
 3. Commit + push des changements (pour que l'autre agent les voie)
 
+### 2026-06-24 — Cron sync (Hermes)
+- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ MEMORY.md inchangé** : dernière entrée 2026-06-14
+
 ---
 
 ## 🔧 Pipeline de synchro technique
