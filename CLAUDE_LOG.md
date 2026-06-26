@@ -14,10 +14,13 @@
 ---
 
 ### 2026-06-26 — Cron sync (Hermes)
-- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ Sync exécutée** : script memory-sync.py, queue traitée (entrées de synchro uniquement)
+- **→ Queue vidée** : 3 entrées de synchro ingérées
 - **→ MEMORY.md mis à jour** : journal de synchro.
 
 ---
+
+### 2026-06-26 — Cron sync (Hermes)
 
 ## Previous Entries
 
