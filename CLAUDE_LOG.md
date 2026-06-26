@@ -13,6 +13,12 @@
 
 ---
 
+### 2026-06-26 — Cron sync (Hermes)
+- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ MEMORY.md mis à jour** : journal de synchro.
+
+---
+
 ## Previous Entries
 
 ### 2026-06-14 — Initialisation
