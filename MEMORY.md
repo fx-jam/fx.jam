@@ -61,6 +61,15 @@ Cf. `CLAUDE.md` et `ARCHITECTURE.md` pour le contexte technique détaillé.
 
 ## 🔄 Journal de synchro bilatérale
 
+### 2026-07-04 — Cron sync (Hermes)
+- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ MEMORY.md mis à jour** : journal de synchro ajouté
+
+### 2026-07-02 — Cron sync (Hermes)
+- **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- **→ Queue vidée** : memory_queue.json vidé
+- **→ MEMORY.md mis à jour** : journal de synchro ajouté
+
 ### 2026-06-30 — Cron sync (Hermes)
 - **→ Sync exécutée** : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
 - **→ Queue vidée** : memory_queue.json vidé
