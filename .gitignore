@@ -35,3 +35,7 @@ pnpm-debug.log*
 
 # Backups
 *.bak
+
+# Memory sync files
+.last_memory_md_hash
+.memory_md_hash
