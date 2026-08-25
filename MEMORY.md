@@ -218,6 +218,10 @@ Cf. `CLAUDE.md` et `ARCHITECTURE.md` pour le contexte technique détaillé.
 
 ---
 
+### 2026-08-24 — Cron sync (Hermes)
+- → Sync exécutée : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
+- → MEMORY.md mis à jour : journal de synchro ajouté
+
 ### 2026-08-23 — Cron sync (Hermes)
 - → Sync exécutée : script memory-sync.py, queue vide — aucune nouvelle entrée à ingérer
 - → MEMORY.md mis à jour : journal de synchro ajouté
