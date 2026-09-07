@@ -617,8 +617,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     animation: facet-snap-pulse 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
   }
 
-  /* ─── Flip arrows (état 1) ──────────────────────────────────── */
+  /* ─── Flip arrows (état 1 uniquement) ──────────────────────── */
   .flip-arrow {
+    display: none; /* caché par défaut, révélé seulement en état 1 */
     background: none;
     border: none;
     color: var(--preview-c, var(--text-tertiary));
@@ -626,10 +627,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     cursor: pointer;
     padding: 0.1rem;
     line-height: 1;
-    display: block;
     width: 100%;
     text-align: center;
   }
+  .scene[data-state="1"] .flip-arrow { display: block; }
   .flip-arrow--up {
     --arrow-drift: -4px;
     animation: arrow-pulse 1.2s ease-in-out infinite;
@@ -639,7 +640,6 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     animation: arrow-pulse 1.2s ease-in-out infinite;
     animation-delay: 0.6s;
   }
-  .scene:not([data-state="1"]) .flip-arrow { display: none; }
 
   /* ─── Flèches carrousel ──────────────────────────────────────── */
   .carousel-arrow {
@@ -816,6 +816,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     display: none;
     position: absolute;
     inset: 0;
+    background: var(--bg-app);
     align-items: center;
     justify-content: center;
     z-index: 5;
@@ -824,15 +825,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   .scene[data-state="2"] .face-b-wrap {
     display: flex;
   }
-  /* Masquer composants état 1 quand face B est visible */
-  .scene[data-state="2"] .turntable-wrap,
-  .scene[data-state="2"] .panel-start,
-  .scene[data-state="2"] .panel-end {
-    display: none !important;
-  }
-  .scene[data-state="2"] .carousel-arrow {
-    display: none !important;
-  }
+  /* Masquer composants état 1 en état 2 — règles séparées pour éviter bugs de compilation */
+  .scene[data-state="2"] .turntable-wrap  { display: none; }
+  .scene[data-state="2"] .panel-start     { display: none; }
+  .scene[data-state="2"] .panel-end       { display: none; }
+  .scene[data-state="2"] .carousel-arrow  { opacity: 0; pointer-events: none; }
 
   .face-b-carousel {
     display: flex;
@@ -1182,6 +1179,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     const panelStreams  = document.getElementById('panel-streams')!;
     const ctaExplorer  = document.getElementById('cta-explorer') as HTMLButtonElement;
 
+    // Face B — déclaré tôt pour être disponible dans setState
+    const faceBWrap = document.getElementById('face-b-wrap') as HTMLElement;
+    if (faceBWrap) faceBWrap.style.display = 'none';
+
     // Modal
     const modalOverlay = document.getElementById('tt-modal')!;
     const modalIframe  = document.getElementById('modal-iframe') as HTMLIFrameElement;
@@ -1392,21 +1393,20 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         panelEnd.classList.remove('is-visible');
         panelStart.setAttribute('aria-hidden', 'true');
         panelEnd.setAttribute('aria-hidden', 'true');
-        const faceWrap = document.getElementById('face-b-wrap');
-        if (faceWrap) faceWrap.setAttribute('aria-hidden', 'true');
+        faceBWrap.style.display = 'none';
         closeModal();
 
       } else if (newState === 1 && facetIdx >= 0) {
         resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_1;
+        faceBWrap.style.display = 'none';
 
       } else if (newState === 2 && facetIdx >= 0) {
         resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_0;
-        const faceWrap = document.getElementById('face-b-wrap');
-        if (faceWrap) faceWrap.setAttribute('aria-hidden', 'false');
+        faceBWrap.style.display = 'flex';
         faceBGoto(facetIdx);
       }
 
