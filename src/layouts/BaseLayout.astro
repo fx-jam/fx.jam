@@ -68,8 +68,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     /* ============================================================
        RESET & LAYOUT GLOBAL
-       Viewport fixe, pas de scroll de page entière.
-       Le scroll vit à l'intérieur des composants.
+       Viewport fixe hors modal ; scroll activé avec ?modal=1.
        ============================================================ */
     html, body {
       height: 100%;
@@ -144,6 +143,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
       ::view-transition-new(root) { animation: none; }
     }
   </style>
+
+  <!-- Mode modal (?modal=1) : scroll activé pour affichage dans iframe -->
+  <script is:inline>
+    if (new URLSearchParams(location.search).has('modal')) {
+      var s = document.createElement('style');
+      s.textContent = 'html,body{height:auto!important;overflow:auto!important}body{position:static!important;overscroll-behavior:auto!important}';
+      document.head.appendChild(s);
+    }
+  </script>
 
   <script>
     // ── Navigation clavier inter-facettes ────────────────────

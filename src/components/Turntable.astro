@@ -249,16 +249,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   </div>
 
   <!-- Modal état 3 -->
-  <div class="modal-overlay" id="tt-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+  <!-- Modal état 3 : page facette complète en iframe overlay -->
+  <div class="modal-overlay" id="tt-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Contenu facette">
     <div class="modal-inner">
       <button class="modal-close" aria-label="Fermer">×</button>
-      <header class="modal-hd">
-        <span class="modal-chip" id="modal-chip"></span>
-        <h2 class="modal-headline" id="modal-headline"></h2>
-        <p class="modal-teaser" id="modal-teaser"></p>
-      </header>
-      <div class="modal-body" id="modal-body"></div>
-      <a class="modal-explore" id="modal-explore" href="#">Voir la page complète →</a>
+      <iframe id="modal-iframe" src="" class="modal-iframe" title="Contenu facette" loading="lazy"></iframe>
     </div>
   </div>
 
@@ -782,26 +777,25 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   .modal-inner {
     position: relative;
-    width: min(420px, 92vw);
-    max-height: 85vh;
-    overflow-y: auto;
-    background: var(--bg-elevated);
+    width: min(680px, 95vw);
+    height: 88vh;
+    background: var(--bg-app);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    padding: 2rem 1.5rem;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
   }
 
   .modal-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--bg-surface);
+    background: var(--bg-elevated);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     font-size: 1.1rem;
@@ -813,180 +807,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
   .modal-close:hover { background: var(--border); }
 
-  .modal-hd {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    text-align: center;
-    padding-top: 0.5rem;
-  }
-
-  .modal-chip {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    padding: 0.2rem 0.65rem;
-    border-radius: 99px;
-    border: 1px solid currentColor;
-  }
-
-  .modal-headline {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: clamp(1.6rem, 4vw, 2.4rem);
-    letter-spacing: -0.02em;
-    margin: 0;
-    color: var(--text-primary);
-  }
-
-  .modal-teaser {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    max-width: 34ch;
-    margin: 0;
-    text-align: center;
-  }
-
-  .modal-body {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  /* Blocs dans le modal */
-  .modal-block {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .modal-block-title {
-    padding: 0.75rem 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    list-style: none;
-    user-select: none;
-    transition: color 0.15s ease;
-  }
-  .modal-block-title::-webkit-details-marker { display: none; }
-  .modal-block-title::after {
-    content: '▾';
-    margin-left: auto;
-    transition: transform 0.18s ease;
-  }
-  .modal-block[open] .modal-block-title::after { transform: rotate(180deg); }
-  .modal-block[open] .modal-block-title { color: var(--text-secondary); }
-
-  .modal-gig-list {
-    list-style: none;
-    margin: 0;
-    padding: 0 1rem;
-  }
-  .modal-gig-row {
-    display: grid;
-    grid-template-columns: 80px 1fr 44px;
-    gap: 0.6rem;
-    padding: 0.45rem 0;
-    border-top: 1px solid var(--border);
-    align-items: center;
-  }
-  .mg-date {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--text-tertiary);
-    white-space: nowrap;
-  }
-  .mg-title {
-    font-family: var(--font-display);
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .mg-format {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
-    text-align: right;
-  }
-  .modal-gig-more {
+  .modal-iframe {
+    flex: 1;
+    width: 100%;
+    border: none;
     display: block;
-    padding: 0.55rem 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    text-decoration: none;
-    border-top: 1px solid var(--border);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   }
-  .modal-gig-more:hover { text-decoration: underline; }
-
-  .modal-stream-btns {
-    padding: 0.65rem 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    justify-content: center;
-  }
-  .modal-stream-btn {
-    padding: 0.45rem 0.9rem;
-    border-radius: 6px;
-    border: 1px solid currentColor;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-decoration: none;
-    transition: background 0.2s ease;
-  }
-  .modal-stream-btn:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
-
-  .modal-links-list {
-    list-style: none;
-    margin: 0;
-    padding: 0.5rem 1rem 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    align-items: center;
-  }
-  .modal-link {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-  }
-  .modal-link:hover { color: var(--text-primary); text-decoration: underline; }
-
-  .modal-empty {
-    padding: 0.6rem 1rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--text-tertiary);
-    margin: 0;
-  }
-
-  .modal-explore {
-    display: inline-block;
-    padding: 0.65rem 1.5rem;
-    border-radius: 8px;
-    border: 1px solid currentColor;
-    font-family: var(--font-mono);
-    font-size: 0.82rem;
-    letter-spacing: 0.08em;
-    text-decoration: none;
-    text-align: center;
-    align-self: center;
-    transition: background 0.2s ease;
-  }
-  .modal-explore:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 
   /* ─── Lightbox photos ────────────────────────────────────────── */
   .tt-lightbox {
@@ -1164,12 +991,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     const ctaExplorer  = document.getElementById('cta-explorer') as HTMLButtonElement;
 
     // Modal
-    const modalOverlay  = document.getElementById('tt-modal')!;
-    const modalChip     = document.getElementById('modal-chip')!;
-    const modalHeadline = document.getElementById('modal-headline')!;
-    const modalTeaser   = document.getElementById('modal-teaser')!;
-    const modalBody     = document.getElementById('modal-body')!;
-    const modalExplore  = document.getElementById('modal-explore') as HTMLAnchorElement;
+    const modalOverlay = document.getElementById('tt-modal')!;
+    const modalIframe  = document.getElementById('modal-iframe') as HTMLIFrameElement;
 
     // Carousel arrows
     const arrowPrev = document.querySelector<HTMLButtonElement>('.carousel-arrow--prev')!;
@@ -1339,11 +1162,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     function goToFacet(idx: number): void {
       const modalWasOpen = modalOverlay.classList.contains('is-open');
       snapToFacet(idx);
-      setState(2, idx); // met appState = 2, met à jour panels
+      setState(2, idx);
       if (modalWasOpen) {
-        // Mise à jour du contenu modal sans fermer/rouvrir
-        populateModal(idx);
-        appState = 3; // remettre à 3 (setState l'a repassé à 2)
+        if (modalIframe && ttItems[idx]) modalIframe.src = ttItems[idx].href + '?modal=1';
+        appState = 3;
       }
     }
 
@@ -1401,131 +1223,24 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       });
     }
 
-    // ── Modal ─────────────────────────────────────────────────────
-    // Remplit le contenu sans toucher à la visibilité
-    function populateModal(idx: number): void {
-      const d = ttItems[idx];
-      if (!d) return;
-      const color = `var(--facet-${d.key})`;
-
-      modalChip.textContent = d.label;
-      modalChip.style.color = color;
-      (modalChip as HTMLElement).style.borderColor = color;
-      modalHeadline.textContent = d.headline;
-      modalTeaser.textContent = d.teaser;
-      modalExplore.href = d.href;
-      modalExplore.style.color = color;
-
-      modalBody.innerHTML = '';
-
-      if (d.isSon) {
-        const block = document.createElement('details');
-        block.className = 'modal-block';
-        block.open = true;
-        const summary = document.createElement('summary');
-        summary.className = 'modal-block-title';
-        summary.textContent = 'Gigs';
-        block.appendChild(summary);
-        if (d.gigs.length > 0) {
-          const ul = document.createElement('ul');
-          ul.className = 'modal-gig-list';
-          d.gigs.forEach(g => {
-            const li = document.createElement('li');
-            li.className = 'modal-gig-row';
-            const date = document.createElement('time');
-            date.className = 'mg-date';
-            date.textContent = g.date;
-            const title = document.createElement('span');
-            title.className = 'mg-title';
-            title.textContent = g.title;
-            const fmt = document.createElement('span');
-            fmt.className = 'mg-format';
-            fmt.textContent = g.format;
-            li.append(date, title, fmt);
-            ul.appendChild(li);
-          });
-          block.appendChild(ul);
-          const more = document.createElement('a');
-          more.href = '/son';
-          more.className = 'modal-gig-more';
-          more.style.color = color;
-          more.textContent = 'Voir tous →';
-          block.appendChild(more);
-        } else {
-          const p = document.createElement('p');
-          p.className = 'modal-empty';
-          p.textContent = 'Prochaines dates bientôt annoncées.';
-          block.appendChild(p);
-        }
-        modalBody.appendChild(block);
-      }
-
-      if (d.streamLinks.length > 0) {
-        const block = document.createElement('details');
-        block.className = 'modal-block';
-        const summary = document.createElement('summary');
-        summary.className = 'modal-block-title';
-        summary.textContent = 'Écoute';
-        block.appendChild(summary);
-        const btns = document.createElement('div');
-        btns.className = 'modal-stream-btns';
-        d.streamLinks.forEach(sl => {
-          const a = document.createElement('a');
-          a.href = sl.url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.className = 'modal-stream-btn';
-          a.style.color = color;
-          a.textContent = sl.label;
-          btns.appendChild(a);
-        });
-        block.appendChild(btns);
-        modalBody.appendChild(block);
-      }
-
-      if (d.otherLinks.length > 0) {
-        const block = document.createElement('details');
-        block.className = 'modal-block';
-        const summary = document.createElement('summary');
-        summary.className = 'modal-block-title';
-        summary.textContent = 'Liens';
-        block.appendChild(summary);
-        const ul = document.createElement('ul');
-        ul.className = 'modal-links-list';
-        d.otherLinks.forEach(ol => {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = ol.url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          a.className = 'modal-link';
-          a.textContent = ol.key;
-          li.appendChild(a);
-          ul.appendChild(li);
-        });
-        block.appendChild(ul);
-        modalBody.appendChild(block);
-      }
-
-    }
-
-    // Ouvre la modal par-dessus l'état 2 (scene.dataset.state reste "2")
+    // ── Modal iframe ──────────────────────────────────────────────
+    // La page facette complète se charge dans l'iframe.
+    // scene.dataset.state reste "2" → fond homepage toujours visible.
     function openModal(idx: number): void {
-      populateModal(idx);
+      const d = ttItems[idx];
+      if (!d || !modalIframe) return;
+      modalIframe.src = d.href + '?modal=1'; // active le scroll dans l'iframe
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
       appState = 3;
-      // scene.dataset.state reste "2" intentionnellement
     }
 
     function closeModal(): void {
       if (!modalOverlay.classList.contains('is-open')) return;
+      if (modalIframe) modalIframe.src = ''; // stop chargement
       modalOverlay.classList.remove('is-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
-      if (appState === 3) {
-        appState = 2;
-        // scene.dataset.state est déjà "2"
-      }
+      if (appState === 3) appState = 2;
     }
 
     // ── Gestionnaires d'événements ────────────────────────────────
