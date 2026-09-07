@@ -587,6 +587,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     outline-offset: 3px;
   }
 
+  @keyframes tt-snap-pulse {
+    0%   { scale: 1;    filter: none; }
+    35%  { scale: 1.18; filter: drop-shadow(0 0 10px var(--highlight-c, white)); }
+    100% { scale: 1;    filter: none; }
+  }
+  .pastille.is-snap-pulse {
+    animation: tt-snap-pulse 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  }
+
   /* ─── Flèches carrousel ──────────────────────────────────────── */
   .carousel-arrow {
     position: fixed;
@@ -877,15 +886,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   let N_FACETS   = 6;
   let STEP       = 60;
   let BASE_ANGLES: number[] = [];
-  // Physique volant d'inertie : friction dynamique proportionnelle à la vélocité
-  // Plus on va vite → friction plus faible → décélération plus longue
-  const FRICTION_LO    = 0.88;   // friction à faible vitesse (arrêt rapide)
-  const FRICTION_HI    = 0.985;  // friction à haute vitesse (longue décélération)
-  const V_FRICTION_REF = 15;     // vélocité de référence (deg·frame⁻¹)
-  const KEY_ACCEL      = 0.4;    // accélération clavier (deg·frame⁻²)
-  const KEY_MAX_VEL    = 20;     // vélocité max clavier (deg·frame⁻¹)
-  const MOUSE_SENS     = 0.28;   // sensibilité scratch (deg·px⁻¹)
-  const VEL_THRESH     = 0.5;
+  const FRICTION     = 0.992;    // roue de la fortune — décélération très progressive
+  const KEY_ACCEL    = 0.6;      // accélération clavier (deg·frame⁻²)
+  const KEY_MAX_VEL  = 25;       // vélocité max clavier (deg·frame⁻¹)
+  const MOUSE_SENS   = 0.28;     // sensibilité scratch (deg·px⁻¹)
+  const VEL_THRESH   = 0.15;     // seuil snap — disque vraiment lent
+  const IDLE_TIMEOUT = 10_000;   // retour état 0 après 10s sans interaction
 
   let targetAngle  = 0;
   let currentAngle = 0;
@@ -903,6 +909,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   let keyIsHeld   = false;
   let keyDir      = 0;
   let wasCoasting = false;
+  let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
   document.addEventListener('astro:page-load', () => {
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
@@ -942,6 +949,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     ctrl = new AbortController();
     const sig = ctrl.signal;
 
+    if (idleTimer !== null) { clearTimeout(idleTimer); idleTimer = null; }
     appState = 0;
     activeFacetIdx  = -1;
     activeFacetHref = '';
@@ -1050,7 +1058,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         `var(--facet-${pastilles[activeIdx].dataset.facet})`
       );
 
-      if (appState === 1 && activeIdx !== activeFacetIdx) {
+      if ((appState === 1 || appState === 2) && activeIdx !== activeFacetIdx) {
         setActiveFacetInfo(activeIdx);
       }
 
@@ -1060,8 +1068,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }
 
     function animate(): void {
-      // Accélération clavier : ajoute à velAngle chaque frame tant que la touche est maintenue
-      if (keyIsHeld && (appState === 0 || appState === 1)) {
+      if (keyIsHeld && appState !== 3) {
         velAngle += KEY_ACCEL * keyDir;
         if (Math.abs(velAngle) > KEY_MAX_VEL) velAngle = Math.sign(velAngle) * KEY_MAX_VEL;
       }
@@ -1070,15 +1077,16 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
       if (Math.abs(velAngle) > VEL_THRESH || keyIsHeld) {
         currentAngle += velAngle;
-        if (!keyIsHeld) {
-          // Friction dynamique : croît avec la vélocité → plus vite = décélération plus longue
-          const t = Math.min(Math.abs(velAngle) / V_FRICTION_REF, 1);
-          velAngle *= FRICTION_LO + (FRICTION_HI - FRICTION_LO) * t;
-        }
+        if (!keyIsHeld) velAngle *= FRICTION;
         targetAngle  = currentAngle;
         wasCoasting  = true;
       } else {
-        if (wasCoasting && appState === 1) snapToFacet(getActiveIdx());
+        if (wasCoasting) {
+          const idx = getActiveIdx();
+          snapToFacet(idx);
+          if (appState >= 1) highlightPastille(idx);
+          if (appState === 2) updatePanels(idx);
+        }
         wasCoasting = false;
         velAngle = 0;
         const aDiff = targetAngle - currentAngle;
@@ -1121,6 +1129,23 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       schedule();
     }
 
+    function highlightPastille(idx: number): void {
+      const el = pastilles[idx];
+      el.style.setProperty('--highlight-c', `var(--facet-${el.dataset.facet})`);
+      el.classList.remove('is-snap-pulse');
+      void el.offsetWidth; // reflow pour relancer l'animation si déjà en cours
+      el.classList.add('is-snap-pulse');
+      el.addEventListener('animationend', () => el.classList.remove('is-snap-pulse'), { once: true });
+    }
+
+    function resetIdleTimer(): void {
+      if (idleTimer !== null) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        idleTimer = null;
+        if (appState !== 0) setState(0);
+      }, IDLE_TIMEOUT);
+    }
+
     // ── Gestion de l'info facette active ──────────────────────────
     function setActiveFacetInfo(idx: number): void {
       activeFacetIdx  = idx;
@@ -1142,6 +1167,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       scene.dataset.state = String(newState); // "0", "1" ou "2" uniquement
 
       if (newState === 0) {
+        if (idleTimer !== null) { clearTimeout(idleTimer); idleTimer = null; }
         document.documentElement.style.setProperty('--active-facet-color', 'transparent');
         activeFacetIdx  = -1;
         activeFacetHref = '';
@@ -1153,10 +1179,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         closeModal();
 
       } else if (newState === 1 && facetIdx >= 0) {
+        resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_1;
 
       } else if (newState === 2 && facetIdx >= 0) {
+        resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_0;
         updatePanels(facetIdx);
@@ -1382,21 +1410,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
       const dir = isRight ? 1 : -1;
 
-      // Carrousel en états 2 et 3
-      if (appState === 2 || appState === 3) {
+      // Carrousel en état 3 (modal) uniquement — flèches
+      if (appState === 3) {
         goToFacet((activeFacetIdx + dir + N_FACETS) % N_FACETS);
         return;
       }
 
-      // Physique "vinyle" en états 0/1 : accumulation de vélocité par appui maintenu
+      // États 0, 1, 2 : rotation physique du disque
       if (dir !== keyDir) {
         keyDir = dir;
-        if (keyIsHeld) velAngle = 0; // inversion de direction → remise à zéro
+        if (keyIsHeld) velAngle = 0; // inversion → reset
       }
       if (!keyIsHeld) {
         keyIsHeld = true;
-        if (appState !== 1) setState(1, getActiveIdx());
+        if (appState === 0) setState(1, getActiveIdx()); // 0→1 ; état 2 reste en état 2
       }
+      resetIdleTimer();
       schedule();
     }, { signal: sig });
 
@@ -1416,14 +1445,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (t === scene || t === bgStage) setState(0);
     }, { signal: sig });
 
-    // Molette — même physique inertielle que les autres entrées
+    // Molette — momentum additif, ~1.5°/frame par cran de molette standard
     scene.addEventListener('wheel', (e) => {
       if (appState === 3) return;
       e.preventDefault();
       const raw = (e as WheelEvent).deltaY;
-      const capped = Math.sign(raw) * Math.min(Math.abs(raw), 80);
-      velAngle -= capped * 0.09; // cumul de momentum → relances possibles
+      const capped = Math.sign(raw) * Math.min(Math.abs(raw), 100);
+      velAngle -= capped * 0.015;
       targetAngle = currentAngle;
+      resetIdleTimer();
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
@@ -1443,6 +1473,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       mouseDragStartY = e.clientY;
       mouseDragDist = 0;
       velAngle = 0;
+      resetIdleTimer();
     }, { signal: sig });
 
     window.addEventListener('mousemove', (e) => {
@@ -1488,6 +1519,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       const te = e as TouchEvent;
       if (te.touches.length !== 1) return;
       keyIsHeld = false;
+      resetIdleTimer();
       touchIsRotating = true;
       touchLastDeg = fingerAngle(te.touches[0]);
       touchLastMs  = performance.now();
