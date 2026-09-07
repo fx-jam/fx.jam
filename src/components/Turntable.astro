@@ -311,6 +311,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     .scene[data-state="2"] .panel-end {
       align-self: stretch;
       justify-self: stretch;
+      width: 100%;       /* pleine largeur dans la cellule grid */
+      max-width: none;   /* annule la limite 300px du desktop */
       overflow: hidden;
       padding: 0.6rem 1rem;
     }
