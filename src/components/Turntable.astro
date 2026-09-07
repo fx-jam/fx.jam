@@ -1384,10 +1384,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       // Rotation libre en états 0/1
       if (dir !== keyHeldDir) { keyHeldDir = dir; keyHeldFrames = 0; }
       keyHeldFrames++;
-      const step  = Math.min(BASE_STEP + keyHeldFrames * 0.15, MAX_STEP);
       const idx = (getTargetIdx() + dir + N_FACETS) % N_FACETS;
       snapToFacet(idx);
-      velAngle = dir * step * 0.35; // kick appliqué après le snap (sinon snapToFacet l'efface)
       setState(1, idx);
     }, { signal: sig });
 
