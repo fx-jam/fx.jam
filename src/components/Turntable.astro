@@ -363,8 +363,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     pointer-events: none;
     z-index: 0;
   }
-  .scene[data-state="1"] .bg-stage,
-  .scene[data-state="2"] .bg-stage { opacity: 1; }
+  .scene[data-state="1"] .bg-stage { opacity: 1; }
+  .scene[data-state="2"] .bg-stage {
+    opacity: 1;
+    background: radial-gradient(
+      ellipse 80% 80% at center,
+      color-mix(in srgb, var(--stage-c, transparent) 4%, var(--bg-app)) 0%,
+      var(--bg-app) 55%
+    );
+  }
 
   /* ─── Wrapper platine (grid cell en état 2) ──────────────────── */
   .turntable-wrap {
@@ -779,8 +786,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   .modal-inner {
     position: relative;
-    width: min(680px, 95vw);
-    height: 88vh;
+    width: min(680px, 90vw);
+    height: 80dvh;
     background: var(--bg-app);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -1403,12 +1410,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     // Molette
     scene.addEventListener('wheel', (e) => {
-      if (appState === 2 || appState === 3) return; // pas de rotation en état 2/3
+      if (appState === 3) return;
       e.preventDefault();
       velAngle = 0;
       const raw = (e as WheelEvent).deltaY;
       const capped = Math.sign(raw) * Math.min(Math.abs(raw), 80);
-      targetAngle -= capped * 0.25;
+      targetAngle -= capped * 0.75;
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
@@ -1423,7 +1430,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     scene.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
-      if (appState === 2 || appState === 3) return;
+      if (appState === 3) return;
       e.preventDefault();
       mouseDown = true;
       mouseDragStartX = e.clientX; mouseDragStartY = e.clientY; mouseDragDist = 0;
@@ -1457,13 +1464,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         const first = mouseSamples[0];
         const last  = mouseSamples[mouseSamples.length - 1];
         const dt = last.t - first.t;
-        if (dt > 0) velAngle = (last.angle - first.angle) / dt * 16;
+        if (dt > 0) velAngle = (last.angle - first.angle) / dt * 40;
       }
-      if (mouseDragDist < 5 && !(e.target as Element).closest('.disk-center')) setState(0);
+      if (mouseDragDist < 5 && !(e.target as Element).closest('.disk-center') && appState !== 2) setState(0);
       schedule();
     }, { signal: sig });
 
-    // Touch rotatif (états 0/1 uniquement)
+    // Touch rotatif (états 0/1/2)
     const VEL_SAMPLES = 4;
     let touchLastDeg = 0;
     let touchLastMs  = 0;
@@ -1484,7 +1491,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }
 
     scene.addEventListener('touchstart', (e) => {
-      if (appState === 2 || appState === 3) return; // swipe handler prend le relais
+      if (appState === 3) return;
       const te = e as TouchEvent;
       if (te.touches.length !== 1) return;
       touchIsRotating = true;
@@ -1504,7 +1511,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       const newDeg = fingerAngle(te.touches[0]);
       const now    = performance.now();
       const dt     = Math.max(now - touchLastMs, 1);
-      const delta  = wrapDelta(newDeg - touchLastDeg);
+      const delta  = wrapDelta(newDeg - touchLastDeg) * 1.3;
       currentAngle += delta;
       targetAngle   = currentAngle;
       velBuf.push(delta / dt * (1000 / 60));
@@ -1517,14 +1524,14 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     scene.addEventListener('touchend', (e) => {
       if (!touchIsRotating) return;
       touchIsRotating = false;
-      if (velBuf.length > 0)
+      if (appState !== 2 && velBuf.length > 0)
         velAngle = velBuf.reduce((a, b) => a + b, 0) / velBuf.length;
       velBuf = [];
       const te = e as TouchEvent;
       const touch = te.changedTouches[0];
       if (touch) {
         const dist = Math.hypot(touch.clientX - touchRotStartX, touch.clientY - touchRotStartY);
-        if (dist < 5 && !(e.target as Element).closest('.disk-center')) setState(0);
+        if (dist < 5 && !(e.target as Element).closest('.disk-center') && appState !== 2) setState(0);
       }
       schedule();
     }, { passive: true, signal: sig } as AddEventListenerOptions);
