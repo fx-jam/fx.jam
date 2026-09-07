@@ -64,6 +64,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
       /* Modal état 3 — flou de fond */
       --modal-blur: 10px;
+
+      /* Flip animation */
+      --flip-duration: 600ms;
+      /* Flip arrows état 1 */
+      --flip-arrow-size: 1.4rem;
     }
 
     /* ============================================================
@@ -120,6 +125,32 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
     @keyframes vt-fade-out { to   { opacity: 0; } }
     @keyframes vt-fade-in  { from { opacity: 0; } }
+
+    @keyframes needle-bounce {
+      0%   { transform: translateX(-50%) scaleY(1); }
+      30%  { transform: translateX(-50%) scaleY(1.5) translateY(-3px); }
+      65%  { transform: translateX(-50%) scaleY(0.85) translateY(2px); }
+      100% { transform: translateX(-50%) scaleY(1); }
+    }
+    @keyframes facet-snap-pulse {
+      0%   { scale: 1;    filter: none; }
+      35%  { scale: 1.18; filter: drop-shadow(0 0 10px var(--highlight-c, white)); }
+      100% { scale: 1;    filter: none; }
+    }
+    @keyframes arrow-pulse {
+      0%, 100% { opacity: 0.4; transform: translateY(0); }
+      50%       { opacity: 1;   transform: translateY(var(--arrow-drift, -4px)); }
+    }
+    @keyframes flip-out {
+      0%   { transform: perspective(900px) rotateX(0deg); opacity: 1; }
+      50%  { transform: perspective(900px) rotateX(calc(var(--flip-dir, 1) * 90deg)); opacity: 0; }
+      51%  { transform: perspective(900px) rotateX(calc(var(--flip-dir, 1) * -90deg)); opacity: 0; }
+      100% { transform: perspective(900px) rotateX(0deg); opacity: 1; }
+    }
+    .scene.flipping {
+      animation: flip-out var(--flip-duration) cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      pointer-events: none;
+    }
 
     /* Aller : nouveau contenu émerge de l'iris, ancien s'efface */
     ::view-transition-old(root) {
