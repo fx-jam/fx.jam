@@ -311,7 +311,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     .scene[data-state="2"] .turntable-wrap { grid-row: 2; grid-column: 1; }
     .scene[data-state="2"] .panel-end    { grid-row: 3; grid-column: 1; }
 
-    /* Empêche le texte de déplacer la platine : overflow contenu dans la cellule */
+    /* Empêche le texte de déplacer la platine + symétrie centrage portrait */
     .scene[data-state="2"] .panel-start,
     .scene[data-state="2"] .panel-end {
       align-self: stretch;
@@ -322,6 +322,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     .scene[data-state="2"] .panel-content {
       height: 100%;
       overflow: hidden;
+      align-items: center;
+      text-align: center;
+    }
+    .scene[data-state="2"] .facet-chip,
+    .scene[data-state="2"] .cta-explorer {
+      align-self: center;
+    }
+    /* Panel haut : colle en bas (près du disque) */
+    .scene[data-state="2"] .panel-start .panel-content {
+      justify-content: flex-end;
+      padding-bottom: 0.4rem;
+    }
+    /* Panel bas : colle en haut (près du disque) */
+    .scene[data-state="2"] .panel-end .panel-content {
+      justify-content: flex-start;
+      padding-top: 0.4rem;
     }
     .scene[data-state="2"] .panel-headline {
       font-size: clamp(0.8rem, 4vw, 1.3rem);
@@ -1523,16 +1539,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       }, { signal: sig });
     });
 
-    // Centre → état 2 (si état 1)
+    // Centre du disque : même comportement que cliquer la facette active
     centerEl.addEventListener('click', () => {
-      if (appState === 1 && activeFacetIdx >= 0) {
+      if (appState === 0) {
+        const idx = getActiveIdx();
+        snapToFacet(idx);
+        setState(2, idx);
+      } else if (appState === 1 && activeFacetIdx >= 0) {
         setState(2, activeFacetIdx);
+      } else if (appState === 2 && activeFacetIdx >= 0) {
+        openModal(activeFacetIdx); // deuxième tap → page complète
       }
     }, { signal: sig });
 
-    // CTA Explorer → navigation directe vers la page facette
+    // CTA Explorer → page complète en modal overlay (fond homepage toujours visible)
     ctaExplorer.addEventListener('click', () => {
-      if (appState === 2 && activeFacetHref) navigate(activeFacetHref);
+      if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
     }, { signal: sig });
 
     // Fermer modal (× ou clic hors modal-inner)
