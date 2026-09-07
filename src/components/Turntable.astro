@@ -1530,9 +1530,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       }
     }, { signal: sig });
 
-    // CTA Explorer → modal directement (pas d'étape intermédiaire)
+    // CTA Explorer → navigation directe vers la page facette
     ctaExplorer.addEventListener('click', () => {
-      if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
+      if (appState === 2 && activeFacetHref) navigate(activeFacetHref);
     }, { signal: sig });
 
     // Fermer modal (× ou clic hors modal-inner)
