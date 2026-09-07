@@ -364,14 +364,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     z-index: 0;
   }
   .scene[data-state="1"] .bg-stage { opacity: 1; }
-  .scene[data-state="2"] .bg-stage {
-    opacity: 1;
-    background: radial-gradient(
-      ellipse 80% 80% at center,
-      color-mix(in srgb, var(--stage-c, transparent) 4%, var(--bg-app)) 0%,
-      var(--bg-app) 55%
-    );
-  }
+  .scene[data-state="2"] .bg-stage { opacity: 0.45; }
 
   /* ─── Wrapper platine (grid cell en état 2) ──────────────────── */
   .turntable-wrap {
@@ -786,8 +779,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   .modal-inner {
     position: relative;
-    width: min(680px, 90vw);
-    height: 80dvh;
+    width: min(820px, 92vw);
+    height: 88dvh;
     background: var(--bg-app);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -904,6 +897,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   let keyHeldFrames = 0;
   let keyHeldDir    = 0;
+  let wasCoasting   = false;
 
   document.addEventListener('astro:page-load', () => {
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
@@ -1064,7 +1058,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         currentAngle += velAngle;
         velAngle     *= FRICTION;
         targetAngle   = currentAngle;
+        wasCoasting   = true;
       } else {
+        if (wasCoasting && appState === 1) snapToFacet(getActiveIdx());
+        wasCoasting = false;
         velAngle = 0;
         const aDiff = targetAngle - currentAngle;
         if (Math.abs(aDiff) < 0.02 && Math.abs(rDiff) < 0.05) {
@@ -1388,9 +1385,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (dir !== keyHeldDir) { keyHeldDir = dir; keyHeldFrames = 0; }
       keyHeldFrames++;
       const step  = Math.min(BASE_STEP + keyHeldFrames * 0.15, MAX_STEP);
-      velAngle = dir * step * 0.35;
       const idx = (getTargetIdx() + dir + N_FACETS) % N_FACETS;
       snapToFacet(idx);
+      velAngle = dir * step * 0.35; // kick appliqué après le snap (sinon snapToFacet l'efface)
       setState(1, idx);
     }, { signal: sig });
 
