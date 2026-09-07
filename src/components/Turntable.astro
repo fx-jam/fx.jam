@@ -310,6 +310,30 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     .scene[data-state="2"] .panel-start  { grid-row: 1; grid-column: 1; }
     .scene[data-state="2"] .turntable-wrap { grid-row: 2; grid-column: 1; }
     .scene[data-state="2"] .panel-end    { grid-row: 3; grid-column: 1; }
+
+    /* Empêche le texte de déplacer la platine : overflow contenu dans la cellule */
+    .scene[data-state="2"] .panel-start,
+    .scene[data-state="2"] .panel-end {
+      align-self: stretch;
+      justify-self: stretch;
+      overflow: hidden;
+      padding: 0.6rem 1rem;
+    }
+    .scene[data-state="2"] .panel-content {
+      height: 100%;
+      overflow: hidden;
+    }
+    .scene[data-state="2"] .panel-headline {
+      font-size: clamp(0.8rem, 4vw, 1.3rem);
+    }
+    .scene[data-state="2"] .panel-teaser-txt {
+      font-size: clamp(0.55rem, 2.5vw, 0.78rem);
+      max-height: 2.4em;
+    }
+    .scene[data-state="2"] .cta-explorer {
+      font-size: clamp(0.6rem, 2.5vw, 0.78rem);
+      padding: 0.4rem 0.8rem;
+    }
   }
 
   /* ─── Fond coloré (états 1 + 2) ─────────────────────────────── */
@@ -455,7 +479,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     border-radius: 50%;
     opacity: 0.85;
     z-index: 0;
+    transition: opacity 0.3s ease;
   }
+  .scene[data-state="1"] .center-logo-bg,
+  .scene[data-state="2"] .center-logo-bg { opacity: var(--logo-dim); }
   .center-s0,
   .center-s1 {
     position: absolute;
@@ -560,7 +587,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     color: var(--text-secondary);
     font-size: 1.2rem;
     cursor: pointer;
-    z-index: 10;
+    z-index: 110; /* au-dessus de la modal (100) */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -724,7 +751,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: oklch(0 0 0 / 0.75);
+    background: oklch(0 0 0 / 0.55);
+    backdrop-filter: blur(var(--modal-blur));
+    -webkit-backdrop-filter: blur(var(--modal-blur));
     z-index: 100;
     opacity: 0;
     pointer-events: none;
@@ -1254,21 +1283,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }
 
     // ── Machine d'états ───────────────────────────────────────────
+    // Note : scene.dataset.state ne prend jamais la valeur "3".
+    // La modal s'ouvre par-dessus l'état 2 (arrière-plan reste visible + flouté).
     function setState(newState: number, facetIdx = -1): void {
       appState = newState;
-      scene.dataset.state = String(newState);
+      scene.dataset.state = String(newState); // "0", "1" ou "2" uniquement
 
       if (newState === 0) {
         document.documentElement.style.setProperty('--active-facet-color', 'transparent');
         activeFacetIdx  = -1;
         activeFacetHref = '';
         targetRingR = RING_R_0;
-        // Panels : retrait immédiat via CSS (display:none quand data-state != 2)
         panelStart.classList.remove('is-visible');
         panelEnd.classList.remove('is-visible');
         panelStart.setAttribute('aria-hidden', 'true');
         panelEnd.setAttribute('aria-hidden', 'true');
-        closeModal(false); // ferme sans changer l'état
+        closeModal();
 
       } else if (newState === 1 && facetIdx >= 0) {
         setActiveFacetInfo(facetIdx);
@@ -1278,26 +1308,27 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_0;
         updatePanels(facetIdx);
-        // Slide-in : reset animation puis déclenche
         panelStart.classList.remove('is-visible');
         panelEnd.classList.remove('is-visible');
         panelStart.setAttribute('aria-hidden', 'false');
         panelEnd.setAttribute('aria-hidden', 'false');
-        void panelStart.offsetWidth; // force reflow
+        void panelStart.offsetWidth;
         panelStart.classList.add('is-visible');
         panelEnd.classList.add('is-visible');
-
-      } else if (newState === 3) {
-        openModal(activeFacetIdx);
-        return; // pas de schedule supplémentaire
       }
 
       schedule();
     }
 
     function goToFacet(idx: number): void {
+      const modalWasOpen = modalOverlay.classList.contains('is-open');
       snapToFacet(idx);
-      setState(2, idx);
+      setState(2, idx); // met appState = 2, met à jour panels
+      if (modalWasOpen) {
+        // Mise à jour du contenu modal sans fermer/rouvrir
+        populateModal(idx);
+        appState = 3; // remettre à 3 (setState l'a repassé à 2)
+      }
     }
 
     // ── Panels : mise à jour du contenu ───────────────────────────
@@ -1355,7 +1386,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }
 
     // ── Modal ─────────────────────────────────────────────────────
-    function openModal(idx: number): void {
+    // Remplit le contenu sans toucher à la visibilité
+    function populateModal(idx: number): void {
       const d = ttItems[idx];
       if (!d) return;
       const color = `var(--facet-${d.key})`;
@@ -1368,7 +1400,6 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       modalExplore.href = d.href;
       modalExplore.style.color = color;
 
-      // Body
       modalBody.innerHTML = '';
 
       if (d.isSon) {
@@ -1460,18 +1491,24 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         modalBody.appendChild(block);
       }
 
+    }
+
+    // Ouvre la modal par-dessus l'état 2 (scene.dataset.state reste "2")
+    function openModal(idx: number): void {
+      populateModal(idx);
       modalOverlay.classList.add('is-open');
       modalOverlay.setAttribute('aria-hidden', 'false');
       appState = 3;
-      scene.dataset.state = '3';
+      // scene.dataset.state reste "2" intentionnellement
     }
 
-    function closeModal(restoreState = true): void {
+    function closeModal(): void {
+      if (!modalOverlay.classList.contains('is-open')) return;
       modalOverlay.classList.remove('is-open');
       modalOverlay.setAttribute('aria-hidden', 'true');
-      if (restoreState && appState === 3) {
+      if (appState === 3) {
         appState = 2;
-        scene.dataset.state = '2';
+        // scene.dataset.state est déjà "2"
       }
     }
 
@@ -1493,12 +1530,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       }
     }, { signal: sig });
 
-    // CTA Explorer → modal (état 3)
+    // CTA Explorer → modal directement (pas d'étape intermédiaire)
     ctaExplorer.addEventListener('click', () => {
-      if (appState === 2) setState(3);
+      if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
     }, { signal: sig });
 
-    // Fermer modal
+    // Fermer modal (× ou clic hors modal-inner)
     modalOverlay.querySelector('.modal-close')?.addEventListener('click', () => {
       closeModal();
     }, { signal: sig });
@@ -1506,12 +1543,25 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (!(e.target as Element).closest('.modal-inner')) closeModal();
     }, { signal: sig });
 
-    // Carrousel : flèches
+    // Swipe horizontal sur la modal → carrousel
+    let modalSwipeStartX = 0;
+    modalOverlay.addEventListener('touchstart', (e) => {
+      modalSwipeStartX = (e as TouchEvent).touches[0]?.clientX ?? 0;
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+    modalOverlay.addEventListener('touchend', (e) => {
+      if (appState !== 3) return;
+      const dx = ((e as TouchEvent).changedTouches[0]?.clientX ?? 0) - modalSwipeStartX;
+      if (Math.abs(dx) > 50) {
+        goToFacet((activeFacetIdx + (dx < 0 ? 1 : -1) + N_FACETS) % N_FACETS);
+      }
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+
+    // Carrousel : flèches (états 2 et 3)
     arrowPrev.addEventListener('click', () => {
-      if (appState === 2) goToFacet((activeFacetIdx - 1 + N_FACETS) % N_FACETS);
+      if (appState === 2 || appState === 3) goToFacet((activeFacetIdx - 1 + N_FACETS) % N_FACETS);
     }, { signal: sig });
     arrowNext.addEventListener('click', () => {
-      if (appState === 2) goToFacet((activeFacetIdx + 1) % N_FACETS);
+      if (appState === 2 || appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
     }, { signal: sig });
 
     // Lightbox
@@ -1546,7 +1596,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }, { passive: true, signal: sig } as AddEventListenerOptions);
 
     scene.addEventListener('touchend', (e) => {
-      if (appState !== 2) return;
+      if (appState !== 2 && appState !== 3) return;
       const te = e as TouchEvent;
       const touch = te.changedTouches[0];
       if (!touch) return;
@@ -1564,13 +1614,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         keyHeldDir = 0; keyHeldFrames = 0;
-        if (appState === 3) { closeModal(); return; }
-        setState(0);
+        if (modalOverlay.classList.contains('is-open')) { closeModal(); return; }
+        if (appState >= 1) setState(0);
         return;
       }
 
       if (e.key === 'Enter') {
-        if (appState === 2) { setState(3); return; }
+        if (appState === 2 && activeFacetIdx >= 0) { openModal(activeFacetIdx); return; }
         if (appState === 1 && activeFacetHref) navigate(activeFacetHref);
         return;
       }
@@ -1582,8 +1632,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
       const dir = isRight ? 1 : -1;
 
-      // Carrousel en état 2
-      if (appState === 2) {
+      // Carrousel en états 2 et 3
+      if (appState === 2 || appState === 3) {
         goToFacet((activeFacetIdx + dir + N_FACETS) % N_FACETS);
         return;
       }
@@ -1605,10 +1655,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       }
     }, { signal: sig });
 
-    // Clic sur le fond de scène → état 0
+    // Clic sur le fond de scène → état 0 (la modal capture ses propres clics)
     scene.addEventListener('click', (e) => {
-      if (appState === 0) return;
-      if (appState === 3) return; // modal gère son propre click
+      if (appState === 0 || appState === 3) return;
       const t = e.target as Element;
       if (t === scene || t === bgStage) setState(0);
     }, { signal: sig });
