@@ -817,13 +817,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     position: absolute;
     inset: 0;
     background: var(--bg-app);
-    align-items: center;
-    justify-content: center;
     z-index: 5;
     overflow: hidden;
   }
   .scene[data-state="2"] .face-b-wrap {
-    display: flex;
+    display: block;
   }
   /* Masquer composants état 1 en état 2 — règles séparées pour éviter bugs de compilation */
   .scene[data-state="2"] .turntable-wrap  { display: none; }
@@ -882,8 +880,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     height: 100%;
     background: radial-gradient(
       circle at 35% 35%,
-      color-mix(in srgb, var(--cover-c, var(--bg-elevated)) 30%, var(--bg-surface)),
-      var(--bg-surface) 80%
+      color-mix(in srgb, var(--cover-c, var(--bg-elevated)) 70%, var(--bg-surface)) 0%,
+      color-mix(in srgb, var(--cover-c, var(--bg-elevated)) 25%, var(--bg-surface)) 100%
     );
   }
 
@@ -1406,7 +1404,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_0;
-        faceBWrap.style.display = 'flex';
+        faceBWrap.style.display = 'block';
         faceBGoto(facetIdx);
       }
 
