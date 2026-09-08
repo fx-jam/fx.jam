@@ -278,9 +278,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     </div>
   </div>
 
-  <!-- Flèches flip — bas de l'écran, état 2 uniquement -->
-  <div class="flip-bar">
+  <!-- Flèches flip — haut et bas de l'écran, état 2 uniquement -->
+  <div class="flip-bar flip-bar--top">
     <button class="flip-arrow flip-arrow--up" type="button" aria-label="Voir la facette complète">↑</button>
+  </div>
+  <div class="flip-bar flip-bar--bottom">
     <button class="flip-arrow flip-arrow--down" type="button" aria-label="Voir la facette complète">↓</button>
   </div>
 
@@ -382,8 +384,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     inset: 0;
     background: radial-gradient(
       ellipse 80% 80% at center,
-      color-mix(in srgb, var(--stage-c, var(--bg-app)) 15%, var(--bg-app)) 0%,
-      var(--bg-app) 70%
+      color-mix(in srgb, var(--stage-c, var(--bg-app)) 30%, var(--bg-app)) 0%,
+      var(--bg-app) 80%
     );
     opacity: 0;
     transition: opacity 0.5s ease, background 0.4s ease;
@@ -622,27 +624,24 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     animation: facet-snap-pulse 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
   }
 
-  /* ─── Barre flip — bas de l'écran, état 2 ───────────────────── */
+  /* ─── Flèches flip — haut et bas de l'écran, état 2 ────────── */
   .flip-bar {
     display: none;
     position: fixed;
-    bottom: 1.5rem;
     left: 50%;
     transform: translateX(-50%);
-    gap: 0.5rem;
     z-index: 20;
-    align-items: center;
   }
-  .scene[data-state="2"] .flip-bar {
-    display: flex;
-  }
+  .flip-bar--top    { top: 1.5rem; }
+  .flip-bar--bottom { bottom: 1.5rem; }
+  .scene[data-state="2"] .flip-bar { display: block; }
   .flip-arrow {
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     font-size: 1.1rem;
     cursor: pointer;
-    padding: 0.4rem 1rem;
+    padding: 0.4rem 1.2rem;
     border-radius: 8px;
     transition: background 0.2s ease;
   }
@@ -656,7 +655,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     animation: arrow-pulse 1.4s ease-in-out infinite;
     animation-delay: 0.7s;
   }
-  /* Explorer remplacé par la flip-bar en état 2 */
+  /* Explorer remplacé par les flèches flip en état 2 */
   .scene[data-state="2"] .cta-explorer { display: none; }
 
   /* ─── Flèches carrousel ──────────────────────────────────────── */
@@ -698,7 +697,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s ease, transform 0.4s ease;
-    background: var(--panel-bg);
+    background: transparent;
     color: var(--text-primary);
   }
   .panel-start { transform: translateX(-24px); }
@@ -871,8 +870,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
 
   .face-b-cover {
-    aspect-ratio: 1;
     width: min(45vw, 45vh);
+    height: min(45vw, 45vh);
     flex-shrink: 0;
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -882,6 +881,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   @media (orientation: portrait) {
     .face-b-cover {
       width: min(80vw, 38vh);
+      height: min(80vw, 38vh);
     }
   }
 
@@ -903,20 +903,21 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
 
   .face-b-content {
-    aspect-ratio: 1;
     width: min(45vw, 45vh);
+    height: min(45vw, 45vh);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     overflow-y: auto;
     flex-shrink: 0;
+    padding: 1rem;
+    box-sizing: border-box;
   }
 
   @media (orientation: portrait) {
     .face-b-content {
       width: min(80vw, 38vh);
-      aspect-ratio: auto;
-      max-height: 38vh;
+      height: min(80vw, 38vh);
     }
   }
 
@@ -1670,13 +1671,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
       const dir = isRight ? 1 : -1;
 
-      // Carrousel en état 3 (modal) uniquement — flèches
-      if (appState === 3) {
+      // Carrousel discret en états 2 et 3 (une facette par appui, pas d'inertie)
+      if (appState === 2 || appState === 3) {
         goToFacet((activeFacetIdx + dir + N_FACETS) % N_FACETS);
         return;
       }
 
-      // États 0, 1, 2 : rotation physique du disque
+      // États 0/1 : rotation physique avec inertie
       if (dir !== keyDir) {
         keyDir = dir;
         if (keyIsHeld) velAngle = 0; // inversion → reset
