@@ -1,14 +1,14 @@
 {
   "displayName": "Hamcat",
   "tagline": "Musicien / DJ / Tech Son / Prof",
-  "bio": "",
+  "bio": "bio",
   "location": "38",
   "logo_url": "https://media.hamcat.live/logos/logo.jpg",
   "fond_url": "https://media.hamcat.live/logos/fond.png",
   "links": {
-    "soundcloud": "",
-    "mixcloud": "",
-    "spotify": "",
+    "soundcloud": "https://soundcloud.com/hamcatmusic",
+    "mixcloud": "https://www.mixcloud.com/fx-hamcat/",
+    "spotify": "https://open.spotify.com/user/1198265241?si=2f9fb593fe9146db",
     "instagram": "",
     "facebook": "",
     "youtube": ""
