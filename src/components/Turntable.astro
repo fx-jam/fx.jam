@@ -1092,10 +1092,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   let rafId: number | null = null;
   let ctrl: AbortController | null = null;
 
-  let keyIsHeld   = false;
-  let keyDir      = 0;
-  let wasCoasting = false;
+  let keyIsHeld    = false;
+  let keyDir       = 0;
+  let wasCoasting  = false;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
+  let faceBVisible = false;
 
   document.addEventListener('astro:page-load', () => {
     if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
@@ -1142,9 +1143,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     targetAngle  = 0;
     currentAngle = 0;
     velAngle     = 0;
-    keyIsHeld   = false;
-    keyDir      = 0;
-    wasCoasting = false;
+    keyIsHeld    = false;
+    keyDir       = 0;
+    wasCoasting  = false;
+    faceBVisible = false;
     scene.dataset.state = '0';
 
     function calcDiskSize(): number {
@@ -1371,6 +1373,17 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       resetIdleTimer();
     }
 
+    function showFaceB(): void {
+      faceBGoto(activeFacetIdx >= 0 ? activeFacetIdx : 0);
+      faceBWrap.style.display = 'block';
+      faceBVisible = true;
+    }
+
+    function hideFaceB(): void {
+      faceBWrap.style.display = 'none';
+      faceBVisible = false;
+    }
+
     function flipToState2(dir: 'up' | 'down'): void {
       if (appState === 2) return;
       const idx = activeFacetIdx >= 0 ? activeFacetIdx : getActiveIdx();
@@ -1410,7 +1423,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         panelEnd.classList.remove('is-visible');
         panelStart.setAttribute('aria-hidden', 'true');
         panelEnd.setAttribute('aria-hidden', 'true');
-        faceBWrap.style.display = 'none';
+        hideFaceB();
         closeModal();
 
       } else if (newState === 1 && facetIdx >= 0) {
@@ -1579,21 +1592,69 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 2 || appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
     }, { signal: sig });
 
-    // Flip arrows (bas écran, état 2) → ouvre la page facette complète
+    // Flip arrows (état 2) → ouvre le carrousel face-B inline
     document.querySelectorAll<HTMLButtonElement>('.flip-arrow').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
+        if (appState === 2) showFaceB();
       }, { signal: sig });
     });
 
-    // Face B — CTA explorer
+    // Face B — CTA explorer (ouvre modal depuis le carrousel)
     document.querySelectorAll<HTMLButtonElement>('.face-b-cta').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (appState !== 2) return;
         const idx = Number(btn.dataset.facetIdx ?? activeFacetIdx);
         openModal(idx);
       }, { signal: sig });
     });
+
+    // Face B — swipe touch (horizontal = carrousel, vertical = fermer)
+    let faceBSwipeStartX = 0;
+    let faceBSwipeStartY = 0;
+    faceBWrap.addEventListener('touchstart', (e) => {
+      const t = (e as TouchEvent).touches[0];
+      if (!t) return;
+      faceBSwipeStartX = t.clientX;
+      faceBSwipeStartY = t.clientY;
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+    faceBWrap.addEventListener('touchend', (e) => {
+      e.stopPropagation(); // évite le handler scene
+      const t = (e as TouchEvent).changedTouches[0];
+      if (!t) return;
+      const dx = t.clientX - faceBSwipeStartX;
+      const dy = t.clientY - faceBSwipeStartY;
+      const absX = Math.abs(dx), absY = Math.abs(dy);
+      if (absX > 50 && absX > absY) {
+        faceBGoto(dx < 0 ? faceBIdx + 1 : faceBIdx - 1);
+      } else if (absY > 60 && absY > absX * 1.5) {
+        hideFaceB();
+      }
+    }, { passive: true, signal: sig } as AddEventListenerOptions);
+
+    // Face B — drag souris (horizontal = carrousel, vertical = fermer)
+    let faceBMouseX = 0;
+    let faceBMouseY = 0;
+    let faceBMouseDown = false;
+    faceBWrap.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      faceBMouseDown = true;
+      faceBMouseX = e.clientX;
+      faceBMouseY = e.clientY;
+      e.preventDefault();
+    }, { signal: sig });
+    faceBWrap.addEventListener('mouseup', (e) => {
+      if (!faceBMouseDown) return;
+      faceBMouseDown = false;
+      const dx = e.clientX - faceBMouseX;
+      const dy = e.clientY - faceBMouseY;
+      const absX = Math.abs(dx), absY = Math.abs(dy);
+      if (absX > 50 && absX > absY) {
+        faceBGoto(dx < 0 ? faceBIdx + 1 : faceBIdx - 1);
+      } else if (absY > 60 && absY > absX * 1.5) {
+        hideFaceB();
+      }
+    }, { signal: sig });
 
     // Lightbox
     document.querySelectorAll<HTMLElement>('.overlay-photo-btn').forEach(btn => {
@@ -1636,7 +1697,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
       if (appState === 1 && absY > 60 && absY > absX * 1.5) {
         flipToState2(dy < 0 ? 'up' : 'down');
-      } else if (appState === 2) {
+      } else if (appState === 2 && !faceBVisible) {
         if (absX > 50 && absX > absY) {
           goToFacet(dx < 0
             ? (activeFacetIdx + 1) % N_FACETS
@@ -1653,6 +1714,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         keyIsHeld = false; keyDir = 0; velAngle = 0;
+        if (faceBVisible) { hideFaceB(); return; }
         if (modalOverlay.classList.contains('is-open')) { closeModal(); return; }
         if (appState >= 1) setState(0);
         return;
@@ -1670,6 +1732,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       e.preventDefault();
 
       const dir = isRight ? 1 : -1;
+
+      // Si face-B visible, les flèches naviguent le carrousel face-B
+      if (faceBVisible) {
+        faceBGoto(faceBIdx + dir);
+        return;
+      }
 
       // Carrousel discret en états 2 et 3 (une facette par appui, pas d'inertie)
       if (appState === 2 || appState === 3) {
@@ -1699,11 +1767,19 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     window.addEventListener('blur', () => { keyIsHeld = false; }, { signal: sig });
 
-    // Clic sur le fond de scène → état 0 (la modal capture ses propres clics)
+    // Tap / clic hors contrôles → état 0 (fonctionne sur PC et mobile)
     scene.addEventListener('click', (e) => {
       if (appState === 0 || appState === 3) return;
       const t = e.target as Element;
-      if (t === scene || t === bgStage) setState(0);
+      if (t.closest('.turntable') ||
+          t.closest('.carousel-arrow') ||
+          t.closest('.flip-bar') ||
+          t.closest('.face-b-wrap') ||
+          t.closest('.modal-overlay') ||
+          t.closest('.tt-lightbox') ||
+          t.closest('a') ||
+          t.closest('button')) return;
+      setState(0);
     }, { signal: sig });
 
     // Molette — momentum additif, ~1.5°/frame par cran de molette standard
