@@ -217,10 +217,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         </div>
 
         <div class="center-s1">
-          <button class="flip-arrow flip-arrow--up" type="button" aria-label="Ouvrir face B">↑</button>
           <span class="preview-label" id="preview-label"></span>
           <span class="preview-teaser" id="preview-teaser"></span>
-          <button class="flip-arrow flip-arrow--down" type="button" aria-label="Ouvrir face B">↓</button>
+          <span class="preview-cta">↵ explorer</span>
         </div>
       </div>
 
@@ -277,6 +276,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         </div>
       ))}
     </div>
+  </div>
+
+  <!-- Flèches flip — bas de l'écran, état 2 uniquement -->
+  <div class="flip-bar">
+    <button class="flip-arrow flip-arrow--up" type="button" aria-label="Voir la facette complète">↑</button>
+    <button class="flip-arrow flip-arrow--down" type="button" aria-label="Voir la facette complète">↓</button>
   </div>
 
   <!-- Données SSR pour JS -->
@@ -617,29 +622,42 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     animation: facet-snap-pulse 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
   }
 
-  /* ─── Flip arrows (état 1 uniquement) ──────────────────────── */
-  .flip-arrow {
-    display: none; /* caché par défaut, révélé seulement en état 1 */
-    background: none;
-    border: none;
-    color: var(--preview-c, var(--text-tertiary));
-    font-size: var(--flip-arrow-size);
-    cursor: pointer;
-    padding: 0.1rem;
-    line-height: 1;
-    width: 100%;
-    text-align: center;
+  /* ─── Barre flip — bas de l'écran, état 2 ───────────────────── */
+  .flip-bar {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 0.5rem;
+    z-index: 20;
+    align-items: center;
   }
-  .scene[data-state="1"] .flip-arrow { display: block; }
+  .scene[data-state="2"] .flip-bar {
+    display: flex;
+  }
+  .flip-arrow {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+  .flip-arrow:hover { background: var(--bg-surface); }
   .flip-arrow--up {
     --arrow-drift: -4px;
-    animation: arrow-pulse 1.2s ease-in-out infinite;
+    animation: arrow-pulse 1.4s ease-in-out infinite;
   }
   .flip-arrow--down {
     --arrow-drift: 4px;
-    animation: arrow-pulse 1.2s ease-in-out infinite;
-    animation-delay: 0.6s;
+    animation: arrow-pulse 1.4s ease-in-out infinite;
+    animation-delay: 0.7s;
   }
+  /* Explorer remplacé par la flip-bar en état 2 */
+  .scene[data-state="2"] .cta-explorer { display: none; }
 
   /* ─── Flèches carrousel ──────────────────────────────────────── */
   .carousel-arrow {
@@ -1504,12 +1522,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     // ── Gestionnaires d'événements ────────────────────────────────
 
-    // Pastille → état 1 (preview ring)
+    // Pastille → état 2 (panels + disk) — pas d'étape intermédiaire au clic
     pastilles.forEach((el, idx) => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         snapToFacet(idx);
-        setState(1, idx);
+        setState(2, idx);
       }, { signal: sig });
     });
 
@@ -1518,7 +1536,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 0) {
         const idx = getActiveIdx();
         snapToFacet(idx);
-        setState(1, idx);
+        setState(2, idx);
       } else if (appState === 1 && activeFacetIdx >= 0) {
         setState(2, activeFacetIdx);
       } else if (appState === 2 && activeFacetIdx >= 0) {
@@ -1560,11 +1578,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 2 || appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
     }, { signal: sig });
 
-    // Flip arrows état 1
+    // Flip arrows (bas écran, état 2) → ouvre la page facette complète
     document.querySelectorAll<HTMLButtonElement>('.flip-arrow').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (appState !== 1) return;
-        flipToState2(btn.classList.contains('flip-arrow--up') ? 'up' : 'down');
+        if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
       }, { signal: sig });
     });
 
