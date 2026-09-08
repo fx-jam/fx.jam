@@ -377,7 +377,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     inset: 0;
     background: radial-gradient(
       ellipse 80% 80% at center,
-      color-mix(in srgb, var(--stage-c, transparent) 10%, var(--bg-app)) 0%,
+      color-mix(in srgb, var(--stage-c, var(--bg-app)) 15%, var(--bg-app)) 0%,
       var(--bg-app) 70%
     );
     opacity: 0;
@@ -680,6 +680,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s ease, transform 0.4s ease;
+    background: var(--panel-bg);
+    color: var(--text-primary);
   }
   .panel-start { transform: translateX(-24px); }
   .panel-end   { transform: translateX(24px); }
@@ -823,11 +825,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   .scene[data-state="2"] .face-b-wrap {
     display: block;
   }
-  /* Masquer composants état 1 en état 2 — règles séparées pour éviter bugs de compilation */
-  .scene[data-state="2"] .turntable-wrap  { display: none; }
-  .scene[data-state="2"] .panel-start     { display: none; }
-  .scene[data-state="2"] .panel-end       { display: none; }
-  .scene[data-state="2"] .carousel-arrow  { opacity: 0; pointer-events: none; }
+  /* face-b-wrap cachée partout sauf contrôle JS explicite */
+  .scene[data-state="2"] .carousel-arrow  { opacity: 1; pointer-events: auto; }
 
   .face-b-carousel {
     display: flex;
@@ -1258,7 +1257,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
           snapToFacet(idx);
           highlightIndicator();
           if (appState >= 1) highlightPastille(idx);
-          if (appState === 2) faceBGoto(idx);
+          if (appState === 2) updatePanels(idx);
         }
         wasCoasting = false;
         velAngle = 0;
@@ -1336,6 +1335,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (previewTeaser) previewTeaser.textContent = pastilles[idx].dataset.teaser!;
       centerEl.style.setProperty('--preview-c', color);
       bgStage.style.setProperty('--stage-c', color);
+      document.documentElement.style.setProperty('--stage-c', color);
       document.documentElement.style.setProperty('--active-facet-color', color);
     }
 
@@ -1404,8 +1404,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         resetIdleTimer();
         setActiveFacetInfo(facetIdx);
         targetRingR = RING_R_0;
-        faceBWrap.style.display = 'block';
-        faceBGoto(facetIdx);
+        faceBWrap.style.display = 'none';
+        updatePanels(facetIdx);
+        panelStart.classList.remove('is-visible');
+        panelEnd.classList.remove('is-visible');
+        panelStart.setAttribute('aria-hidden', 'false');
+        panelEnd.setAttribute('aria-hidden', 'false');
+        void panelStart.offsetWidth;
+        panelStart.classList.add('is-visible');
+        panelEnd.classList.add('is-visible');
       }
 
       schedule();
@@ -1497,21 +1504,21 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     // ── Gestionnaires d'événements ────────────────────────────────
 
-    // Pastille → état 2 direct
+    // Pastille → état 1 (preview ring)
     pastilles.forEach((el, idx) => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         snapToFacet(idx);
-        setState(2, idx);
+        setState(1, idx);
       }, { signal: sig });
     });
 
-    // Centre du disque : même comportement que cliquer la facette active
+    // Centre du disque
     centerEl.addEventListener('click', () => {
       if (appState === 0) {
         const idx = getActiveIdx();
         snapToFacet(idx);
-        setState(2, idx);
+        setState(1, idx);
       } else if (appState === 1 && activeFacetIdx >= 0) {
         setState(2, activeFacetIdx);
       } else if (appState === 2 && activeFacetIdx >= 0) {
@@ -1547,12 +1554,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
     // Carrousel : flèches (états 2 et 3)
     arrowPrev.addEventListener('click', () => {
-      if (appState === 2) faceBGoto(faceBIdx - 1);
-      else if (appState === 3) goToFacet((activeFacetIdx - 1 + N_FACETS) % N_FACETS);
+      if (appState === 2 || appState === 3) goToFacet((activeFacetIdx - 1 + N_FACETS) % N_FACETS);
     }, { signal: sig });
     arrowNext.addEventListener('click', () => {
-      if (appState === 2) faceBGoto(faceBIdx + 1);
-      else if (appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
+      if (appState === 2 || appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
     }, { signal: sig });
 
     // Flip arrows état 1
@@ -1615,9 +1620,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         flipToState2(dy < 0 ? 'up' : 'down');
       } else if (appState === 2) {
         if (absX > 50 && absX > absY) {
-          faceBGoto(dx < 0 ? faceBIdx + 1 : faceBIdx - 1);
-        } else if (absY > 60 && absY > absX * 1.5) {
-          flipToState1();
+          goToFacet(dx < 0
+            ? (activeFacetIdx + 1) % N_FACETS
+            : (activeFacetIdx - 1 + N_FACETS) % N_FACETS);
         }
       } else if (appState === 3) {
         if (absX > 50 && absX > absY) {
