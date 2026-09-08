@@ -17,6 +17,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
   {description && <meta name="description" content={description} />}
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content={siteData.displayName} />
+  {(description || siteData.tagline) && (
+    <meta property="og:description" content={description || siteData.tagline} />
+  )}
+  {siteData.logo_url && <meta property="og:image" content={siteData.logo_url} />}
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">

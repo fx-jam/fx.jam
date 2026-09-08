@@ -1,4 +1,239 @@
 ---
-import StubPage from '../layouts/StubPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFacet } from '../data/facets.ts';
+import type { ContactData } from '../data/types';
+import contactJson from '../data/contact.json';
+
+const f = getFacet('contact');
+const contactData = contactJson as unknown as ContactData;
+
+const SOCIAL_LABELS: Record<string, string> = {
+  mixcloud:   'Mixcloud',
+  soundcloud: 'SoundCloud',
+  spotify:    'Spotify',
+  instagram:  'Instagram',
+  facebook:   'Facebook',
+  youtube:    'YouTube',
+};
+
+const socialLinks = Object.entries(contactData.social || {}).filter(([, v]) => v);
+
+const hasContent = contactData.booking_email || socialLinks.length > 0 || contactData.press_kit_url;
 ---
-<StubPage facet="contact" />
+
+<BaseLayout title="Contact — hamcat.live" description={f?.teaser}>
+  <main class="contact">
+
+    {contactData.cover_image && (
+      <div class="cover-hero">
+        <img src={contactData.cover_image} alt="Contact" class="cover-img" />
+      </div>
+    )}
+
+    <header class="hd">
+      <span class="label">{contactData.label || 'Contact'}</span>
+      <h1>{contactData.headline || 'Contact'}</h1>
+      {contactData.bio && <p class="bio">{contactData.bio}</p>}
+    </header>
+
+    {contactData.booking_email && (
+      <section class="section booking">
+        <h2 class="section-title">Booking</h2>
+        <a href={`mailto:${contactData.booking_email}`} class="booking-btn">
+          {contactData.booking_email}
+        </a>
+      </section>
+    )}
+
+    {socialLinks.length > 0 && (
+      <section class="section social">
+        <h2 class="section-title">Réseaux</h2>
+        <div class="social-links">
+          {socialLinks.map(([k, v]) => (
+            <a href={v} target="_blank" rel="noopener" class="social-btn">
+              {SOCIAL_LABELS[k] || k}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {contactData.press_kit_url && (
+      <section class="section presskit">
+        <h2 class="section-title">Presse</h2>
+        <a href={contactData.press_kit_url} target="_blank" rel="noopener" class="link-btn">
+          Télécharger le Press Kit
+        </a>
+      </section>
+    )}
+
+    {!hasContent && (
+      <p class="note">{contactData.note_stub || 'Informations de contact à venir.'}</p>
+    )}
+
+    <a class="home" href="/">← Accueil</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .contact {
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 2rem 3rem;
+    gap: 3rem;
+  }
+
+  .cover-hero {
+    width: 100%;
+    max-width: 360px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .cover-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+
+  .label {
+    color: var(--facet-contact);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .bio {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 48ch;
+    line-height: 1.6;
+    margin: 0.5rem 0 0;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    margin: 0;
+    align-self: flex-start;
+  }
+
+  .booking-btn {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    border: 2px solid var(--facet-contact);
+    border-radius: 10px;
+    color: var(--facet-contact);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    transition: background 0.2s ease;
+    word-break: break-all;
+  }
+  .booking-btn:hover {
+    background: color-mix(in srgb, var(--facet-contact) 15%, transparent);
+  }
+
+  .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: center;
+  }
+
+  .social-btn {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--facet-contact);
+    border-radius: 8px;
+    color: var(--facet-contact);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    transition: background 0.2s ease;
+  }
+  .social-btn:hover {
+    background: color-mix(in srgb, var(--facet-contact) 15%, transparent);
+  }
+
+  .link-btn {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    transition: background 0.2s ease;
+  }
+  .link-btn:hover {
+    background: color-mix(in srgb, var(--text-tertiary) 12%, transparent);
+  }
+
+  .note {
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-align: center;
+    max-width: 38ch;
+    line-height: 1.5;
+  }
+
+  .home {
+    align-self: center;
+    color: var(--facet-contact);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-contact);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .home:hover {
+    background: color-mix(in srgb, var(--facet-contact) 15%, transparent);
+  }
+</style>

@@ -2,7 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { getFacet } from '../data/facets.ts';
-import sonData from '../data/son.json';
+import sonJson from '../data/son.json';
+import type { SonData } from '../data/types';
+const sonData = sonJson as unknown as SonData;
 
 const f = getFacet('son');
 
@@ -28,6 +30,13 @@ const fmtShort = (d: Date) =>
 
 <BaseLayout title="Son — hamcat.live" description={f?.teaser}>
   <main class="son">
+
+    <!-- ── COVER IMAGE ──────────────────────────────────────────── -->
+    {sonData.cover_image && (
+      <div class="cover-hero">
+        <img src={sonData.cover_image} alt={sonData.headline || 'Son'} class="cover-img" />
+      </div>
+    )}
 
     <!-- ── HEADER ───────────────────────────────────────────────── -->
     <header class="hd">
@@ -96,7 +105,8 @@ const fmtShort = (d: Date) =>
     <section class="section ecoute">
       <h2 class="section-title">Écoute</h2>
 
-      {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify) ? (
+      {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify ||
+         sonData.links?.instagram  || sonData.links?.facebook) ? (
         <div class="links-streaming">
           {sonData.links.soundcloud && (
             <a href={sonData.links.soundcloud} target="_blank" rel="noopener" class="link-btn">
@@ -113,6 +123,16 @@ const fmtShort = (d: Date) =>
               Spotify
             </a>
           )}
+          {sonData.links.instagram && (
+            <a href={sonData.links.instagram} target="_blank" rel="noopener" class="link-btn link-btn--secondary">
+              Instagram
+            </a>
+          )}
+          {sonData.links.facebook && (
+            <a href={sonData.links.facebook} target="_blank" rel="noopener" class="link-btn link-btn--secondary">
+              Facebook
+            </a>
+          )}
           {sonData.links.presskit && (
             <a href={sonData.links.presskit} target="_blank" rel="noopener" class="link-btn link-btn--secondary">
               Presskit
@@ -123,6 +143,37 @@ const fmtShort = (d: Date) =>
         <p class="empty">Liens à venir.</p>
       )}
     </section>
+
+    <!-- ── MIXES ─────────────────────────────────────────────────── -->
+    {sonData.mixes && sonData.mixes.length > 0 && (
+      <section class="section mixes">
+        <h2 class="section-title">Mixes</h2>
+        <ul class="mix-list">
+          {sonData.mixes.map(mix => (
+            <li class="mix-row">
+              {mix.date && <time class="mix-date">{mix.date.slice(0, 7)}</time>}
+              <span class="mix-title">{mix.title}</span>
+              {mix.genre && <span class="mix-genre">{mix.genre}</span>}
+              {mix.duration_min > 0 && <span class="mix-dur">{mix.duration_min}min</span>}
+              {(mix.mixcloud_url || mix.soundcloud_url) && (
+                <span class="mix-links">
+                  {mix.mixcloud_url && (
+                    <a href={mix.mixcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">
+                      Mixcloud
+                    </a>
+                  )}
+                  {mix.soundcloud_url && (
+                    <a href={mix.soundcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">
+                      SoundCloud
+                    </a>
+                  )}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <!-- ── VISUELS ───────────────────────────────────────────────── -->
     <!-- TODO: galerie photos, vidéos de sets -->
@@ -142,6 +193,20 @@ const fmtShort = (d: Date) =>
 </BaseLayout>
 
 <style>
+  /* ── Cover hero ── */
+  .cover-hero {
+    width: 100%;
+    max-width: 420px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .cover-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+  }
+
   /* ── Conteneur principal ── */
   .son {
     height: 100dvh;
@@ -392,6 +457,78 @@ const fmtShort = (d: Date) =>
   }
   .link-btn--secondary:hover {
     background: color-mix(in srgb, var(--text-tertiary) 12%, transparent);
+  }
+  .link-btn--sm {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.72rem;
+    border-color: var(--facet-son);
+    color: var(--facet-son);
+  }
+
+  /* ── Mixes ── */
+  .mixes { align-items: stretch; }
+
+  .mix-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  .mix-row {
+    display: grid;
+    grid-template-columns: 56px 1fr auto auto auto;
+    column-gap: 0.7rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .mix-row:last-child { border-bottom: 1px solid var(--border); }
+
+  .mix-date {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .mix-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mix-genre {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .mix-dur {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .mix-links {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  @media (max-width: 520px) {
+    .mix-row {
+      grid-template-columns: 1fr auto;
+      row-gap: 0.2rem;
+    }
+    .mix-date, .mix-genre, .mix-dur { display: none; }
+    .mix-links { grid-column: 1 / -1; }
   }
 
   /* ── Placeholders ── */

@@ -23,7 +23,7 @@ export interface Props {
 const { facet, title } = Astro.props;
 const f = getFacet(facet);
 
-const dataMap: Record<string, { label?: string; teaser?: string; note_stub?: string; bio?: string; email?: string }> = {
+const dataMap: Record<string, { label?: string; teaser?: string; note_stub?: string; bio?: string; email?: string; contact_email?: string }> = {
   regie: regieData,
   cours: coursData,
   outils: outilsData,
@@ -46,6 +46,9 @@ const pageTitle = title ?? `${displayLabel} — hamcat.live`;
     {d.bio && <p class="bio">{d.bio}</p>}
     {d.email && (
       <a href={`mailto:${d.email}`} class="email">{d.email}</a>
+    )}
+    {d.contact_email && !d.email && (
+      <a href={`mailto:${d.contact_email}`} class="email">{d.contact_email}</a>
     )}
     <p class="note">{displayNote}</p>
     <a class="home" href="/">← Accueil</a>
