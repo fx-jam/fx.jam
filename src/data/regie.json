@@ -1,6 +1,6 @@
 {
   "label": "Régie",
-  "teaser": "Tech son FOH/MON (X32/M32, SQ)",
+  "teaser": "Tech son FOH/MON (X32/M32/WING)",
   "headline": "Régie technique",
   "note_stub": "Facette Régie : références, équipement, contact à venir.",
   "cover_image": "",
@@ -11,6 +11,6 @@
   "links": {
     "lien1": ""
   },
-  "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "photos": []
 }
