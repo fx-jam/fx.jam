@@ -971,6 +971,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     opacity: 1;
     pointer-events: auto;
   }
+  .modal-overlay.is-open .modal-inner {
+    animation: modal-enter 0.38s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
 
   .modal-inner {
     position: relative;
@@ -1592,10 +1595,18 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 2 || appState === 3) goToFacet((activeFacetIdx + 1) % N_FACETS);
     }, { signal: sig });
 
-    // Flip arrows (état 2) → ouvre le carrousel face-B inline
+    // Flip arrows (état 2) → animation flip sur la scène puis ouvre le modal
     document.querySelectorAll<HTMLButtonElement>('.flip-arrow').forEach(btn => {
       btn.addEventListener('click', () => {
-        if (appState === 2) showFaceB();
+        if (appState !== 2 || activeFacetIdx < 0) return;
+        const flipDir = btn.classList.contains('flip-arrow--up') ? '-1' : '1';
+        scene.classList.add('flipping');
+        scene.style.setProperty('--flip-dir', flipDir);
+        const idx = activeFacetIdx;
+        setTimeout(() => {
+          scene.classList.remove('flipping');
+          openModal(idx);
+        }, 600);
       }, { signal: sig });
     });
 
