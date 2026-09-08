@@ -8,6 +8,20 @@ import coursJson  from '../data/cours.json';
 import blogJson   from '../data/blog.json';
 import outilsJson from '../data/outils.json';
 import contactJson from '../data/contact.json';
+import type { SonData, RegieData, CoursData, OutilsData, ContactData } from '../data/types';
+
+// Typed data for face-B rich rendering
+const sonDataTyped    = sonJson    as unknown as SonData;
+const regieDataTyped  = regieJson  as unknown as RegieData;
+const coursDataTyped  = coursJson  as unknown as CoursData;
+const outilsDataTyped = outilsJson as unknown as OutilsData;
+const contactDataTyped = contactJson as unknown as ContactData;
+
+// Last 3 published blog posts for face-B
+const allBlogPosts = await getCollection('blog', ({ data }) => !data.draft);
+const latestBlogPosts = allBlogPosts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
 
 const facets = visibleFacets();
 const N = facets.length;
@@ -71,6 +85,7 @@ interface OverlayData {
   teaser: string;
   href: string;
   headline: string;
+  cover_image: string;
   streamLinks: { key: string; url: string; label: string }[];
   otherLinks:  { key: string; url: string }[];
   photos: string[];
@@ -107,6 +122,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     teaser:      item.teaser,
     href:        item.href,
     headline:    String(d.headline || item.label),
+    cover_image: typeof d.cover_image === 'string' ? d.cover_image : '',
     streamLinks,
     otherLinks,
     photos:      Array.isArray(d.photos) ? (d.photos as string[]) : [],
@@ -262,15 +278,190 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     <div class="face-b-carousel" id="face-b-carousel">
       {overlayItems.map((item, i) => (
         <div class="face-b-slide" data-idx={String(i)} data-facet={item.key}>
+
+          <!-- Carré 1 : image de couverture -->
           <div class="face-b-cover">
-            {item.photos && item.photos[0]
-              ? <img src={item.photos[0]} alt={item.label} class="face-b-img" />
+            {item.cover_image
+              ? <img src={item.cover_image} alt={item.label} class="face-b-img" />
               : <div class="face-b-cover-ph" style={`--cover-c:var(--facet-${item.key})`}></div>
             }
           </div>
+
+          <!-- Carré 2 : contenu par facette -->
           <div class="face-b-content">
             <h2 class="face-b-title" style={`color:var(--facet-${item.key})`}>{item.headline}</h2>
-            <p class="face-b-text">{item.teaser}</p>
+
+            {/* ── Son ── */}
+            {item.key === 'son' && (
+              <>
+                {sonDataTyped.bio && <p class="face-b-text">{sonDataTyped.bio}</p>}
+                {sonDataTyped.genres && sonDataTyped.genres.length > 0 && (
+                  <p class="face-b-genres">{sonDataTyped.genres.join(' · ')}</p>
+                )}
+                {sonDataTyped.mixes && sonDataTyped.mixes.length > 0 ? (
+                  <ul class="face-b-list">
+                    {sonDataTyped.mixes.map(mix => (
+                      <li class="face-b-list-item">
+                        <span class="fbli-title">{mix.title}</span>
+                        {mix.genre && <span class="fbli-tag">{mix.genre}</span>}
+                        {mix.duration_min > 0 && <span class="fbli-meta">{mix.duration_min}min</span>}
+                        {mix.mixcloud_url && (
+                          <a href={mix.mixcloud_url} target="_blank" rel="noopener" class="fbli-link">Mixcloud</a>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  !sonDataTyped.bio && <p class="face-b-text">{item.teaser}</p>
+                )}
+              </>
+            )}
+
+            {/* ── Régie ── */}
+            {item.key === 'regie' && (
+              <>
+                {regieDataTyped.bio && <p class="face-b-text">{regieDataTyped.bio}</p>}
+                {regieDataTyped.references && regieDataTyped.references.length > 0 && (
+                  <ul class="face-b-list">
+                    {regieDataTyped.references.map(ref => (
+                      <li class="face-b-list-item">
+                        <span class="fbli-title">{ref.event}</span>
+                        {ref.venue && <span class="fbli-tag">{ref.venue}</span>}
+                        {ref.year > 0 && <span class="fbli-meta">{ref.year}</span>}
+                        {ref.role && <span class="fbli-tag">{ref.role}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {regieDataTyped.equipment && regieDataTyped.equipment.length > 0 && (
+                  <ul class="face-b-list face-b-list--sm">
+                    {regieDataTyped.equipment.map(eq => (
+                      <li class="face-b-list-item">
+                        <span class="fbli-title">{eq.name}</span>
+                        {eq.detail && <span class="fbli-meta">{eq.detail}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!regieDataTyped.bio && !regieDataTyped.references?.length && !regieDataTyped.equipment?.length && (
+                  <p class="face-b-text">{item.teaser}</p>
+                )}
+                {regieDataTyped.contact_email && (
+                  <a href={`mailto:${regieDataTyped.contact_email}`} class="fbli-email">
+                    {regieDataTyped.contact_email}
+                  </a>
+                )}
+              </>
+            )}
+
+            {/* ── Cours ── */}
+            {item.key === 'cours' && (
+              <>
+                {coursDataTyped.intro && <p class="face-b-text">{coursDataTyped.intro}</p>}
+                {coursDataTyped.courses && coursDataTyped.courses.length > 0 ? (
+                  <ul class="face-b-list">
+                    {coursDataTyped.courses.map(cours => (
+                      <li class="face-b-list-item face-b-list-item--col">
+                        <span class="fbli-title">{cours.title}</span>
+                        <span class="fbli-row">
+                          {cours.level && <span class="fbli-tag">{cours.level}</span>}
+                          {cours.price && <span class="fbli-tag">{cours.price}</span>}
+                          {cours.duration && <span class="fbli-meta">{cours.duration}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  !coursDataTyped.intro && <p class="face-b-text">{item.teaser}</p>
+                )}
+                {coursDataTyped.schedule_info && (
+                  <p class="face-b-text face-b-text--sm">{coursDataTyped.schedule_info}</p>
+                )}
+                {coursDataTyped.registration_link && (
+                  <a href={coursDataTyped.registration_link} target="_blank" rel="noopener" class="fbli-link">
+                    S'inscrire
+                  </a>
+                )}
+              </>
+            )}
+
+            {/* ── Outils ── */}
+            {item.key === 'outils' && (
+              <>
+                {outilsDataTyped.description && <p class="face-b-text">{outilsDataTyped.description}</p>}
+                {outilsDataTyped.tools && outilsDataTyped.tools.length > 0 ? (
+                  <ul class="face-b-list">
+                    {outilsDataTyped.tools.map(tool => (
+                      <li class="face-b-list-item">
+                        {tool.url ? (
+                          <a href={tool.url} target="_blank" rel="noopener" class="fbli-title fbli-link-title">
+                            {tool.name}
+                          </a>
+                        ) : (
+                          <span class="fbli-title">{tool.name}</span>
+                        )}
+                        {tool.description && <span class="fbli-meta fbli-desc">{tool.description}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  !outilsDataTyped.description && <p class="face-b-text">{item.teaser}</p>
+                )}
+              </>
+            )}
+
+            {/* ── Contact ── */}
+            {item.key === 'contact' && (
+              <>
+                {contactDataTyped.bio && <p class="face-b-text">{contactDataTyped.bio}</p>}
+                {contactDataTyped.booking_email && (
+                  <a href={`mailto:${contactDataTyped.booking_email}`} class="fbli-email">
+                    Booking : {contactDataTyped.booking_email}
+                  </a>
+                )}
+                {contactDataTyped.social && Object.values(contactDataTyped.social).some(v => v) && (
+                  <div class="face-b-social">
+                    {Object.entries(contactDataTyped.social)
+                      .filter(([, v]) => v)
+                      .map(([k, v]) => (
+                        <a href={v} target="_blank" rel="noopener" class="face-b-social-link">{k}</a>
+                      ))}
+                  </div>
+                )}
+                {contactDataTyped.press_kit_url && (
+                  <a href={contactDataTyped.press_kit_url} target="_blank" rel="noopener" class="fbli-link">
+                    Press Kit
+                  </a>
+                )}
+                {!contactDataTyped.bio && !contactDataTyped.booking_email && (
+                  <p class="face-b-text">{item.teaser}</p>
+                )}
+              </>
+            )}
+
+            {/* ── Blog ── */}
+            {item.key === 'blog' && (
+              <>
+                {(blogJson as { bio?: string }).bio && (
+                  <p class="face-b-text">{(blogJson as { bio?: string }).bio}</p>
+                )}
+                {latestBlogPosts.length > 0 ? (
+                  <ul class="face-b-list">
+                    {latestBlogPosts.map(post => (
+                      <li class="face-b-list-item">
+                        <span class="fbli-title">{post.data.title}</span>
+                        <span class="fbli-meta">
+                          {post.data.pubDate.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  !(blogJson as { bio?: string }).bio && <p class="face-b-text">{item.teaser}</p>
+                )}
+              </>
+            )}
+
             <button class="face-b-cta" type="button" data-facet-idx={String(i)}>Explorer →</button>
           </div>
         </div>
@@ -952,6 +1143,141 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
   .face-b-cta:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 
+  .face-b-genres {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .face-b-text--sm {
+    font-size: clamp(0.7rem, 1.4vw, 0.82rem);
+    color: var(--text-tertiary);
+  }
+
+  /* ── Liste universelle face-B ──────────────────────────── */
+  .face-b-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+  }
+
+  .face-b-list--sm .face-b-list-item {
+    padding: 0.25rem 0;
+  }
+
+  .face-b-list-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem;
+    padding: 0.4rem 0;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-display);
+    font-size: clamp(0.72rem, 1.5vw, 0.88rem);
+    line-height: 1.3;
+  }
+
+  .face-b-list-item--col {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fbli-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: baseline;
+  }
+
+  .fbli-title {
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .face-b-list-item--col .fbli-title {
+    white-space: normal;
+  }
+
+  .fbli-tag {
+    font-size: 0.7em;
+    color: var(--text-secondary);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .fbli-meta {
+    font-family: var(--font-mono);
+    font-size: 0.66em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .fbli-desc {
+    white-space: normal;
+    font-size: 0.72em;
+  }
+
+  .fbli-link {
+    font-family: var(--font-mono);
+    font-size: 0.68em;
+    color: currentColor;
+    text-decoration: underline;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
+  .fbli-link:hover { opacity: 1; }
+
+  .fbli-link-title {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+  .fbli-link-title:hover { opacity: 1; }
+
+  .fbli-email {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    word-break: break-all;
+  }
+
+  /* ── Réseaux sociaux contact ───────────────────────────── */
+  .face-b-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+  }
+
+  .face-b-social-link {
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    text-decoration: none;
+    text-transform: lowercase;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .face-b-social-link:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    color: var(--text-primary);
+  }
+
   /* ─── Modal état 3 ───────────────────────────────────────────── */
   .modal-overlay {
     position: fixed;
@@ -1065,6 +1391,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     teaser: string;
     href: string;
     headline: string;
+    cover_image: string;
     streamLinks: { key: string; url: string; label: string }[];
     otherLinks:  { key: string; url: string }[];
     photos: string[];

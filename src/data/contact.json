@@ -3,8 +3,19 @@
   "teaser": "contact",
   "headline": "Contact",
   "note_stub": "Facette Contact : formulaire, réseaux, booking à venir.",
+  "cover_image": "",
   "email": "",
   "bio": "",
+  "booking_email": "",
+  "press_kit_url": "",
+  "social": {
+    "mixcloud": "",
+    "soundcloud": "",
+    "spotify": "",
+    "instagram": "",
+    "facebook": "",
+    "youtube": ""
+  },
   "links": {},
   "photos": [],
   "image_fond": ""

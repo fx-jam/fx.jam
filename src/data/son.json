@@ -3,12 +3,17 @@
   "teaser": "DJ & Live",
   "headline": "DJ & Live",
   "note_stub": "Son : contenu à venir",
+  "cover_image": "",
   "bio": "",
+  "genres": [],
+  "mixes": [],
   "links": {
     "soundcloud": "",
     "mixcloud": "",
     "spotify": "",
-    "presskit": ""
+    "presskit": "",
+    "instagram": "",
+    "facebook": ""
   },
   "photos": [],
   "image_fond": ""

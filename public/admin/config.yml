@@ -95,32 +95,70 @@ collections:
         file: src/data/son.json
         format: json
         fields:
-          - { label: "Label (nom court)", name: label,    widget: string, required: false }
-          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
-          - { label: "Titre / accroche",  name: headline, widget: string, required: false }
-          - { label: "Genres",            name: genres,   widget: list,   required: false, hint: "Ex: psytrance, hi-tech, goa" }
+          - { label: "Label (nom court)", name: label,     widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,    widget: string, required: false }
+          - { label: "Titre / accroche",  name: headline,  widget: string, required: false }
           - { label: "Note stub",         name: note_stub, widget: string, required: false, hint: "Affiché sur la page stub tant que la facette est en chantier" }
-          - { label: "Bio musicale",      name: bio,      widget: text,   required: false }
-          - label: "Liens"
-            name: links
+          - { label: "Image de couverture", name: cover_image, widget: image, required: false, media_library: { config: { multiple: false } } }
+          - { label: "Bio musicale",      name: bio,       widget: markdown, required: false }
+          - name: genres
+            label: "Genres"
+            widget: list
+            required: false
+            hint: "Ex: psytrance, hi-tech, goa"
+            field: { name: item, label: Genre, widget: string }
+          - name: mixes
+            label: "Mixes"
+            widget: list
+            required: false
+            fields:
+              - { name: title,         label: Titre,           widget: string,   required: false }
+              - { name: date,          label: Date,            widget: datetime, required: false }
+              - { name: genre,         label: Genre,           widget: string,   required: false }
+              - { name: duration_min,  label: "Durée (min)",   widget: number,   required: false }
+              - { name: mixcloud_url,  label: "URL Mixcloud",  widget: string,   required: false }
+              - { name: soundcloud_url, label: "URL SoundCloud", widget: string, required: false }
+              - { name: image,         label: Image,           widget: image,    required: false }
+          - name: links
+            label: "Liens"
             widget: object
             fields:
               - { label: SoundCloud, name: soundcloud, widget: string, required: false }
               - { label: Mixcloud,   name: mixcloud,   widget: string, required: false }
               - { label: Spotify,    name: spotify,    widget: string, required: false }
               - { label: Presskit,   name: presskit,   widget: string, required: false }
+              - { label: Instagram,  name: instagram,  widget: string, required: false }
+              - { label: Facebook,   name: facebook,   widget: string, required: false }
       - name: regie
         label: "Facette Régie"
         file: src/data/regie.json
         format: json
         fields:
-          - { label: "Label (nom court)", name: label,    widget: string, required: false }
-          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
-          - { label: "Accroche",          name: headline, widget: string, required: false }
+          - { label: "Label (nom court)", name: label,     widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,    widget: string, required: false }
+          - { label: "Accroche",          name: headline,  widget: string, required: false }
           - { label: "Note stub",         name: note_stub, widget: string, required: false }
-          - { label: "Texte",             name: bio,      widget: text,   required: false }
-          - label: "Liens"
-            name: links
+          - { label: "Image de couverture", name: cover_image, widget: image, required: false, media_library: { config: { multiple: false } } }
+          - { label: "Bio / texte",       name: bio,       widget: markdown, required: false }
+          - name: equipment
+            label: "Équipement"
+            widget: list
+            required: false
+            fields:
+              - { name: name,   label: Nom,    widget: string, required: false }
+              - { name: detail, label: Détail, widget: string, required: false }
+          - name: references
+            label: "Références"
+            widget: list
+            required: false
+            fields:
+              - { name: event, label: "Événement", widget: string, required: false }
+              - { name: venue, label: Lieu,         widget: string, required: false }
+              - { name: year,  label: Année,        widget: number, required: false }
+              - { name: role,  label: Rôle,         widget: string, required: false }
+          - { label: "Email de contact", name: contact_email, widget: string, required: false }
+          - name: links
+            label: "Liens"
             widget: object
             fields:
               - { label: "Lien 1", name: lien1, widget: string, required: false }
@@ -129,13 +167,27 @@ collections:
         file: src/data/cours.json
         format: json
         fields:
-          - { label: "Label (nom court)", name: label,    widget: string, required: false }
-          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
-          - { label: "Accroche",          name: headline, widget: string, required: false }
-          - { label: "Note stub",         name: note_stub, widget: string, required: false }
-          - { label: "Texte",             name: bio,      widget: text,   required: false }
-          - label: "Liens"
-            name: links
+          - { label: "Label (nom court)", name: label,             widget: string, required: false }
+          - { label: "Teaser (1 ligne)",  name: teaser,            widget: string, required: false }
+          - { label: "Accroche",          name: headline,          widget: string, required: false }
+          - { label: "Note stub",         name: note_stub,         widget: string, required: false }
+          - { label: "Image de couverture", name: cover_image,     widget: image,  required: false, media_library: { config: { multiple: false } } }
+          - { label: "Introduction",      name: intro,             widget: markdown, required: false }
+          - name: courses
+            label: "Cours proposés"
+            widget: list
+            required: false
+            fields:
+              - { name: title,       label: Titre,       widget: string, required: false }
+              - { name: description, label: Description, widget: text,   required: false }
+              - { name: level,       label: Niveau,      widget: string, required: false }
+              - { name: tools,       label: Outils,      widget: string, required: false }
+              - { name: price,       label: Tarif,       widget: string, required: false }
+              - { name: duration,    label: Durée,       widget: string, required: false }
+          - { label: "Infos planning",    name: schedule_info,     widget: text,   required: false }
+          - { label: "Lien inscription",  name: registration_link, widget: string, required: false }
+          - name: links
+            label: "Liens (legacy)"
             widget: object
             fields:
               - { label: "Lien inscription", name: inscription, widget: string, required: false }
@@ -144,22 +196,45 @@ collections:
         file: src/data/outils.json
         format: json
         fields:
-          - { label: "Label (nom court)", name: label,    widget: string, required: false }
-          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
-          - { label: "Accroche",          name: headline, widget: string, required: false }
-          - { label: "Note stub",         name: note_stub, widget: string, required: false }
-          - { label: "Texte",             name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)",   name: label,       widget: string,   required: false }
+          - { label: "Teaser (1 ligne)",    name: teaser,      widget: string,   required: false }
+          - { label: "Accroche",            name: headline,    widget: string,   required: false }
+          - { label: "Note stub",           name: note_stub,   widget: string,   required: false }
+          - { label: "Image de couverture", name: cover_image, widget: image,    required: false, media_library: { config: { multiple: false } } }
+          - { label: "Description",         name: description, widget: markdown, required: false }
+          - name: tools
+            label: "Outils"
+            widget: list
+            required: false
+            fields:
+              - { name: name,        label: Nom,         widget: string, required: false }
+              - { name: description, label: Description, widget: text,   required: false }
+              - { name: url,         label: URL,         widget: string, required: false }
+              - { name: icon,        label: Icône,       widget: string, required: false }
       - name: contact
         label: "Facette Contact"
         file: src/data/contact.json
         format: json
         fields:
-          - { label: "Label (nom court)", name: label,    widget: string, required: false }
-          - { label: "Teaser (1 ligne)",  name: teaser,   widget: string, required: false }
-          - { label: "Accroche",          name: headline, widget: string, required: false }
-          - { label: "Note stub",         name: note_stub, widget: string, required: false }
-          - { label: "Email",             name: email,    widget: string, required: false }
-          - { label: "Texte",             name: bio,      widget: text,   required: false }
+          - { label: "Label (nom court)",   name: label,         widget: string, required: false }
+          - { label: "Teaser (1 ligne)",    name: teaser,        widget: string, required: false }
+          - { label: "Accroche",            name: headline,      widget: string, required: false }
+          - { label: "Note stub",           name: note_stub,     widget: string, required: false }
+          - { label: "Image de couverture", name: cover_image,   widget: image,  required: false, media_library: { config: { multiple: false } } }
+          - { label: "Bio",                 name: bio,           widget: text,   required: false }
+          - { label: "Email (legacy)",      name: email,         widget: string, required: false }
+          - { label: "Email booking",       name: booking_email, widget: string, required: false }
+          - { label: "URL Press Kit",       name: press_kit_url, widget: string, required: false }
+          - name: social
+            label: "Réseaux sociaux"
+            widget: object
+            fields:
+              - { label: Mixcloud,   name: mixcloud,   widget: string, required: false }
+              - { label: SoundCloud, name: soundcloud, widget: string, required: false }
+              - { label: Spotify,    name: spotify,    widget: string, required: false }
+              - { label: Instagram,  name: instagram,  widget: string, required: false }
+              - { label: Facebook,   name: facebook,   widget: string, required: false }
+              - { label: YouTube,    name: youtube,    widget: string, required: false }
       - name: blog
         label: "Facette Blog"
         file: src/data/blog.json
