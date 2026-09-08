@@ -4,19 +4,19 @@
   "headline": "Contact",
   "note_stub": "Facette Contact : formulaire, réseaux, booking à venir.",
   "cover_image": "",
+  "bio": "bio",
   "email": "",
-  "bio": "",
   "booking_email": "",
   "press_kit_url": "",
   "social": {
-    "mixcloud": "",
-    "soundcloud": "",
-    "spotify": "",
+    "mixcloud": "https://www.mixcloud.com/fx-hamcat/",
+    "soundcloud": "https://soundcloud.com/hamcatmusic",
+    "spotify": "https://open.spotify.com/user/1198265241?si=ad338a2f160a470a",
     "instagram": "",
     "facebook": "",
     "youtube": ""
   },
+  "image_fond": "",
   "links": {},
-  "photos": [],
-  "image_fond": ""
+  "photos": []
 }
