@@ -2,7 +2,6 @@
 import { ViewTransitions } from 'astro:transitions';
 import { visibleFacets } from '../data/facets';
 import siteData from '../data/site.json';
-import PersistentPlayer from '../components/PersistentPlayer.astro';
 
 const seo = {
   title:       "Hamcat — DJ · Son · MAO · Événements",
@@ -43,6 +42,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <script src="https://w.soundcloud.com/player/api.js"></script>
   <ViewTransitions />
 
   <style is:global>
@@ -201,6 +201,37 @@ const facetHrefs = visibleFacets().map(f => f.href);
       ::view-transition-old(root),
       ::view-transition-new(root) { animation: none; }
     }
+
+    /* ── Player audio persistant ──────────────────────────────── */
+    #hamcat-player {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      z-index: 1000;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      padding: 0 1.25rem;
+    }
+    #hamcat-player[data-active="true"] { transform: translateY(0); }
+    .player-controls {
+      display: flex; align-items: center; gap: 0.75rem;
+      height: 56px; width: 100%;
+    }
+    #player-label {
+      flex: 1;
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      color: var(--text-primary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .player-controls button {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; color: var(--text-secondary); padding: 0.25rem 0.4rem;
+      border-radius: 4px; transition: color 0.15s ease, background 0.15s ease;
+      line-height: 1;
+    }
+    .player-controls button:hover { color: var(--text-primary); background: var(--bg-surface); }
+    #btn-playpause { color: var(--facet-son); font-size: 1.1rem; }
   </style>
 
   <!-- Mode modal (?modal=1) : scroll activé pour affichage dans iframe -->
@@ -259,6 +290,102 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <!-- Hrefs des facettes pour la navigation clavier globale -->
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
-  <PersistentPlayer />
+
+  <script is:inline>
+  (function () {
+    if (document.getElementById('hamcat-player')) return; // déjà créé
+
+    var player = document.createElement('div');
+    player.id = 'hamcat-player';
+    player.dataset.active = 'false';
+    player.innerHTML =
+      '<iframe id="sc-iframe" src="" style="display:none" allow="autoplay"></iframe>' +
+      '<iframe id="sp-iframe" src="" style="display:none;width:100%;height:80px;border:none" allow="autoplay"></iframe>' +
+      '<div class="player-controls">' +
+        '<button id="btn-playpause" aria-label="Play/Pause">▶</button>' +
+        '<span id="player-label">—</span>' +
+        '<button id="btn-mute" aria-label="Mute">🔊</button>' +
+        '<button id="btn-close" aria-label="Fermer">✕</button>' +
+      '</div>';
+    document.body.appendChild(player);
+
+    var scIframe = document.getElementById('sc-iframe');
+    var spIframe = document.getElementById('sp-iframe');
+    var btnPlay  = document.getElementById('btn-playpause');
+    var btnMute  = document.getElementById('btn-mute');
+    var btnClose = document.getElementById('btn-close');
+    var label    = document.getElementById('player-label');
+
+    var scWidget = null;
+    var isMuted  = false;
+    var source   = null; // 'soundcloud' | 'spotify'
+
+    function bindSC() {
+      if (typeof SC === 'undefined' || !scIframe.src) return;
+      scWidget = SC.Widget(scIframe);
+      scWidget.bind(SC.Widget.Events.PLAY,  function () { btnPlay.textContent = '⏸'; });
+      scWidget.bind(SC.Widget.Events.PAUSE, function () { btnPlay.textContent = '▶'; });
+    }
+
+    function loadSoundCloud(url, lbl) {
+      spIframe.src = ''; spIframe.style.display = 'none';
+      source = 'soundcloud';
+      var encoded = encodeURIComponent(url);
+      scIframe.src = 'https://w.soundcloud.com/player/?url=' + encoded + '&auto_play=true&visual=false';
+      label.textContent = lbl;
+      player.dataset.active = 'true';
+      scWidget = null;
+      scIframe.onload = bindSC;
+      try { localStorage.setItem('hamcat-player', JSON.stringify({ url: url, lbl: lbl, type: 'soundcloud' })); } catch(e) {}
+    }
+
+    function loadSpotify(playlistId, lbl) {
+      if (scWidget) scWidget.pause();
+      source = 'spotify';
+      spIframe.src = 'https://open.spotify.com/embed/playlist/' + playlistId + '?autoplay=1&theme=0';
+      spIframe.style.display = 'block';
+      label.textContent = lbl;
+      player.dataset.active = 'true';
+      btnPlay.textContent = '▶';
+      try { localStorage.setItem('hamcat-player', JSON.stringify({ playlistId: playlistId, lbl: lbl, type: 'spotify' })); } catch(e) {}
+    }
+
+    btnPlay.addEventListener('click', function () {
+      if (source === 'soundcloud' && scWidget) {
+        scWidget.isPaused(function (p) { p ? scWidget.play() : scWidget.pause(); });
+      }
+    });
+
+    btnMute.addEventListener('click', function () {
+      isMuted = !isMuted;
+      btnMute.textContent = isMuted ? '🔇' : '🔊';
+      if (source === 'soundcloud' && scWidget) scWidget.setVolume(isMuted ? 0 : 100);
+    });
+
+    btnClose.addEventListener('click', function () {
+      player.dataset.active = 'false';
+      if (scWidget) scWidget.pause();
+      spIframe.src = ''; spIframe.style.display = 'none';
+      source = null;
+      try { localStorage.removeItem('hamcat-player'); } catch(e) {}
+    });
+
+    document.addEventListener('hamcat:play', function (e) {
+      var d = e.detail;
+      if (d.type === 'soundcloud') loadSoundCloud(d.url, d.lbl);
+      else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
+    });
+
+    // Restauration après hard reload
+    try {
+      var saved = localStorage.getItem('hamcat-player');
+      if (saved) {
+        var s = JSON.parse(saved);
+        if (s.type === 'soundcloud' && s.url) loadSoundCloud(s.url, s.lbl);
+        else if (s.type === 'spotify' && s.playlistId) loadSpotify(s.playlistId, s.lbl);
+      }
+    } catch(e) {}
+  })();
+  </script>
 </body>
 </html>
