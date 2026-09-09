@@ -2,6 +2,7 @@
 import { ViewTransitions } from 'astro:transitions';
 import { visibleFacets } from '../data/facets';
 import siteData from '../data/site.json';
+import PersistentPlayer from '../components/PersistentPlayer.astro';
 
 const seo = {
   title:       "Hamcat — DJ · Son · MAO · Événements",
@@ -258,5 +259,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <!-- Hrefs des facettes pour la navigation clavier globale -->
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
+  <PersistentPlayer />
 </body>
 </html>

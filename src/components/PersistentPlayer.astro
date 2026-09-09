@@ -1,0 +1,138 @@
+---
+// Barre audio fixe en bas — persiste entre les pages via ViewTransitions
+---
+
+<script src="https://w.soundcloud.com/player/api.js"></script>
+
+<div id="hamcat-player" transition:persist="audio-player" data-active="false">
+  <iframe id="sc-iframe" src="" style="display:none" allow="autoplay" title="SoundCloud Player"></iframe>
+  <div class="player-controls">
+    <button id="btn-playpause" aria-label="Play/Pause">▶</button>
+    <span id="player-label">—</span>
+    <button id="btn-mute" aria-label="Mute">🔊</button>
+    <button id="btn-close" aria-label="Fermer">✕</button>
+  </div>
+</div>
+
+<script is:inline>
+(function () {
+  let widget = null;
+  let isMuted = false;
+  let isPlaying = false;
+
+  const playerEl = document.getElementById('hamcat-player');
+  const iframe   = document.getElementById('sc-iframe');
+  const btnPlay  = document.getElementById('btn-playpause');
+  const btnMute  = document.getElementById('btn-mute');
+  const btnClose = document.getElementById('btn-close');
+  const labelEl  = document.getElementById('player-label');
+
+  function bindWidget() {
+    if (typeof SC === 'undefined' || !iframe.src) return;
+    widget = SC.Widget(iframe);
+    widget.bind(SC.Widget.Events.PLAY,   () => { isPlaying = true;  btnPlay.textContent = '⏸'; });
+    widget.bind(SC.Widget.Events.PAUSE,  () => { isPlaying = false; btnPlay.textContent = '▶'; });
+    widget.bind(SC.Widget.Events.FINISH, () => { isPlaying = false; btnPlay.textContent = '▶'; });
+  }
+
+  function loadSoundCloud(url, label) {
+    const encoded = encodeURIComponent(url);
+    const newSrc  = 'https://w.soundcloud.com/player/?url=' + encoded + '&auto_play=true&visual=false&show_artwork=false';
+    iframe.src = newSrc;
+    iframe.style.display = 'none';
+    labelEl.textContent = label;
+    playerEl.dataset.active = 'true';
+    widget = null; // reset — iframe reloading
+    iframe.onload = bindWidget;
+    try { localStorage.setItem('hamcat-player-state', JSON.stringify({ url, label })); } catch (_) {}
+  }
+
+  btnPlay.addEventListener('click', () => {
+    if (!widget) return;
+    isPlaying ? widget.pause() : widget.play();
+  });
+
+  btnMute.addEventListener('click', () => {
+    if (!widget) return;
+    isMuted = !isMuted;
+    widget.setVolume(isMuted ? 0 : 100);
+    btnMute.textContent = isMuted ? '🔇' : '🔊';
+  });
+
+  btnClose.addEventListener('click', () => {
+    playerEl.dataset.active = 'false';
+    if (widget) { widget.pause(); }
+    try { localStorage.removeItem('hamcat-player-state'); } catch (_) {}
+  });
+
+  document.addEventListener('hamcat:play', (e) => {
+    const { url, label } = e.detail;
+    loadSoundCloud(url, label);
+  });
+
+  // Restauration depuis localStorage après hard reload
+  try {
+    const saved = localStorage.getItem('hamcat-player-state');
+    if (saved) {
+      const { url, label } = JSON.parse(saved);
+      if (url) loadSoundCloud(url, label);
+    }
+  } catch (_) {}
+})();
+</script>
+
+<style>
+  #hamcat-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    gap: 0.75rem;
+  }
+  #hamcat-player[data-active="true"] {
+    transform: translateY(0);
+  }
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  #player-label {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .player-controls button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    transition: color 0.15s ease, background 0.15s ease;
+    line-height: 1;
+  }
+  .player-controls button:hover {
+    color: var(--text-primary);
+    background: var(--bg-surface);
+  }
+  #btn-playpause {
+    color: var(--facet-son);
+    font-size: 1.1rem;
+  }
+</style>

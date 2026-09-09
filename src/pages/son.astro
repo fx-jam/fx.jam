@@ -134,15 +134,22 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         )}
 
         {sonData.links?.soundcloud && (
-          <div class="embed-frame">
-            <iframe
-              src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(sonData.links.soundcloud)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true`}
-              width="100%"
-              height="300"
-              frameborder="0"
-              scrolling="no"
-              loading="lazy"
-            />
+          <div class="sc-profile">
+            <button
+              class="btn-ecouter"
+              data-url={sonData.links.soundcloud}
+              data-label="Hamcat — SoundCloud"
+            >▶ Écouter sur SoundCloud</button>
+            <div class="embed-frame">
+              <iframe
+                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(sonData.links.soundcloud)}&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&visual=true`}
+                width="100%"
+                height="300"
+                frameborder="0"
+                scrolling="no"
+                loading="lazy"
+              />
+            </div>
           </div>
         )}
 
@@ -162,6 +169,13 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       )}
                       {mix.soundcloud_url && (
                         <a href={mix.soundcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">SC</a>
+                      )}
+                      {mix.soundcloud_url && (
+                        <button
+                          class="btn-ecouter link-btn link-btn--sm"
+                          data-url={mix.soundcloud_url}
+                          data-label={mix.title}
+                        >▶</button>
                       )}
                     </span>
                   )}
@@ -521,4 +535,35 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     .gig-row { grid-template-columns: 1fr 34px; }
     .c-date { display: none; }
   }
+
+  /* ── Bouton Écouter → player persistant ── */
+  .sc-profile { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .btn-ecouter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--facet-son);
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--facet-son) 10%, transparent);
+    color: var(--facet-son);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    align-self: flex-start;
+  }
+  .btn-ecouter:hover { background: color-mix(in srgb, var(--facet-son) 22%, transparent); }
 </style>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.btn-ecouter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url   = btn.dataset.url   ?? '';
+      const label = btn.dataset.label ?? '';
+      if (!url) return;
+      document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { url, label } }));
+    });
+  });
+</script>
