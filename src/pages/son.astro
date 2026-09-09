@@ -198,16 +198,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       data-lbl={p.spotify_title}
                     >▶ Écouter</button>
                   </div>
-                  <div class="embed-frame">
-                    <iframe
-                      src={`https://open.spotify.com/embed/playlist/${p.id}?utm_source=generator&theme=0`}
-                      width="100%"
-                      height="152"
-                      frameborder="0"
-                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                      loading="lazy"
-                    />
-                  </div>
                 </div>
               ))}
             </div>
@@ -557,17 +547,23 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 </style>
 
 <script>
-  document.querySelectorAll<HTMLButtonElement>('.btn-ecouter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.type ?? '';
-      const lbl  = btn.dataset.lbl  ?? '';
-      if (type === 'soundcloud') {
-        const url = btn.dataset.url ?? '';
-        if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl } }));
-      } else if (type === 'spotify') {
-        const playlistId = btn.dataset.playlistId ?? '';
-        if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));
-      }
+  function attachPlayerButtons() {
+    document.querySelectorAll<HTMLButtonElement>('.btn-ecouter').forEach(btn => {
+      if (btn.dataset.listenerAttached) return;
+      btn.dataset.listenerAttached = '1';
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type ?? '';
+        const lbl  = btn.dataset.lbl  ?? '';
+        if (type === 'soundcloud') {
+          const url = btn.dataset.url ?? '';
+          if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl } }));
+        } else if (type === 'spotify') {
+          const playlistId = btn.dataset.playlistId ?? '';
+          if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));
+        }
+      });
     });
-  });
+  }
+  attachPlayerButtons();
+  document.addEventListener('astro:page-load', attachPlayerButtons);
 </script>

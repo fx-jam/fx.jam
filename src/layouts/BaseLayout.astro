@@ -42,7 +42,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script src="https://w.soundcloud.com/player/api.js"></script>
   <ViewTransitions />
 
   <style is:global>
@@ -291,11 +290,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
 
-  <script is:inline>
-  (function () {
-    if (document.getElementById('hamcat-player')) return; // déjà créé
+  <script>
+  // ── Player audio persistant ──────────────────────────────────────────
+  // Exécuté UNE SEULE FOIS par session (déduplication Astro).
+  // Le player survit aux ViewTransitions grâce à astro:before-swap.
 
-    var player = document.createElement('div');
+  (function () {
+    if (document.getElementById('hamcat-player')) return;
+
+    const player = document.createElement('div');
     player.id = 'hamcat-player';
     player.dataset.active = 'false';
     player.innerHTML =
@@ -309,82 +312,116 @@ const facetHrefs = visibleFacets().map(f => f.href);
       '</div>';
     document.body.appendChild(player);
 
-    var scIframe = document.getElementById('sc-iframe');
-    var spIframe = document.getElementById('sp-iframe');
-    var btnPlay  = document.getElementById('btn-playpause');
-    var btnMute  = document.getElementById('btn-mute');
-    var btnClose = document.getElementById('btn-close');
-    var label    = document.getElementById('player-label');
+    const scIframe = document.getElementById('sc-iframe') as HTMLIFrameElement;
+    const spIframe = document.getElementById('sp-iframe') as HTMLIFrameElement;
+    const btnPlay  = document.getElementById('btn-playpause') as HTMLButtonElement;
+    const btnMute  = document.getElementById('btn-mute') as HTMLButtonElement;
+    const btnClose = document.getElementById('btn-close') as HTMLButtonElement;
+    const labelEl  = document.getElementById('player-label') as HTMLSpanElement;
 
-    var scWidget = null;
-    var isMuted  = false;
-    var source   = null; // 'soundcloud' | 'spotify'
+    let scWidget: any = null;
+    let isMuted = false;
+    let source: 'soundcloud' | 'spotify' | null = null;
+
+    // SC API chargée dynamiquement à la demande (pas de script bloquant dans <head>)
+    let scApiCallbacks: Array<() => void> = [];
+    function whenSCReady(cb: () => void) {
+      if ((window as any).SC) { cb(); return; }
+      scApiCallbacks.push(cb);
+      if (document.getElementById('sc-api-script')) return;
+      const s = document.createElement('script');
+      s.id  = 'sc-api-script';
+      s.src = 'https://w.soundcloud.com/player/api.js';
+      s.onload = () => { scApiCallbacks.forEach(fn => fn()); scApiCallbacks = []; };
+      document.head.appendChild(s);
+    }
 
     function bindSC() {
-      if (typeof SC === 'undefined' || !scIframe.src) return;
-      scWidget = SC.Widget(scIframe);
-      scWidget.bind(SC.Widget.Events.PLAY,  function () { btnPlay.textContent = '⏸'; });
-      scWidget.bind(SC.Widget.Events.PAUSE, function () { btnPlay.textContent = '▶'; });
+      whenSCReady(() => {
+        const SC = (window as any).SC;
+        if (!SC || !scIframe.src) return;
+        scWidget = SC.Widget(scIframe);
+        scWidget.bind(SC.Widget.Events.PLAY,   () => { btnPlay.textContent = '⏸'; });
+        scWidget.bind(SC.Widget.Events.PAUSE,  () => { btnPlay.textContent = '▶'; });
+        scWidget.bind(SC.Widget.Events.FINISH, () => { btnPlay.textContent = '▶'; });
+      });
     }
 
-    function loadSoundCloud(url, lbl) {
-      spIframe.src = ''; spIframe.style.display = 'none';
+    function loadSoundCloud(url: string, lbl: string) {
+      spIframe.src = '';
+      spIframe.style.display = 'none';
       source = 'soundcloud';
-      var encoded = encodeURIComponent(url);
-      scIframe.src = 'https://w.soundcloud.com/player/?url=' + encoded + '&auto_play=true&visual=false';
-      label.textContent = lbl;
-      player.dataset.active = 'true';
       scWidget = null;
-      scIframe.onload = bindSC;
-      try { localStorage.setItem('hamcat-player', JSON.stringify({ url: url, lbl: lbl, type: 'soundcloud' })); } catch(e) {}
+      btnPlay.textContent = '▶';
+      const encoded = encodeURIComponent(url);
+      const newSrc  = `https://w.soundcloud.com/player/?url=${encoded}&auto_play=true&visual=false&buying=false&sharing=false&show_artwork=false`;
+      // addEventListener AVANT de setter src pour ne jamais rater l'event
+      scIframe.addEventListener('load', function onLoad() {
+        scIframe.removeEventListener('load', onLoad);
+        bindSC();
+      }, { once: true });
+      scIframe.src = newSrc;
+      labelEl.textContent = lbl;
+      player.dataset.active = 'true';
+      try { localStorage.setItem('hamcat-player', JSON.stringify({ url, lbl, type: 'soundcloud' })); } catch (_) {}
     }
 
-    function loadSpotify(playlistId, lbl) {
-      if (scWidget) scWidget.pause();
+    function loadSpotify(playlistId: string, lbl: string) {
+      if (scWidget) { scWidget.pause(); }
+      scIframe.src = '';
       source = 'spotify';
-      spIframe.src = 'https://open.spotify.com/embed/playlist/' + playlistId + '?autoplay=1&theme=0';
+      spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?autoplay=1&theme=0`;
       spIframe.style.display = 'block';
-      label.textContent = lbl;
+      labelEl.textContent = lbl;
       player.dataset.active = 'true';
       btnPlay.textContent = '▶';
-      try { localStorage.setItem('hamcat-player', JSON.stringify({ playlistId: playlistId, lbl: lbl, type: 'spotify' })); } catch(e) {}
+      try { localStorage.setItem('hamcat-player', JSON.stringify({ playlistId, lbl, type: 'spotify' })); } catch (_) {}
     }
 
-    btnPlay.addEventListener('click', function () {
+    btnPlay.addEventListener('click', () => {
       if (source === 'soundcloud' && scWidget) {
-        scWidget.isPaused(function (p) { p ? scWidget.play() : scWidget.pause(); });
+        scWidget.isPaused((p: boolean) => { p ? scWidget.play() : scWidget.pause(); });
       }
     });
 
-    btnMute.addEventListener('click', function () {
+    btnMute.addEventListener('click', () => {
       isMuted = !isMuted;
       btnMute.textContent = isMuted ? '🔇' : '🔊';
       if (source === 'soundcloud' && scWidget) scWidget.setVolume(isMuted ? 0 : 100);
     });
 
-    btnClose.addEventListener('click', function () {
+    btnClose.addEventListener('click', () => {
       player.dataset.active = 'false';
-      if (scWidget) scWidget.pause();
-      spIframe.src = ''; spIframe.style.display = 'none';
+      if (scWidget) { scWidget.pause(); scWidget = null; }
+      scIframe.src = '';
+      spIframe.src = '';
+      spIframe.style.display = 'none';
       source = null;
-      try { localStorage.removeItem('hamcat-player'); } catch(e) {}
+      try { localStorage.removeItem('hamcat-player'); } catch (_) {}
     });
 
-    document.addEventListener('hamcat:play', function (e) {
-      var d = e.detail;
+    document.addEventListener('hamcat:play', (e: Event) => {
+      const d = (e as CustomEvent).detail;
       if (d.type === 'soundcloud') loadSoundCloud(d.url, d.lbl);
       else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
     });
 
+    // FIX PRINCIPAL : déplace le player dans le nouveau document AVANT le swap de body.
+    // Sans ça, ViewTransitions détruit l'élément à chaque navigation.
+    document.addEventListener('astro:before-swap', (e: Event) => {
+      const p = document.getElementById('hamcat-player');
+      if (p) (e as any).newDocument.body.appendChild(p);
+    });
+
     // Restauration après hard reload
     try {
-      var saved = localStorage.getItem('hamcat-player');
+      const saved = localStorage.getItem('hamcat-player');
       if (saved) {
-        var s = JSON.parse(saved);
+        const s = JSON.parse(saved);
         if (s.type === 'soundcloud' && s.url) loadSoundCloud(s.url, s.lbl);
         else if (s.type === 'spotify' && s.playlistId) loadSpotify(s.playlistId, s.lbl);
       }
-    } catch(e) {}
+    } catch (_) {}
   })();
   </script>
 </body>
