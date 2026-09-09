@@ -12,7 +12,7 @@
     {
       "id": "1LwZ7zJtqAxDkOT0sbgR6B",
       "spotify_title": "Old a trier",
-      "visible": true,
+      "visible": false,
       "category": "",
       "description": "",
       "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0253d5906a52a961b9e917ccf4ab67616d00001e0263ad1a7334b2aea25b608914ab67616d00001e02c2abc78e22d3c2bf7d2e2f64ab67616d00001e02e7029b939c402c7031420ccd",
@@ -201,7 +201,7 @@
     {
       "id": "6LqesCJbqyLyt4x714LXJg",
       "spotify_title": "CHILL TO PROG 26",
-      "visible": true,
+      "visible": false,
       "category": "",
       "description": "",
       "spotify_cover": "https://mosaic.scdn.co/640/26527cfca0cd66fb5c9460d18fa6c72a8e76bdd6ab67616d00001e02275f70543329ff4d9afea628ab67616d00001e0276086d1625d27971f2f48caaab67616d00001e02e88afd5e9d5481d75e0c907f",
