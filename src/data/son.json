@@ -7,6 +7,1170 @@
   "bio": "",
   "genres": [],
   "mixes": [],
+  "spotify_user_id": "1198265241",
+  "spotify_playlists": [
+    {
+      "id": "1LwZ7zJtqAxDkOT0sbgR6B",
+      "spotify_title": "Old a trier",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0253d5906a52a961b9e917ccf4ab67616d00001e0263ad1a7334b2aea25b608914ab67616d00001e02c2abc78e22d3c2bf7d2e2f64ab67616d00001e02e7029b939c402c7031420ccd",
+      "spotify_tracks": 6
+    },
+    {
+      "id": "5Vz3hyYpPt6mcPXAdimEoz",
+      "spotify_title": "Noyaburn",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "",
+      "spotify_tracks": 0
+    },
+    {
+      "id": "65jVX43kSjzcxfzXkmCIbN",
+      "spotify_title": "26_08_30_HADRA_ZOMBAN",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0267c944e5a8a00c590e658867ab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02de352b1a4b61fa568d6e2e94ab67616d00001e02f3d55241898480ff08002f3d",
+      "spotify_tracks": 27
+    },
+    {
+      "id": "0YcMfW8gBtREy2Z4OUOXPV",
+      "spotify_title": "hadra sûr",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023a9c9946256bed4dfc8a050cab67616d00001e023fc4ea4a2882a87606450bfeab67616d00001e02b1c715484e279b6d1a8f2dc4ab67616d00001e02d5482fbba647699afc38858b",
+      "spotify_tracks": 50
+    },
+    {
+      "id": "5FfK3NwlkITwwmubEdA9J3",
+      "spotify_title": "rab mout",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e022e7558daae7a80e1f5819aa1",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "4xgXcDLGyH7JwQL82jhvUf",
+      "spotify_title": "hadra sûr sûr",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02515592df4bffcf8928f5bea6ab67616d00001e026a796e457b11914a47d5580bab67616d00001e029cadc021b28ba996a28d9631ab67616d00001e02abab8938250f131e622ef4dc",
+      "spotify_tracks": 31
+    },
+    {
+      "id": "5dNl2Y56gvWWcnevoGGZV0",
+      "spotify_title": "Zib min",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0207d07816a710749c609f25c4ab67616d00001e0210d8ff94263a86e98f10ee23ab67616d00001e021ea53fb4a60cb301178c9197ab67616d00001e0242c72e234c7d785a3adbc92e",
+      "spotify_tracks": 31
+    },
+    {
+      "id": "6tDaX2j4Ti7WSLMuX5zKzy",
+      "spotify_title": "26 drak",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b239d8f7aeaeb7027b0aaffab67616d00001e0251f7322cd07cabb335065546ab67616d00001e025d9b879e108210db55ae819eab67616d00001e02ea24173e94eb9683e2af1d53",
+      "spotify_tracks": 67
+    },
+    {
+      "id": "0ng7v4oSj4v5gF7TwYCBHI",
+      "spotify_title": "26draksur",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024b40c493b62c27b550b26d65ab67616d00001e02720d5eeb937e4a29e8ed7ba5ab67616d00001e028795633fd0b4413c03f62ad6ab67616d00001e02cb676ae812aca3aec33372a0",
+      "spotify_tracks": 22
+    },
+    {
+      "id": "58qiqNFtuklnGSPS2RadWV",
+      "spotify_title": "moutons ⚡︎🐑",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020828aeb5f7aaf30d104ee7f4ab67616d00001e020a6dd2c2ff4017ac35d92b3fab67616d00001e023d131b366db2f7f3556812adab67616d00001e02dcd290904c04d1ae1a345dca",
+      "spotify_tracks": 89
+    },
+    {
+      "id": "3KfKxtTWeXNPUjUbxWC7np",
+      "spotify_title": "??",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e024d08fc99eff4ed52dfce91fa",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "0vvSsBqry77RlDLxfEUPEV",
+      "spotify_title": "Yes Future",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0229475cafafc8f8686b8fabf9",
+      "spotify_tracks": 11
+    },
+    {
+      "id": "7z1sOi4h8bV1gHqYpFX5mZ",
+      "spotify_title": "Chance",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021baaacf3e7241d49c628a558",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "2sh1CItKa6DOZPGSwWg4j9",
+      "spotify_title": "Untitled",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02d5c5b70155db89f637cc5920",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "7uQzpuNFN6g4ivygEB9HtS",
+      "spotify_title": "match :)",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e020da2e35aedb8fde943c86749",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "40nrikztSFD3uQDcikjxzJ",
+      "spotify_title": "A séparer/cut/remix/remaster",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02bfd90a225d87215e380f5ceb",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "5Y81rLhlas6fcrYhHzDwph",
+      "spotify_title": "Match?",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02c99659f11ac60fe03d5973ae",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "4EHtgj6TELER9PKY8cL0ZS",
+      "spotify_title": "RF_HADRA_EP",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e0207cfa84a29f519cb068ee854ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e02e33c348a05034f1e90e5babb",
+      "spotify_tracks": 16
+    },
+    {
+      "id": "1igaHcPBGu6okI0qb5M4F2",
+      "spotify_title": "à sampler✂️",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02b1f55df876611438658fd16c",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "7nDLpNu1TtLU60pbtz6lgI",
+      "spotify_title": "CHILL TO PROG 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02334a3e937dfeb6154dbab612ab67616d00001e02dbc4f7edcd8653fc3a4e51e6ab67616d00001e02ea1c7f814c585a59db3bba4dab67616d00001e02f81308dffd8b77bc9c4f361b",
+      "spotify_tracks": 13
+    },
+    {
+      "id": "0BPLcKfUwsccGWlnon2ge1",
+      "spotify_title": "CHILL TO PROG 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e02390087b27bac1ebc54a0beddab67616d00001e025ed603d1bcf3cdfaae97b11dab67616d00001e02bf1f519823f16193043984d7",
+      "spotify_tracks": 156
+    },
+    {
+      "id": "6LqesCJbqyLyt4x714LXJg",
+      "spotify_title": "CHILL TO PROG 26",
+      "visible": true,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/26527cfca0cd66fb5c9460d18fa6c72a8e76bdd6ab67616d00001e02275f70543329ff4d9afea628ab67616d00001e0276086d1625d27971f2f48caaab67616d00001e02e88afd5e9d5481d75e0c907f",
+      "spotify_tracks": 124
+    },
+    {
+      "id": "09hpyyrjI5mF32sDzS6Hmm",
+      "spotify_title": "CHILL 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "",
+      "spotify_tracks": 0
+    },
+    {
+      "id": "2YD3rJZGBmh06bq7SPTS91",
+      "spotify_title": "HAM & ZIB 25/26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0209473248b0dd4de8e33197c2ab67616d00001e02b8eadbfbddb3350fb001dfe7ab67616d00001e02ecd9543ccef0a143a4fcb232ab67616d00001e02fcef5b6f3e7c7f41a580c7eb",
+      "spotify_tracks": 98
+    },
+    {
+      "id": "3JAW4kgW5oosIncAb1YHNZ",
+      "spotify_title": "B3B 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024d64eeb1999cb3e208b82d7fab67616d00001e027ce5e7af3cbd0a84e275b084ab67616d00001e02976e83ce677530c6d6efa699ab67616d00001e02fb73c88e0aa2b3776817d2b0",
+      "spotify_tracks": 21
+    },
+    {
+      "id": "0kYrGEEH39u6YRjTXeAx3H",
+      "spotify_title": "MARIAGE 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021b2fab7e25e89fca41fc3a4cab67616d00001e024f0b23a7f212f18b6ffe55b1ab67616d00001e0277fa2ec3d9751d7ec87a1ce9ab67616d00001e02c4b7d2d4043df17f71e3c3d7",
+      "spotify_tracks": 223
+    },
+    {
+      "id": "69MvUYgKhzxuhxQdlIv1Tl",
+      "spotify_title": "ADN",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025f0276d125b71685068d423fab67616d00001e02e5913c1b0142b689d2a86449ab67616d00001e02ebd8244a20176d98441021c5ab67616d00001e02f2d3132275b1773d9677aaac",
+      "spotify_tracks": 139
+    },
+    {
+      "id": "6rYyoGXQ3ezAKiXdog0YZm",
+      "spotify_title": "ADN RAB",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0222040a90701d599883ef204cab67616d00001e02343678efb69ad96f2c65f938ab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02f6d7c836ccf649d6beba5a48",
+      "spotify_tracks": 18
+    },
+    {
+      "id": "5nByixmCGxAm8wn8xAAU4U",
+      "spotify_title": "PSY / TEK 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02a940087bef5396611e84a45eab67616d00001e02dfefcebc30a8b686d3bcdcdfab67616d00001e02e5913c1b0142b689d2a86449ab67616d00001e02f2d3132275b1773d9677aaac",
+      "spotify_tracks": 77
+    },
+    {
+      "id": "1P8kybiB410ySnwonh8Kjx",
+      "spotify_title": "HITECH 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021ca0ba17b3aee86c8b464a2fab67616d00001e027f5b21c5819fb55aa1656bc2ab67616d00001e028795633fd0b4413c03f62ad6ab67616d00001e02cb676ae812aca3aec33372a0",
+      "spotify_tracks": 76
+    },
+    {
+      "id": "2kcYdf3pzKyLIKe0RcQMGM",
+      "spotify_title": "PROG 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02000bec772f551df26a4052f9ab67616d00001e021ef7d10e1d296268e4617a76ab67616d00001e026fbfe9e0b6a9987f7b914d5fab67616d00001e02a77255d678b174e98ffb96ba",
+      "spotify_tracks": 25
+    },
+    {
+      "id": "4Zac5yEivX9CHXWBUizIYT",
+      "spotify_title": "PROG 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023482792f78533f3b35732b1fab67616d00001e023b45b7fff6dae37d1564301eab67616d00001e0271535cf4e68a3e90b2438208ab67616d00001e02bb75316f4898d9b8c547f2d2",
+      "spotify_tracks": 35
+    },
+    {
+      "id": "4S34524tUlCKSkHQzS27OO",
+      "spotify_title": "BELELEK 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0227cfad17e5fde8e073d04511ab67616d00001e027a4224e9219bdb12d7605372ab67616d00001e0286cd0b88047f056b824c36e6ab67616d00001e02d5cfa0dc5c6207d3942807c1",
+      "spotify_tracks": 73
+    },
+    {
+      "id": "1hfosIuxRghaPXMoxGFLRm",
+      "spotify_title": "PROG 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02000bec772f551df26a4052f9ab67616d00001e025098e6af06aa7f432be96511ab67616d00001e02da08f2f9ad11095e15c4879bab67616d00001e02f4dca592dcab1a64f227ef0b",
+      "spotify_tracks": 18
+    },
+    {
+      "id": "6cGno2VWPfhi0WFgqfvLkJ",
+      "spotify_title": "PROG 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e023b45b7fff6dae37d1564301eab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02bb75316f4898d9b8c547f2d2",
+      "spotify_tracks": 23
+    },
+    {
+      "id": "38EKcHsBV5V5MyfN5JWPxe",
+      "spotify_title": "FULLON 25",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023ed13141ad6709ac52da9afdab67616d00001e0276086d1625d27971f2f48caaab67616d00001e02989f069607ab754af5ae6ae9ab67616d00001e02ffa031559cd3c9836856cda7",
+      "spotify_tracks": 42
+    },
+    {
+      "id": "2QyQp6xYoNoXmti5OmTmDL",
+      "spotify_title": "konkif",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0216898498b94ee5be67a7a8cb",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "7xLycnDwUFskfIU6HAnRcn",
+      "spotify_title": "[2015-2010]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021c127c14186fb23ea8607db9ab67616d00001e027aa730d9f11b32634cc65f4aab67616d00001e02dc71afe98ba69bee55dddf4eab67616d00001e02dee132e89d8a70d67e06f9db",
+      "spotify_tracks": 883
+    },
+    {
+      "id": "0SVQ1ijKfhscmplTWwprhS",
+      "spotify_title": "[2020-2015]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0262c7aca125c661b3c121bf85ab67616d00001e02959c0d568ca7c685990eb270ab67616d00001e0298853d5ca76387d32e7ab969ab67616d00001e02db7114400fc0c67a41ae8c30",
+      "spotify_tracks": 421
+    },
+    {
+      "id": "0HXFBbIxUQD9g7PjRt9gpR",
+      "spotify_title": "[2025-2020]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e029e1cfc756886ac782e363d79ab67616d00001e02a9f6c04ba168640b48aa5795ab67616d00001e02b06522f99c3503f5c89cd185ab67616d00001e02e88afd5e9d5481d75e0c907f",
+      "spotify_tracks": 456
+    },
+    {
+      "id": "19VuJukvwTlGYeTnhM7o7S",
+      "spotify_title": "[2014]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0243b184116369add2beeeda00ab67616d00001e0285f2f5754dedf35fd21edd7eab67616d00001e028e52e449cbd3848658a252bbab67616d00001e02cd874e988ed15f2859705217",
+      "spotify_tracks": 95
+    },
+    {
+      "id": "6s2VeIpzcaLRyfAre0cnv5",
+      "spotify_title": "[2015]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0262c7aca125c661b3c121bf85ab67616d00001e02959c0d568ca7c685990eb270ab67616d00001e0298853d5ca76387d32e7ab969ab67616d00001e02db7114400fc0c67a41ae8c30",
+      "spotify_tracks": 99
+    },
+    {
+      "id": "3LlyOoI4SqhKEWy9qmcxpq",
+      "spotify_title": "[2016]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025bc5e053031032000a726768ab67616d00001e02943aa7a54a0991e537da1890ab67616d00001e02bb2dc2a5310638e67b1efecaab67616d00001e02caa8bdf2faa090c25657d30b",
+      "spotify_tracks": 112
+    },
+    {
+      "id": "4XHwS7LSfWHWih0nbh8HDb",
+      "spotify_title": "[2017]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02034f85da463faf79527d1fe0ab67616d00001e026a3e92d72b8c00231ac2d8b8ab67616d00001e028930ec68951de697278c406aab67616d00001e02943aa7a54a0991e537da1890",
+      "spotify_tracks": 100
+    },
+    {
+      "id": "2bkkVSzYeONDkMXoe4DVdQ",
+      "spotify_title": "[2018]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02835816171f84a315bbae2559ab67616d00001e02940c4b3f77b8e31a186c1c33ab67616d00001e02af9e77bc3ddfb2e7580a8ee3ab67616d00001e02da2163c6b2d1ffddec97605d",
+      "spotify_tracks": 97
+    },
+    {
+      "id": "2Mp3pJyVIhhwqxWkMlVYXS",
+      "spotify_title": "[2019]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0232083f1a325ed4939f1fbecdab67616d00001e023408a925e0bcb7940f864a0eab67616d00001e02a570fcaff0adf1ecdc73b85dab67616d00001e02f6e3988d51dd5d707b5a53a0",
+      "spotify_tracks": 86
+    },
+    {
+      "id": "1R3KBqckckksX7CvuRZkNK",
+      "spotify_title": "[2020]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e029e1cfc756886ac782e363d79ab67616d00001e02a9f6c04ba168640b48aa5795ab67616d00001e02b06522f99c3503f5c89cd185ab67616d00001e02e88afd5e9d5481d75e0c907f",
+      "spotify_tracks": 100
+    },
+    {
+      "id": "7BKHrRyzQ3bzjldRNaqr7O",
+      "spotify_title": "[2021]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022e0d511c597b089a06cf2adaab67616d00001e024896429a87abfacd5d90587bab67616d00001e02add46af0e060eb6cfc41e287ab67616d00001e02e33e9f4f9887e8ab30763823",
+      "spotify_tracks": 101
+    },
+    {
+      "id": "63Y5fqC1ZWmwRVMtuOXE2n",
+      "spotify_title": "[2022]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022d80bc4fd8fc763674a33165ab67616d00001e02611f8e051785bf51dfb60f8fab67616d00001e027c61051b74a2b90825336039ab67616d00001e02c88bae7846e62a8ba59ee0bd",
+      "spotify_tracks": 102
+    },
+    {
+      "id": "6RvShb7z60HKLZrXftjPsY",
+      "spotify_title": "[2023]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024bf3b48e615335264b9fcb22ab67616d00001e025ad82b969514da96fb376ad0ab67616d00001e028faa12e4fae5b54e99329dc7ab67616d00001e02c5276ed6cb0287df8d9be07f",
+      "spotify_tracks": 100
+    },
+    {
+      "id": "4mandicmAzGGDIO2PhMCga",
+      "spotify_title": "[2024]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e025d9fc25539053bfb935a24a3ab67616d00001e02eb832efe061888ee7ef10456ab67616d00001e02feae6a6ee0dac7fede477d4a",
+      "spotify_tracks": 100
+    },
+    {
+      "id": "0nliuBlR1I3V2Ql3zSqM1F",
+      "spotify_title": "[2025]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e0255b72bf2e20270860cce6634ab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02e33c348a05034f1e90e5babb",
+      "spotify_tracks": 100
+    },
+    {
+      "id": "1p67PRXhJBEfMW3CL43IlY",
+      "spotify_title": "adaptations",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0247f84ceb651a341256f75ea6ab67616d00001e0297c43b5e54eaab7c1fa71dcfab67616d00001e029bb27b727a49603fb4a89718ab67616d00001e02b4f9be9981e8b4385a6e15a8",
+      "spotify_tracks": 8
+    },
+    {
+      "id": "3Je4aJJuYFUvP1WAidF5MN",
+      "spotify_title": "Songs",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024c127e9d8439a3da6c31c96fab67616d00001e026b66e9099c7a66e58658f512ab67616d00001e026ba876bf105fccb15f2a403dab67616d00001e02ed317ec13d3de9e01fb99c9e",
+      "spotify_tracks": 983
+    },
+    {
+      "id": "2ZiipAmKZYXXjwzoCXPfGh",
+      "spotify_title": "Gauchiste",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02178fb85bb77b667610a7d9c1ab67616d00001e0218987e04b880918a65630aecab67616d00001e02883ef56c4d7df36bfd02ef80ab67616d00001e02af9e77bc3ddfb2e7580a8ee3",
+      "spotify_tracks": 117
+    },
+    {
+      "id": "4j8cuocPNRWDcniRlWFamJ",
+      "spotify_title": "Angy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02bf1cabe663c6eef761b04a21",
+      "spotify_tracks": 5
+    },
+    {
+      "id": "1xt6gzs53qm1Q9y6qQOv2C",
+      "spotify_title": "Revendiquons",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0213b4a9b64ed747d5e0e6428eab67616d00001e021c3a4a6fcd88ea9891f70f2aab67616d00001e02334a3e937dfeb6154dbab612ab67616d00001e02bb506d2a2d3f5893b3a14352",
+      "spotify_tracks": 5
+    },
+    {
+      "id": "1j1SV10P30ub55fkTqABol",
+      "spotify_title": "chansfrcool",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e026b5ae962903762aea414b355ab67616d00001e02ceca77198d896b2c50d8e1d1ab67616d00001e02d2285cdad327f639b7164ab4ab67616d00001e02e466992496a53d4b464d112e",
+      "spotify_tracks": 5
+    },
+    {
+      "id": "3esvzfSKjFcdO2W8eQWD4R",
+      "spotify_title": "🙂 HA-PT 🙂",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021fa55cf010db247948b8cd4fab67616d00001e02371304b5516c39ed90130f73ab67616d00001e02733c6e1cfc427dcc957a5771ab67616d00001e02e0294ac39cf7e5166c315299",
+      "spotify_tracks": 8
+    },
+    {
+      "id": "78gWyftdrbmnZmT8uY4HAK",
+      "spotify_title": "🦫 PT BOBR 🦫",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0259fee416d114b30583afef48ab67616d00001e02926b7eaa98f3fcf4b525c73aab67616d00001e02957ae146a564181e7bbbfbd2ab67616d00001e02d07a305af2d2ed473f859175",
+      "spotify_tracks": 15
+    },
+    {
+      "id": "5HY53MJ7kBMJLlHXl8qPZX",
+      "spotify_title": "🦌 WA-PT TOUT DOUX 🦌",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0216898498b94ee5be67a7a8cbab67616d00001e025b58f8783545cb9a652f347cab67616d00001e02ca002872d8e2803fd040608cab67616d00001e02ecafe5607a782dd3df893751",
+      "spotify_tracks": 12
+    },
+    {
+      "id": "4BhdkLK91q2wYw0izgmCwx",
+      "spotify_title": "🌀 PT GATE 🌀",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0209e0cd1bfdbdd13c94535d2dab67616d00001e0243c1c4a885898002d281d0c6ab67616d00001e0259fee416d114b30583afef48ab67616d00001e02957ae146a564181e7bbbfbd2",
+      "spotify_tracks": 20
+    },
+    {
+      "id": "11GKn6VA3tiHVOsIjxZUPN",
+      "spotify_title": "🐎 PT CHEVAL 🐎",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b58f8783545cb9a652f347cab67616d00001e02761a7d6160c29cbc813893deab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02d9c15b02d0da8be6b0a82645",
+      "spotify_tracks": 37
+    },
+    {
+      "id": "7KTDhiMwmqqVrZDfvpdG7i",
+      "spotify_title": "💥 PT BAGAR 💥",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02733c6e1cfc427dcc957a5771ab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02a3419033a3c4cf9843643f13ab67616d00001e02ca4668680e974f60d1df89da",
+      "spotify_tracks": 7
+    },
+    {
+      "id": "6Xlpgf8SB8uCx04zSwREmg",
+      "spotify_title": "[Metal Symphonique sans metal]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023433fb2a95c54de6d42291bdab67616d00001e025269d32e06be76afcd892d54ab67616d00001e029262ad1f055171572a047bd0ab67616d00001e02aafd1a955eda9a0f8bbf50a1",
+      "spotify_tracks": 49
+    },
+    {
+      "id": "1E7YRqFG6aU8jxOKd03LSJ",
+      "spotify_title": "[Post-rock]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e027720e9fee5d7be232e4fac2fab67616d00001e029213438c86b0f50290a41eaaab67616d00001e02940c4b3f77b8e31a186c1c33ab67616d00001e02da2163c6b2d1ffddec97605d",
+      "spotify_tracks": 319
+    },
+    {
+      "id": "6uPBVgJGvNBmUGXwuDb5zx",
+      "spotify_title": "REGGAE",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022df6e19833979245c1ff60a8ab67616d00001e028e52e449cbd3848658a252bbab67616d00001e02db7114400fc0c67a41ae8c30ab67616d00001e02f62cf5c716eb4ff634df6a85",
+      "spotify_tracks": 560
+    },
+    {
+      "id": "5mCoYNNq7sU7ptJ5ckDkrT",
+      "spotify_title": "lol",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e028f4680c5efa2de607865bd5bab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02b1f55df876611438658fd16cab67616d00001e02f38e54a9366739b7a20c8852",
+      "spotify_tracks": 25
+    },
+    {
+      "id": "4IFyNSqcDc0gFEgmm4rXNO",
+      "spotify_title": "-Tabarnak",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da8468f8271cd8fa6fa93f11c895",
+      "spotify_tracks": 151
+    },
+    {
+      "id": "621djHLuPP3YIM8yKwSUol",
+      "spotify_title": "metelkova",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024085790f98ab559e0004fa7cab67616d00001e02a4057cd48660f0062a47d61bab67616d00001e02b3e10e192b9e9af7d461506fab67616d00001e02e7cd7fae5a79f4f1f4a13bce",
+      "spotify_tracks": 56
+    },
+    {
+      "id": "59AtDd2kqpdVgUrIFhU5az",
+      "spotify_title": "Artistes aux noms hardtek mais en fait c'est du chill",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02362ac7cb4dddfe003ccfc79dab67616d00001e026c03389e9a6a708aefd5cc8aab67616d00001e02a4b62f435bc45aeedf2051aeab67616d00001e02f0f0e52502363547908c643f",
+      "spotify_tracks": 19
+    },
+    {
+      "id": "0e5U8ZWJQGAMbuIglSPptL",
+      "spotify_title": "Improbables",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02636612a4969cba0ef5454d91ab67616d00001e0289e645132016591a1e65971cab67616d00001e02c82ef9749e0496c4e5e03dd0ab67616d00001e02f5078a0cf7291968f6f54d1f",
+      "spotify_tracks": 14
+    },
+    {
+      "id": "3q1JYjCBo7IGkIYw1itF6y",
+      "spotify_title": "Lookalike",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02149a508cb837c47d2696fc18ab67616d00001e023d131b366db2f7f3556812adab67616d00001e02c418220159462cdd7cfeb9a1ab67616d00001e02e88afd5e9d5481d75e0c907f",
+      "spotify_tracks": 8
+    },
+    {
+      "id": "0cRrNb5F6USyE1vTmdpXKU",
+      "spotify_title": "sol-air",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0272d99df21eb858e23d6f1ee9",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "0G4TqnovOmO0zLOOLjLDkR",
+      "spotify_title": "morning",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02291bf52e305c4fca90247e97ab67616d00001e02561090eafe08bf07114e176dab67616d00001e02d504161362c7270093c78b02ab67616d00001e02ebd8244a20176d98441021c5",
+      "spotify_tracks": 21
+    },
+    {
+      "id": "3TUXCCAtDjxg4YPrQc9UCM",
+      "spotify_title": "groovy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02927e4da17de63fc59b68042dab67616d00001e02a95fb0d23b29af7c95700424ab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02f38e54a9366739b7a20c8852",
+      "spotify_tracks": 17
+    },
+    {
+      "id": "5mPx18mvh4n1clKuMfL9ON",
+      "spotify_title": "balear",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02f9f1f817bfdd245009f1152e",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "30beit8pvhGcI0j4FjMV8X",
+      "spotify_title": "Heure bleue",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02291bf52e305c4fca90247e97",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "7GmeY0ii0d2UK93AhO0A8x",
+      "spotify_title": "feel_x",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023396c029f47ff621f59e30b9ab67616d00001e02a43f9418af7e912a42b40d27ab67616d00001e02a5de54b39ae31c512e031be2ab67616d00001e02b6dea284b8f96486789cec5d",
+      "spotify_tracks": 49
+    },
+    {
+      "id": "1MhTjTYkeKMVdZbPhAY8z4",
+      "spotify_title": "Shh",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020a7d45a345534966a4ad2c39ab67616d00001e025092260f47e0d95717b834c3ab67616d00001e02dd9e17a2000252d6b79cf904ab67616d00001e02eb5c3642422ba88527e4ab7c",
+      "spotify_tracks": 9
+    },
+    {
+      "id": "2OviBXu8YcLcrCBpx5p78G",
+      "spotify_title": "Epic / virtuo",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02afa319b160b2f5633fd6bc87ab67616d00001e02b66fb2bce97977b504214990ab67616d00001e02bacf773e8a4dea88c4e9d074ab67616d00001e02f3fd6f5fc65c0e7ca8cde48a",
+      "spotify_tracks": 33
+    },
+    {
+      "id": "2Q0Z7pJKmLbgetElR5Ng0A",
+      "spotify_title": "[Hypnotrucs]",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02275f70543329ff4d9afea628ab67616d00001e02a48bdfeb5f9465572c52af88ab67616d00001e02aac3d58131b00eb41a55bbd0ab67616d00001e02e88afd5e9d5481d75e0c907f",
+      "spotify_tracks": 61
+    },
+    {
+      "id": "7FccQkOVUqPJLYZuwgCg6X",
+      "spotify_title": "Mimi",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021abb45377cebf1a1e0c69e2c",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "5fWGnnb8nFvLGx0HmottXv",
+      "spotify_title": "[Skiley] Liked Songs - BPM 58-220",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b9d470896a418d1a8cbc89cab67616d00001e0259182926cb404ad15d42a217ab67616d00001e0274b72e1f09593a831f56b2cdab67616d00001e02e4ffa6505ce2fe9222b633c1",
+      "spotify_tracks": 2692
+    },
+    {
+      "id": "6qLSv1XnPcwphwJGCNxIsI",
+      "spotify_title": "mif",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02c1cabab9e087f29fb53c4e08",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "3wKZLbv9ZtF0ODBbupZTMO",
+      "spotify_title": "?",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b9fca80401e636137c2fc8dab67616d00001e0260b4e7d369c20a8d57d5d65fab67616d00001e02c16e6ddb53c86b03abbe166bab67616d00001e02f01ff2ac22f31e1dc480fb0b",
+      "spotify_tracks": 343
+    },
+    {
+      "id": "0rDL2m48NQ63QCBhHjmlzp",
+      "spotify_title": "Relax",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02ec9176f0b98678a011948ff3",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "6eqHuP56CzwHHCZfXFXL6p",
+      "spotify_title": "Bien chill",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0202bb6a69975cf69ec7432019ab67616d00001e0275133efd17465c8a18d8c4a2ab67616d00001e0279baeba451612590781e8109ab67616d00001e02e6d6be974d99119db2d112b0",
+      "spotify_tracks": 37
+    },
+    {
+      "id": "5cG5mNYmwiiZoyM7C6iTRw",
+      "spotify_title": "s l o w",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0202bb6a69975cf69ec7432019ab67616d00001e024dcac85815bb2969b82c259aab67616d00001e02a5de54b39ae31c512e031be2ab67616d00001e02ed317ec13d3de9e01fb99c9e",
+      "spotify_tracks": 7
+    },
+    {
+      "id": "5FE09jcn95vRmKe21FUI11",
+      "spotify_title": "numb",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02477f0a81369c1fca168219db",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "2kQm2qjIN0XsUYvUtfyTY2",
+      "spotify_title": "guinguette",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02673b2f9bea8b1445c5f76714",
+      "spotify_tracks": 1
+    },
+    {
+      "id": "2TiC5VKcsKHOc3VuSWH3aK",
+      "spotify_title": "after",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "",
+      "spotify_tracks": 0
+    },
+    {
+      "id": "2iAvCXUVcJu5Kk9zINliqa",
+      "spotify_title": "CINE",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e026733e431f67f8995b7eea689ab67616d00001e029a2fcc14dae33d3870ab736dab67616d00001e029c3b716200bfbc837377744eab67616d00001e02fb6e4451f9d60cace76b0b0d",
+      "spotify_tracks": 33
+    },
+    {
+      "id": "75e5PX4tk6S5HRSt6LZhq3",
+      "spotify_title": "NEW TEUF 26",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02588bc4cdf6e96e8f4a744553ab67616d00001e025d9b879e108210db55ae819eab67616d00001e026fd0518da8e652c8a8c9f606ab67616d00001e02a38766d4fdb658616aa022ed",
+      "spotify_tracks": 54
+    },
+    {
+      "id": "2q9oxtHOuwBQX6On4EoPRG",
+      "spotify_title": "FOLKTRONICA",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02a09f3437197ce74724d41b8c",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "00BWDQl0stWMQCPAW0b3r8",
+      "spotify_title": "PSYBASS",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "",
+      "spotify_tracks": 0
+    },
+    {
+      "id": "4OGb9AGpjkIDXsCuEhyXck",
+      "spotify_title": "MELODIC PSY",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020ea5179e87bba94e5c2afebbab67616d00001e0267cfb117f45fa336861bb149ab67616d00001e02859ba5404ad3ef417d76407fab67616d00001e02af1a7ea39677f2abfdcb6f19",
+      "spotify_tracks": 20
+    },
+    {
+      "id": "1Zl9RmN9gUE0Iwvp9HH9rl",
+      "spotify_title": "PSYBIENT/PSYCHILL/CHILLGRESSIVE/x",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02009b6285733cd13f5e15df2fab67616d00001e02034af9156cbbf3d7b03827c2ab67616d00001e02ccaa1f18984e56e56705efa1ab67616d00001e02fef00d498a4a77e1fa3c4a5a",
+      "spotify_tracks": 312
+    },
+    {
+      "id": "5JuijwgnDHamCPiy4XKBPG",
+      "spotify_title": "flx_psy_bpm_↗️",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b2dc5a09eb1a01643768725ab67616d00001e02a0cf0745ba76082afaa9865dab67616d00001e02f4bb199c99487204c60540e1ab67616d00001e02fd3baefb8a5022e05509261d",
+      "spotify_tracks": 1680
+    },
+    {
+      "id": "4Rvl7u2j9legxqdxHrsYmP",
+      "spotify_title": "PSYDUB",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025fe9ffb5d9cbfe9f7ae9b028ab67616d00001e0264d33713f3eddde35a337af4ab67616d00001e029c3f9b40fe20aa75e772a8aaab67616d00001e02fd2933ed1bfc5b846ec1f3e2",
+      "spotify_tracks": 178
+    },
+    {
+      "id": "1PsiQQoraSC8YorjgmeZx9",
+      "spotify_title": "PROG",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0212fa3fbeb7ce16e76e2339d9ab67616d00001e025f8372eafe3234c024e89ebaab67616d00001e027528f88eef3153a0c73857e2ab67616d00001e02bb27eb3c6c10a34945d66e14",
+      "spotify_tracks": 90
+    },
+    {
+      "id": "5s6ebKiaXERKwljTaK2mSA",
+      "spotify_title": "FULLON",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02555785cf7a52d7256cbe85e4ab67616d00001e026234464c50f651dbd00e8c61ab67616d00001e02bd397c147f4a73f3a9a08dbbab67616d00001e02ffa031559cd3c9836856cda7",
+      "spotify_tracks": 29
+    },
+    {
+      "id": "2ZBfXtKz069IbPSywL8bjc",
+      "spotify_title": "GOA",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021baaacf3e7241d49c628a558ab67616d00001e0263d088a9f8dd7163a7db8575ab67616d00001e02bf7fa09c9096eb7c1c35ccf2ab67616d00001e02d404a079b8984a31a22c6d28",
+      "spotify_tracks": 11
+    },
+    {
+      "id": "27JvwtF07c11CLCTPFnSM3",
+      "spotify_title": "NITZHO",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020509e4216d5a3dc5625ef1d9ab67616d00001e020d573eb35b05ce4ed448434bab67616d00001e02ab6f6c8965643d433f6dfaf4ab67616d00001e02f24d555a406e1b512eac1f3d",
+      "spotify_tracks": 93
+    },
+    {
+      "id": "3BKtQgxoyiFg9KLa1ADFXX",
+      "spotify_title": "HITECH",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0229d8eb38e224cf366a8070faab67616d00001e02561090eafe08bf07114e176dab67616d00001e02c13048ac9283fd2e83b5fb50ab67616d00001e02e2090da95a1228714ad330c2",
+      "spotify_tracks": 396
+    },
+    {
+      "id": "4kc4xkyoFkZC8myhvmjPE2",
+      "spotify_title": "PSYCORE_EXP",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025e8cfc780dd9af7d072b2795ab67616d00001e0288a81ebba50333aa8852361aab67616d00001e02ac4b3f804326370f0cde44d7ab67616d00001e02eec976962e3e7757cb538061",
+      "spotify_tracks": 38
+    },
+    {
+      "id": "3ooTx00YeU6dnfZgTgfT1n",
+      "spotify_title": "FREE TEKNO",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023653a15cca405f7c5903f6c2ab67616d00001e02497084c12a2cdc304adff34fab67616d00001e0262add9be57ad50e5b213ce52ab67616d00001e028d2dcfc23df02bb073449f59",
+      "spotify_tracks": 14
+    },
+    {
+      "id": "5qad4p8ROADc5da9kmtX2T",
+      "spotify_title": "FLX_TEKNORAP_FRAPCORE",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0268061118e5edb06525a38803ab67616d00001e0269a8699f51a356c8b4c695caab67616d00001e02d3a5a2364857f5e4a5909eebab67616d00001e02e63166ace799508203ffa954",
+      "spotify_tracks": 11
+    },
+    {
+      "id": "0dcBtAry2eh41bHhSBQG3u",
+      "spotify_title": "Synthwave",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b94a718e3e80df28f06c6f0ab67616d00001e0298fd5b75c57d568f54ea89c0ab67616d00001e02a116c0fd702730e643795964ab67616d00001e02c1fa18fcff45677fa780844f",
+      "spotify_tracks": 104
+    },
+    {
+      "id": "6GE3NvfVCY9Y5TZUwXKiEQ",
+      "spotify_title": "classics",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020ea5179e87bba94e5c2afebbab67616d00001e0243106801d684357c009db2acab67616d00001e02703b1049343abf44aa5b2886ab67616d00001e02ba41f3e566e53d4b696ac688",
+      "spotify_tracks": 20
+    },
+    {
+      "id": "22yV7P6wBZUxc5BXlRVV95",
+      "spotify_title": "303",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022d2f19d4026aff6f94f0a716ab67616d00001e028b808b086216273a4ec89f4fab67616d00001e02b54af20a80b5c959fbaf2565ab67616d00001e02f4dca592dcab1a64f227ef0b",
+      "spotify_tracks": 19
+    },
+    {
+      "id": "5PhLo1qOuBOiuMEtR5aVsZ",
+      "spotify_title": "warmup",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02334a3e937dfeb6154dbab612",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "1rt0hpCT1BmP6JzdikxL4Z",
+      "spotify_title": "Envoûtantes",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024c127e9d8439a3da6c31c96fab67616d00001e02664767416db4df8a2cce27eeab67616d00001e0266ca5eed5bbc6190bf64b970ab67616d00001e02787edcfb0ec16b64c17485fe",
+      "spotify_tracks": 37
+    },
+    {
+      "id": "7FOiGGiS00GZBTpWWHKnbi",
+      "spotify_title": "light & groovy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02087a3fe94f86bc51f57d4b38ab67616d00001e0228b19ded7335c7549f128284ab67616d00001e027c37a295d60a5799d909e485ab67616d00001e02af1a7ea39677f2abfdcb6f19",
+      "spotify_tracks": 48
+    },
+    {
+      "id": "0DhN0Ixav4XDPjowcYuoJn",
+      "spotify_title": "Dark & groovy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020db272f444c8ec41c3303f55ab67616d00001e022e90e66e9f3116ce6fe082baab67616d00001e02588bc4cdf6e96e8f4a744553ab67616d00001e025c4d606f6c8a375875f43c34",
+      "spotify_tracks": 24
+    },
+    {
+      "id": "7Kz79fRKoGrFmZM9jVPngW",
+      "spotify_title": "deep & groovy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021c2b36ca059a4edb6bdb442eab67616d00001e02af1a7ea39677f2abfdcb6f19ab67616d00001e02cf039805de18b2a006c9ba22ab67616d00001e02e3fca1b5712eeb308c5d0b8a",
+      "spotify_tracks": 25
+    },
+    {
+      "id": "2JtX19nYeWXTUKcw188IDa",
+      "spotify_title": "bassy",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02674f1c0604493990a079c255ab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02a09f3437197ce74724d41b8cab67616d00001e02cea51a765da100823b829814",
+      "spotify_tracks": 10
+    },
+    {
+      "id": "0GjJ4r82FZupkr5fOnp4h5",
+      "spotify_title": "Turbo",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0206bc55b3fb9da2f25927c822ab67616d00001e02144a0a25dcad64a61752c98bab67616d00001e02463d0c11bcfd732686c45632ab67616d00001e027f9193bae0ebd410f279f549",
+      "spotify_tracks": 6
+    },
+    {
+      "id": "2VAHGxhAGobzJYRmHtfzZ3",
+      "spotify_title": "Retro",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021d1d334d180dc7c336c33b3a",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "0Q3HZnwGYfFsDajmwfIHa9",
+      "spotify_title": "chill jazz house",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0224d7533c98518d78de5ec07dab67616d00001e029e38782f8d8dd7c65c8e7899ab67616d00001e02a63f5324bb3c5db67529d00aab67616d00001e02ea856181e66b3db22ff05958",
+      "spotify_tracks": 50
+    },
+    {
+      "id": "4FOZzJWReh9TKbyhIcXIrl",
+      "spotify_title": "Tech prog",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e026c06aede47ea802b93566280",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "03HAC24FHbo6aovVj8bVRW",
+      "spotify_title": "NEOTRANCE",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0220a63117adfc02a94f76e01bab67616d00001e0289ce83b9a8f3bf90a54f8e95ab67616d00001e02cfa605ab4248590013f489c5ab67616d00001e02e9951f87053c91e0265e5a20",
+      "spotify_tracks": 24
+    },
+    {
+      "id": "5Lh7TJh05hZFy0A2Bg5gXB",
+      "spotify_title": "Italo trance",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0233836194ec0ec467260479e6ab67616d00001e028d7d6d3c3894cfad073be42fab67616d00001e02a4155425cf2f481e3bd007e4ab67616d00001e02b425e0ebc4016d022211ddc5",
+      "spotify_tracks": 6
+    },
+    {
+      "id": "5401ipX3tMv75S5pQoPLzd",
+      "spotify_title": "flx_deep_melodic_house",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020e21a5cc77e4148c7665f8eaab67616d00001e023708414686db50c93df14765ab67616d00001e02c4483c9e7108a8a408fc6063ab67616d00001e02f980b780113c39d7fa61057b",
+      "spotify_tracks": 5
+    },
+    {
+      "id": "4xwvjqeAplocvKzTeXg6D7",
+      "spotify_title": "melodic tech",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021677f484125173d96fd1f4fdab67616d00001e0243e3a85bb94d4927fc0ec6c4ab67616d00001e0260aecf1bfc11fddc0147f0dfab67616d00001e02a66e7de3ebceb60ecb45202d",
+      "spotify_tracks": 4
+    },
+    {
+      "id": "2C4LvTsgPao8rwmvFQBd24",
+      "spotify_title": "Dub techno",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e026d0dfd27bf202f737a1d8ed3",
+      "spotify_tracks": 2
+    },
+    {
+      "id": "6rSUoU4AtNQOAuhPr4fGxS",
+      "spotify_title": "edm",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0225ef6de5ddceadb4cf7e91e9",
+      "spotify_tracks": 3
+    },
+    {
+      "id": "3cBqiqjvR3F3PJ7nEZCap9",
+      "spotify_title": "random  house a trier",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024846513506ba4bedc11fadbcab67616d00001e02e59493ba7c04a6cdf9a2ae82ab67616d00001e02ea4d7e3a90749aae26dd6751ab67616d00001e02faae2898e5b2bc3d5ee9fca5",
+      "spotify_tracks": 894
+    },
+    {
+      "id": "6GDwBGuPHqguem2vLODi4Z",
+      "spotify_title": "random neotrance a trier",
+      "visible": false,
+      "category": "",
+      "description": "",
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02154572442b02f9b4f6654582ab67616d00001e023ef0db3c76e62615b5cb5bdaab67616d00001e029fa44b0f4ce6e06f9a67b18bab67616d00001e02cfa605ab4248590013f489c5",
+      "spotify_tracks": 295
+    }
+  ],
   "links": {
     "soundcloud": "https://soundcloud.com/hamcatmusic",
     "mixcloud": "https://www.mixcloud.com/fx-hamcat/",
@@ -15,1170 +1179,6 @@
     "instagram": "",
     "facebook": ""
   },
-  "spotify_user_id": "",
-  "spotify_playlists": [
-    {
-      "id": "1LwZ7zJtqAxDkOT0sbgR6B",
-      "spotify_title": "Old a trier",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0253d5906a52a961b9e917ccf4ab67616d00001e0263ad1a7334b2aea25b608914ab67616d00001e02c2abc78e22d3c2bf7d2e2f64ab67616d00001e02e7029b939c402c7031420ccd",
-      "spotify_tracks": 6,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5Vz3hyYpPt6mcPXAdimEoz",
-      "spotify_title": "Noyaburn",
-      "spotify_cover": "",
-      "spotify_tracks": 0,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "65jVX43kSjzcxfzXkmCIbN",
-      "spotify_title": "26_08_30_HADRA_ZOMBAN",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0267c944e5a8a00c590e658867ab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02de352b1a4b61fa568d6e2e94ab67616d00001e02f3d55241898480ff08002f3d",
-      "spotify_tracks": 27,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0YcMfW8gBtREy2Z4OUOXPV",
-      "spotify_title": "hadra sûr",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023a9c9946256bed4dfc8a050cab67616d00001e023fc4ea4a2882a87606450bfeab67616d00001e02b1c715484e279b6d1a8f2dc4ab67616d00001e02d5482fbba647699afc38858b",
-      "spotify_tracks": 50,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5FfK3NwlkITwwmubEdA9J3",
-      "spotify_title": "rab mout",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e022e7558daae7a80e1f5819aa1",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4xgXcDLGyH7JwQL82jhvUf",
-      "spotify_title": "hadra sûr sûr",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02515592df4bffcf8928f5bea6ab67616d00001e026a796e457b11914a47d5580bab67616d00001e029cadc021b28ba996a28d9631ab67616d00001e02abab8938250f131e622ef4dc",
-      "spotify_tracks": 31,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5dNl2Y56gvWWcnevoGGZV0",
-      "spotify_title": "Zib min",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0207d07816a710749c609f25c4ab67616d00001e0210d8ff94263a86e98f10ee23ab67616d00001e021ea53fb4a60cb301178c9197ab67616d00001e0242c72e234c7d785a3adbc92e",
-      "spotify_tracks": 31,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6tDaX2j4Ti7WSLMuX5zKzy",
-      "spotify_title": "26 drak",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b239d8f7aeaeb7027b0aaffab67616d00001e0251f7322cd07cabb335065546ab67616d00001e025d9b879e108210db55ae819eab67616d00001e02ea24173e94eb9683e2af1d53",
-      "spotify_tracks": 67,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0ng7v4oSj4v5gF7TwYCBHI",
-      "spotify_title": "26draksur",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024b40c493b62c27b550b26d65ab67616d00001e02720d5eeb937e4a29e8ed7ba5ab67616d00001e028795633fd0b4413c03f62ad6ab67616d00001e02cb676ae812aca3aec33372a0",
-      "spotify_tracks": 22,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "58qiqNFtuklnGSPS2RadWV",
-      "spotify_title": "moutons ⚡︎🐑",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020828aeb5f7aaf30d104ee7f4ab67616d00001e020a6dd2c2ff4017ac35d92b3fab67616d00001e023d131b366db2f7f3556812adab67616d00001e02dcd290904c04d1ae1a345dca",
-      "spotify_tracks": 89,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3KfKxtTWeXNPUjUbxWC7np",
-      "spotify_title": "??",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e024d08fc99eff4ed52dfce91fa",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0vvSsBqry77RlDLxfEUPEV",
-      "spotify_title": "Yes Future",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0229475cafafc8f8686b8fabf9",
-      "spotify_tracks": 11,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7z1sOi4h8bV1gHqYpFX5mZ",
-      "spotify_title": "Chance",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021baaacf3e7241d49c628a558",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2sh1CItKa6DOZPGSwWg4j9",
-      "spotify_title": "Untitled",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02d5c5b70155db89f637cc5920",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7uQzpuNFN6g4ivygEB9HtS",
-      "spotify_title": "match :)",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e020da2e35aedb8fde943c86749",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "40nrikztSFD3uQDcikjxzJ",
-      "spotify_title": "A séparer/cut/remix/remaster",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02bfd90a225d87215e380f5ceb",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5Y81rLhlas6fcrYhHzDwph",
-      "spotify_title": "Match?",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02c99659f11ac60fe03d5973ae",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4EHtgj6TELER9PKY8cL0ZS",
-      "spotify_title": "RF_HADRA_EP",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e0207cfa84a29f519cb068ee854ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e02e33c348a05034f1e90e5babb",
-      "spotify_tracks": 16,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1igaHcPBGu6okI0qb5M4F2",
-      "spotify_title": "à sampler✂️ ",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02b1f55df876611438658fd16c",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7nDLpNu1TtLU60pbtz6lgI",
-      "spotify_title": "CHILL TO PROG 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02334a3e937dfeb6154dbab612ab67616d00001e02dbc4f7edcd8653fc3a4e51e6ab67616d00001e02ea1c7f814c585a59db3bba4dab67616d00001e02f81308dffd8b77bc9c4f361b",
-      "spotify_tracks": 13,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0BPLcKfUwsccGWlnon2ge1",
-      "spotify_title": "CHILL TO PROG 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e02390087b27bac1ebc54a0beddab67616d00001e025ed603d1bcf3cdfaae97b11dab67616d00001e02bf1f519823f16193043984d7",
-      "spotify_tracks": 156,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6LqesCJbqyLyt4x714LXJg",
-      "spotify_title": "CHILL TO PROG 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/26527cfca0cd66fb5c9460d18fa6c72a8e76bdd6ab67616d00001e02275f70543329ff4d9afea628ab67616d00001e0276086d1625d27971f2f48caaab67616d00001e02e88afd5e9d5481d75e0c907f",
-      "spotify_tracks": 124,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "09hpyyrjI5mF32sDzS6Hmm",
-      "spotify_title": "CHILL 25",
-      "spotify_cover": "",
-      "spotify_tracks": 0,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2YD3rJZGBmh06bq7SPTS91",
-      "spotify_title": "HAM & ZIB 25/26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0209473248b0dd4de8e33197c2ab67616d00001e02b8eadbfbddb3350fb001dfe7ab67616d00001e02ecd9543ccef0a143a4fcb232ab67616d00001e02fcef5b6f3e7c7f41a580c7eb",
-      "spotify_tracks": 98,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3JAW4kgW5oosIncAb1YHNZ",
-      "spotify_title": "B3B 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024d64eeb1999cb3e208b82d7fab67616d00001e027ce5e7af3cbd0a84e275b084ab67616d00001e02976e83ce677530c6d6efa699ab67616d00001e02fb73c88e0aa2b3776817d2b0",
-      "spotify_tracks": 21,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0kYrGEEH39u6YRjTXeAx3H",
-      "spotify_title": "MARIAGE 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021b2fab7e25e89fca41fc3a4cab67616d00001e024f0b23a7f212f18b6ffe55b1ab67616d00001e0277fa2ec3d9751d7ec87a1ce9ab67616d00001e02c4b7d2d4043df17f71e3c3d7",
-      "spotify_tracks": 223,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "69MvUYgKhzxuhxQdlIv1Tl",
-      "spotify_title": "ADN",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025f0276d125b71685068d423fab67616d00001e02e5913c1b0142b689d2a86449ab67616d00001e02ebd8244a20176d98441021c5ab67616d00001e02f2d3132275b1773d9677aaac",
-      "spotify_tracks": 139,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6rYyoGXQ3ezAKiXdog0YZm",
-      "spotify_title": "ADN RAB",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0222040a90701d599883ef204cab67616d00001e02343678efb69ad96f2c65f938ab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02f6d7c836ccf649d6beba5a48",
-      "spotify_tracks": 18,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5nByixmCGxAm8wn8xAAU4U",
-      "spotify_title": "PSY / TEK 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02a940087bef5396611e84a45eab67616d00001e02dfefcebc30a8b686d3bcdcdfab67616d00001e02e5913c1b0142b689d2a86449ab67616d00001e02f2d3132275b1773d9677aaac",
-      "spotify_tracks": 77,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1P8kybiB410ySnwonh8Kjx",
-      "spotify_title": "HITECH 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021ca0ba17b3aee86c8b464a2fab67616d00001e027f5b21c5819fb55aa1656bc2ab67616d00001e028795633fd0b4413c03f62ad6ab67616d00001e02cb676ae812aca3aec33372a0",
-      "spotify_tracks": 76,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2kcYdf3pzKyLIKe0RcQMGM",
-      "spotify_title": "PROG 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02000bec772f551df26a4052f9ab67616d00001e021ef7d10e1d296268e4617a76ab67616d00001e026fbfe9e0b6a9987f7b914d5fab67616d00001e02a77255d678b174e98ffb96ba",
-      "spotify_tracks": 25,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4Zac5yEivX9CHXWBUizIYT",
-      "spotify_title": "PROG 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023482792f78533f3b35732b1fab67616d00001e023b45b7fff6dae37d1564301eab67616d00001e0271535cf4e68a3e90b2438208ab67616d00001e02bb75316f4898d9b8c547f2d2",
-      "spotify_tracks": 35,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4S34524tUlCKSkHQzS27OO",
-      "spotify_title": "BELELEK 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0227cfad17e5fde8e073d04511ab67616d00001e027a4224e9219bdb12d7605372ab67616d00001e0286cd0b88047f056b824c36e6ab67616d00001e02d5cfa0dc5c6207d3942807c1",
-      "spotify_tracks": 73,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1hfosIuxRghaPXMoxGFLRm",
-      "spotify_title": "PROG 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02000bec772f551df26a4052f9ab67616d00001e025098e6af06aa7f432be96511ab67616d00001e02da08f2f9ad11095e15c4879bab67616d00001e02f4dca592dcab1a64f227ef0b",
-      "spotify_tracks": 18,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6cGno2VWPfhi0WFgqfvLkJ",
-      "spotify_title": "PROG 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0201ddddeb643b224c09544fc6ab67616d00001e023b45b7fff6dae37d1564301eab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02bb75316f4898d9b8c547f2d2",
-      "spotify_tracks": 23,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "38EKcHsBV5V5MyfN5JWPxe",
-      "spotify_title": "FULLON 25",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023ed13141ad6709ac52da9afdab67616d00001e0276086d1625d27971f2f48caaab67616d00001e02989f069607ab754af5ae6ae9ab67616d00001e02ffa031559cd3c9836856cda7",
-      "spotify_tracks": 42,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2QyQp6xYoNoXmti5OmTmDL",
-      "spotify_title": "konkif",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0216898498b94ee5be67a7a8cb",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7xLycnDwUFskfIU6HAnRcn",
-      "spotify_title": "[2015-2010]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021c127c14186fb23ea8607db9ab67616d00001e027aa730d9f11b32634cc65f4aab67616d00001e02dc71afe98ba69bee55dddf4eab67616d00001e02dee132e89d8a70d67e06f9db",
-      "spotify_tracks": 883,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0SVQ1ijKfhscmplTWwprhS",
-      "spotify_title": "[2020-2015]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0262c7aca125c661b3c121bf85ab67616d00001e02959c0d568ca7c685990eb270ab67616d00001e0298853d5ca76387d32e7ab969ab67616d00001e02db7114400fc0c67a41ae8c30",
-      "spotify_tracks": 421,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0HXFBbIxUQD9g7PjRt9gpR",
-      "spotify_title": "[2025-2020]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e029e1cfc756886ac782e363d79ab67616d00001e02a9f6c04ba168640b48aa5795ab67616d00001e02b06522f99c3503f5c89cd185ab67616d00001e02e88afd5e9d5481d75e0c907f",
-      "spotify_tracks": 456,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "19VuJukvwTlGYeTnhM7o7S",
-      "spotify_title": "[2014]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0243b184116369add2beeeda00ab67616d00001e0285f2f5754dedf35fd21edd7eab67616d00001e028e52e449cbd3848658a252bbab67616d00001e02cd874e988ed15f2859705217",
-      "spotify_tracks": 95,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6s2VeIpzcaLRyfAre0cnv5",
-      "spotify_title": "[2015]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0262c7aca125c661b3c121bf85ab67616d00001e02959c0d568ca7c685990eb270ab67616d00001e0298853d5ca76387d32e7ab969ab67616d00001e02db7114400fc0c67a41ae8c30",
-      "spotify_tracks": 99,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3LlyOoI4SqhKEWy9qmcxpq",
-      "spotify_title": "[2016]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025bc5e053031032000a726768ab67616d00001e02943aa7a54a0991e537da1890ab67616d00001e02bb2dc2a5310638e67b1efecaab67616d00001e02caa8bdf2faa090c25657d30b",
-      "spotify_tracks": 112,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4XHwS7LSfWHWih0nbh8HDb",
-      "spotify_title": "[2017]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02034f85da463faf79527d1fe0ab67616d00001e026a3e92d72b8c00231ac2d8b8ab67616d00001e028930ec68951de697278c406aab67616d00001e02943aa7a54a0991e537da1890",
-      "spotify_tracks": 100,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2bkkVSzYeONDkMXoe4DVdQ",
-      "spotify_title": "[2018]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02835816171f84a315bbae2559ab67616d00001e02940c4b3f77b8e31a186c1c33ab67616d00001e02af9e77bc3ddfb2e7580a8ee3ab67616d00001e02da2163c6b2d1ffddec97605d",
-      "spotify_tracks": 97,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2Mp3pJyVIhhwqxWkMlVYXS",
-      "spotify_title": "[2019]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0232083f1a325ed4939f1fbecdab67616d00001e023408a925e0bcb7940f864a0eab67616d00001e02a570fcaff0adf1ecdc73b85dab67616d00001e02f6e3988d51dd5d707b5a53a0",
-      "spotify_tracks": 86,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1R3KBqckckksX7CvuRZkNK",
-      "spotify_title": "[2020]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e029e1cfc756886ac782e363d79ab67616d00001e02a9f6c04ba168640b48aa5795ab67616d00001e02b06522f99c3503f5c89cd185ab67616d00001e02e88afd5e9d5481d75e0c907f",
-      "spotify_tracks": 100,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7BKHrRyzQ3bzjldRNaqr7O",
-      "spotify_title": "[2021]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022e0d511c597b089a06cf2adaab67616d00001e024896429a87abfacd5d90587bab67616d00001e02add46af0e060eb6cfc41e287ab67616d00001e02e33e9f4f9887e8ab30763823",
-      "spotify_tracks": 101,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "63Y5fqC1ZWmwRVMtuOXE2n",
-      "spotify_title": "[2022]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022d80bc4fd8fc763674a33165ab67616d00001e02611f8e051785bf51dfb60f8fab67616d00001e027c61051b74a2b90825336039ab67616d00001e02c88bae7846e62a8ba59ee0bd",
-      "spotify_tracks": 102,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6RvShb7z60HKLZrXftjPsY",
-      "spotify_title": "[2023]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024bf3b48e615335264b9fcb22ab67616d00001e025ad82b969514da96fb376ad0ab67616d00001e028faa12e4fae5b54e99329dc7ab67616d00001e02c5276ed6cb0287df8d9be07f",
-      "spotify_tracks": 100,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4mandicmAzGGDIO2PhMCga",
-      "spotify_title": "[2024]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e025d9fc25539053bfb935a24a3ab67616d00001e02eb832efe061888ee7ef10456ab67616d00001e02feae6a6ee0dac7fede477d4a",
-      "spotify_tracks": 100,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0nliuBlR1I3V2Ql3zSqM1F",
-      "spotify_title": "[2025]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02538ffd9b10ba139847a8a892ab67616d00001e0255b72bf2e20270860cce6634ab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02e33c348a05034f1e90e5babb",
-      "spotify_tracks": 100,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1p67PRXhJBEfMW3CL43IlY",
-      "spotify_title": "adaptations",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0247f84ceb651a341256f75ea6ab67616d00001e0297c43b5e54eaab7c1fa71dcfab67616d00001e029bb27b727a49603fb4a89718ab67616d00001e02b4f9be9981e8b4385a6e15a8",
-      "spotify_tracks": 8,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3Je4aJJuYFUvP1WAidF5MN",
-      "spotify_title": "Songs",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024c127e9d8439a3da6c31c96fab67616d00001e026b66e9099c7a66e58658f512ab67616d00001e026ba876bf105fccb15f2a403dab67616d00001e02ed317ec13d3de9e01fb99c9e",
-      "spotify_tracks": 983,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2ZiipAmKZYXXjwzoCXPfGh",
-      "spotify_title": "Gauchiste",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02178fb85bb77b667610a7d9c1ab67616d00001e0218987e04b880918a65630aecab67616d00001e02883ef56c4d7df36bfd02ef80ab67616d00001e02af9e77bc3ddfb2e7580a8ee3",
-      "spotify_tracks": 117,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4j8cuocPNRWDcniRlWFamJ",
-      "spotify_title": "Angy",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02bf1cabe663c6eef761b04a21",
-      "spotify_tracks": 5,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1xt6gzs53qm1Q9y6qQOv2C",
-      "spotify_title": "Revendiquons",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0213b4a9b64ed747d5e0e6428eab67616d00001e021c3a4a6fcd88ea9891f70f2aab67616d00001e02334a3e937dfeb6154dbab612ab67616d00001e02bb506d2a2d3f5893b3a14352",
-      "spotify_tracks": 5,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1j1SV10P30ub55fkTqABol",
-      "spotify_title": "chansfrcool",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e026b5ae962903762aea414b355ab67616d00001e02ceca77198d896b2c50d8e1d1ab67616d00001e02d2285cdad327f639b7164ab4ab67616d00001e02e466992496a53d4b464d112e",
-      "spotify_tracks": 5,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3esvzfSKjFcdO2W8eQWD4R",
-      "spotify_title": "🙂 HA-PT 🙂",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021fa55cf010db247948b8cd4fab67616d00001e02371304b5516c39ed90130f73ab67616d00001e02733c6e1cfc427dcc957a5771ab67616d00001e02e0294ac39cf7e5166c315299",
-      "spotify_tracks": 8,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "78gWyftdrbmnZmT8uY4HAK",
-      "spotify_title": "🦫 PT BOBR 🦫",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0259fee416d114b30583afef48ab67616d00001e02926b7eaa98f3fcf4b525c73aab67616d00001e02957ae146a564181e7bbbfbd2ab67616d00001e02d07a305af2d2ed473f859175",
-      "spotify_tracks": 15,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5HY53MJ7kBMJLlHXl8qPZX",
-      "spotify_title": "🦌 WA-PT TOUT DOUX 🦌",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0216898498b94ee5be67a7a8cbab67616d00001e025b58f8783545cb9a652f347cab67616d00001e02ca002872d8e2803fd040608cab67616d00001e02ecafe5607a782dd3df893751",
-      "spotify_tracks": 12,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4BhdkLK91q2wYw0izgmCwx",
-      "spotify_title": "🌀 PT GATE 🌀",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0209e0cd1bfdbdd13c94535d2dab67616d00001e0243c1c4a885898002d281d0c6ab67616d00001e0259fee416d114b30583afef48ab67616d00001e02957ae146a564181e7bbbfbd2",
-      "spotify_tracks": 20,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "11GKn6VA3tiHVOsIjxZUPN",
-      "spotify_title": "🐎 PT CHEVAL 🐎",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b58f8783545cb9a652f347cab67616d00001e02761a7d6160c29cbc813893deab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02d9c15b02d0da8be6b0a82645",
-      "spotify_tracks": 37,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7KTDhiMwmqqVrZDfvpdG7i",
-      "spotify_title": "💥 PT BAGAR 💥",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02733c6e1cfc427dcc957a5771ab67616d00001e027b84deb0be9a8a7ec8a5b4ffab67616d00001e02a3419033a3c4cf9843643f13ab67616d00001e02ca4668680e974f60d1df89da",
-      "spotify_tracks": 7,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6Xlpgf8SB8uCx04zSwREmg",
-      "spotify_title": "[Metal Symphonique sans metal]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023433fb2a95c54de6d42291bdab67616d00001e025269d32e06be76afcd892d54ab67616d00001e029262ad1f055171572a047bd0ab67616d00001e02aafd1a955eda9a0f8bbf50a1",
-      "spotify_tracks": 49,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1E7YRqFG6aU8jxOKd03LSJ",
-      "spotify_title": "[Post-rock]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e027720e9fee5d7be232e4fac2fab67616d00001e029213438c86b0f50290a41eaaab67616d00001e02940c4b3f77b8e31a186c1c33ab67616d00001e02da2163c6b2d1ffddec97605d",
-      "spotify_tracks": 319,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6uPBVgJGvNBmUGXwuDb5zx",
-      "spotify_title": "REGGAE",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022df6e19833979245c1ff60a8ab67616d00001e028e52e449cbd3848658a252bbab67616d00001e02db7114400fc0c67a41ae8c30ab67616d00001e02f62cf5c716eb4ff634df6a85",
-      "spotify_tracks": 560,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5mCoYNNq7sU7ptJ5ckDkrT",
-      "spotify_title": "lol",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e028f4680c5efa2de607865bd5bab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02b1f55df876611438658fd16cab67616d00001e02f38e54a9366739b7a20c8852",
-      "spotify_tracks": 25,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4IFyNSqcDc0gFEgmm4rXNO",
-      "spotify_title": "-Tabarnak",
-      "spotify_cover": "https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da8468f8271cd8fa6fa93f11c895",
-      "spotify_tracks": 151,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "621djHLuPP3YIM8yKwSUol",
-      "spotify_title": "metelkova",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024085790f98ab559e0004fa7cab67616d00001e02a4057cd48660f0062a47d61bab67616d00001e02b3e10e192b9e9af7d461506fab67616d00001e02e7cd7fae5a79f4f1f4a13bce",
-      "spotify_tracks": 56,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "59AtDd2kqpdVgUrIFhU5az",
-      "spotify_title": "Artistes aux noms hardtek mais en fait c'est du chill",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02362ac7cb4dddfe003ccfc79dab67616d00001e026c03389e9a6a708aefd5cc8aab67616d00001e02a4b62f435bc45aeedf2051aeab67616d00001e02f0f0e52502363547908c643f",
-      "spotify_tracks": 19,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0e5U8ZWJQGAMbuIglSPptL",
-      "spotify_title": "Improbables",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02636612a4969cba0ef5454d91ab67616d00001e0289e645132016591a1e65971cab67616d00001e02c82ef9749e0496c4e5e03dd0ab67616d00001e02f5078a0cf7291968f6f54d1f",
-      "spotify_tracks": 14,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3q1JYjCBo7IGkIYw1itF6y",
-      "spotify_title": "Lookalike",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02149a508cb837c47d2696fc18ab67616d00001e023d131b366db2f7f3556812adab67616d00001e02c418220159462cdd7cfeb9a1ab67616d00001e02e88afd5e9d5481d75e0c907f",
-      "spotify_tracks": 8,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0cRrNb5F6USyE1vTmdpXKU",
-      "spotify_title": "sol-air",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0272d99df21eb858e23d6f1ee9",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0G4TqnovOmO0zLOOLjLDkR",
-      "spotify_title": "morning",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02291bf52e305c4fca90247e97ab67616d00001e02561090eafe08bf07114e176dab67616d00001e02d504161362c7270093c78b02ab67616d00001e02ebd8244a20176d98441021c5",
-      "spotify_tracks": 21,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3TUXCCAtDjxg4YPrQc9UCM",
-      "spotify_title": "groovy",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02927e4da17de63fc59b68042dab67616d00001e02a95fb0d23b29af7c95700424ab67616d00001e02accb2eba2406b9b7e07da8aeab67616d00001e02f38e54a9366739b7a20c8852",
-      "spotify_tracks": 17,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5mPx18mvh4n1clKuMfL9ON",
-      "spotify_title": "balear",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02f9f1f817bfdd245009f1152e",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "30beit8pvhGcI0j4FjMV8X",
-      "spotify_title": "Heure bleue",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02291bf52e305c4fca90247e97",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7GmeY0ii0d2UK93AhO0A8x",
-      "spotify_title": "feel_x",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023396c029f47ff621f59e30b9ab67616d00001e02a43f9418af7e912a42b40d27ab67616d00001e02a5de54b39ae31c512e031be2ab67616d00001e02b6dea284b8f96486789cec5d",
-      "spotify_tracks": 49,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1MhTjTYkeKMVdZbPhAY8z4",
-      "spotify_title": "Shh",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020a7d45a345534966a4ad2c39ab67616d00001e025092260f47e0d95717b834c3ab67616d00001e02dd9e17a2000252d6b79cf904ab67616d00001e02eb5c3642422ba88527e4ab7c",
-      "spotify_tracks": 9,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2OviBXu8YcLcrCBpx5p78G",
-      "spotify_title": "Epic / virtuo",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02afa319b160b2f5633fd6bc87ab67616d00001e02b66fb2bce97977b504214990ab67616d00001e02bacf773e8a4dea88c4e9d074ab67616d00001e02f3fd6f5fc65c0e7ca8cde48a",
-      "spotify_tracks": 33,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2Q0Z7pJKmLbgetElR5Ng0A",
-      "spotify_title": "[Hypnotrucs]",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02275f70543329ff4d9afea628ab67616d00001e02a48bdfeb5f9465572c52af88ab67616d00001e02aac3d58131b00eb41a55bbd0ab67616d00001e02e88afd5e9d5481d75e0c907f",
-      "spotify_tracks": 61,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7FccQkOVUqPJLYZuwgCg6X",
-      "spotify_title": "Mimi",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021abb45377cebf1a1e0c69e2c",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5fWGnnb8nFvLGx0HmottXv",
-      "spotify_title": "[Skiley] Liked Songs - BPM 58-220",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b9d470896a418d1a8cbc89cab67616d00001e0259182926cb404ad15d42a217ab67616d00001e0274b72e1f09593a831f56b2cdab67616d00001e02e4ffa6505ce2fe9222b633c1",
-      "spotify_tracks": 2692,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6qLSv1XnPcwphwJGCNxIsI",
-      "spotify_title": "mif",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02c1cabab9e087f29fb53c4e08",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3wKZLbv9ZtF0ODBbupZTMO",
-      "spotify_title": "?",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020b9fca80401e636137c2fc8dab67616d00001e0260b4e7d369c20a8d57d5d65fab67616d00001e02c16e6ddb53c86b03abbe166bab67616d00001e02f01ff2ac22f31e1dc480fb0b",
-      "spotify_tracks": 343,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0rDL2m48NQ63QCBhHjmlzp",
-      "spotify_title": "Relax",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02ec9176f0b98678a011948ff3",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6eqHuP56CzwHHCZfXFXL6p",
-      "spotify_title": "Bien chill",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0202bb6a69975cf69ec7432019ab67616d00001e0275133efd17465c8a18d8c4a2ab67616d00001e0279baeba451612590781e8109ab67616d00001e02e6d6be974d99119db2d112b0",
-      "spotify_tracks": 37,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5cG5mNYmwiiZoyM7C6iTRw",
-      "spotify_title": "s l o w",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0202bb6a69975cf69ec7432019ab67616d00001e024dcac85815bb2969b82c259aab67616d00001e02a5de54b39ae31c512e031be2ab67616d00001e02ed317ec13d3de9e01fb99c9e",
-      "spotify_tracks": 7,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5FE09jcn95vRmKe21FUI11",
-      "spotify_title": "numb",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02477f0a81369c1fca168219db",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2kQm2qjIN0XsUYvUtfyTY2",
-      "spotify_title": "guinguette",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02673b2f9bea8b1445c5f76714",
-      "spotify_tracks": 1,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2TiC5VKcsKHOc3VuSWH3aK",
-      "spotify_title": "after",
-      "spotify_cover": "",
-      "spotify_tracks": 0,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2iAvCXUVcJu5Kk9zINliqa",
-      "spotify_title": "CINE",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e026733e431f67f8995b7eea689ab67616d00001e029a2fcc14dae33d3870ab736dab67616d00001e029c3b716200bfbc837377744eab67616d00001e02fb6e4451f9d60cace76b0b0d",
-      "spotify_tracks": 33,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "75e5PX4tk6S5HRSt6LZhq3",
-      "spotify_title": "NEW TEUF 26",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02588bc4cdf6e96e8f4a744553ab67616d00001e025d9b879e108210db55ae819eab67616d00001e026fd0518da8e652c8a8c9f606ab67616d00001e02a38766d4fdb658616aa022ed",
-      "spotify_tracks": 54,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2q9oxtHOuwBQX6On4EoPRG",
-      "spotify_title": "FOLKTRONICA",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02a09f3437197ce74724d41b8c",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "00BWDQl0stWMQCPAW0b3r8",
-      "spotify_title": "PSYBASS",
-      "spotify_cover": "",
-      "spotify_tracks": 0,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4OGb9AGpjkIDXsCuEhyXck",
-      "spotify_title": "MELODIC PSY",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020ea5179e87bba94e5c2afebbab67616d00001e0267cfb117f45fa336861bb149ab67616d00001e02859ba5404ad3ef417d76407fab67616d00001e02af1a7ea39677f2abfdcb6f19",
-      "spotify_tracks": 20,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1Zl9RmN9gUE0Iwvp9HH9rl",
-      "spotify_title": "PSYBIENT/PSYCHILL/CHILLGRESSIVE/x",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02009b6285733cd13f5e15df2fab67616d00001e02034af9156cbbf3d7b03827c2ab67616d00001e02ccaa1f18984e56e56705efa1ab67616d00001e02fef00d498a4a77e1fa3c4a5a",
-      "spotify_tracks": 312,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5JuijwgnDHamCPiy4XKBPG",
-      "spotify_title": "flx_psy_bpm_↗️",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b2dc5a09eb1a01643768725ab67616d00001e02a0cf0745ba76082afaa9865dab67616d00001e02f4bb199c99487204c60540e1ab67616d00001e02fd3baefb8a5022e05509261d",
-      "spotify_tracks": 1680,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4Rvl7u2j9legxqdxHrsYmP",
-      "spotify_title": "PSYDUB",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025fe9ffb5d9cbfe9f7ae9b028ab67616d00001e0264d33713f3eddde35a337af4ab67616d00001e029c3f9b40fe20aa75e772a8aaab67616d00001e02fd2933ed1bfc5b846ec1f3e2",
-      "spotify_tracks": 178,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1PsiQQoraSC8YorjgmeZx9",
-      "spotify_title": "PROG",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0212fa3fbeb7ce16e76e2339d9ab67616d00001e025f8372eafe3234c024e89ebaab67616d00001e027528f88eef3153a0c73857e2ab67616d00001e02bb27eb3c6c10a34945d66e14",
-      "spotify_tracks": 90,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5s6ebKiaXERKwljTaK2mSA",
-      "spotify_title": "FULLON",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02555785cf7a52d7256cbe85e4ab67616d00001e026234464c50f651dbd00e8c61ab67616d00001e02bd397c147f4a73f3a9a08dbbab67616d00001e02ffa031559cd3c9836856cda7",
-      "spotify_tracks": 29,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2ZBfXtKz069IbPSywL8bjc",
-      "spotify_title": "GOA",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021baaacf3e7241d49c628a558ab67616d00001e0263d088a9f8dd7163a7db8575ab67616d00001e02bf7fa09c9096eb7c1c35ccf2ab67616d00001e02d404a079b8984a31a22c6d28",
-      "spotify_tracks": 11,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "27JvwtF07c11CLCTPFnSM3",
-      "spotify_title": "NITZHO",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020509e4216d5a3dc5625ef1d9ab67616d00001e020d573eb35b05ce4ed448434bab67616d00001e02ab6f6c8965643d433f6dfaf4ab67616d00001e02f24d555a406e1b512eac1f3d",
-      "spotify_tracks": 93,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3BKtQgxoyiFg9KLa1ADFXX",
-      "spotify_title": "HITECH",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0229d8eb38e224cf366a8070faab67616d00001e02561090eafe08bf07114e176dab67616d00001e02c13048ac9283fd2e83b5fb50ab67616d00001e02e2090da95a1228714ad330c2",
-      "spotify_tracks": 396,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4kc4xkyoFkZC8myhvmjPE2",
-      "spotify_title": "PSYCORE_EXP",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025e8cfc780dd9af7d072b2795ab67616d00001e0288a81ebba50333aa8852361aab67616d00001e02ac4b3f804326370f0cde44d7ab67616d00001e02eec976962e3e7757cb538061",
-      "spotify_tracks": 38,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3ooTx00YeU6dnfZgTgfT1n",
-      "spotify_title": "FREE TEKNO",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023653a15cca405f7c5903f6c2ab67616d00001e02497084c12a2cdc304adff34fab67616d00001e0262add9be57ad50e5b213ce52ab67616d00001e028d2dcfc23df02bb073449f59",
-      "spotify_tracks": 14,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5qad4p8ROADc5da9kmtX2T",
-      "spotify_title": "FLX_TEKNORAP_FRAPCORE",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0268061118e5edb06525a38803ab67616d00001e0269a8699f51a356c8b4c695caab67616d00001e02d3a5a2364857f5e4a5909eebab67616d00001e02e63166ace799508203ffa954",
-      "spotify_tracks": 11,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0dcBtAry2eh41bHhSBQG3u",
-      "spotify_title": "Synthwave",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e025b94a718e3e80df28f06c6f0ab67616d00001e0298fd5b75c57d568f54ea89c0ab67616d00001e02a116c0fd702730e643795964ab67616d00001e02c1fa18fcff45677fa780844f",
-      "spotify_tracks": 104,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6GE3NvfVCY9Y5TZUwXKiEQ",
-      "spotify_title": "classics",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020ea5179e87bba94e5c2afebbab67616d00001e0243106801d684357c009db2acab67616d00001e02703b1049343abf44aa5b2886ab67616d00001e02ba41f3e566e53d4b696ac688",
-      "spotify_tracks": 20,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "22yV7P6wBZUxc5BXlRVV95",
-      "spotify_title": "303",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e022d2f19d4026aff6f94f0a716ab67616d00001e028b808b086216273a4ec89f4fab67616d00001e02b54af20a80b5c959fbaf2565ab67616d00001e02f4dca592dcab1a64f227ef0b",
-      "spotify_tracks": 19,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5PhLo1qOuBOiuMEtR5aVsZ",
-      "spotify_title": "warmup",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02334a3e937dfeb6154dbab612",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "1rt0hpCT1BmP6JzdikxL4Z",
-      "spotify_title": "Envoûtantes",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024c127e9d8439a3da6c31c96fab67616d00001e02664767416db4df8a2cce27eeab67616d00001e0266ca5eed5bbc6190bf64b970ab67616d00001e02787edcfb0ec16b64c17485fe",
-      "spotify_tracks": 37,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7FOiGGiS00GZBTpWWHKnbi",
-      "spotify_title": "light & groovy",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02087a3fe94f86bc51f57d4b38ab67616d00001e0228b19ded7335c7549f128284ab67616d00001e027c37a295d60a5799d909e485ab67616d00001e02af1a7ea39677f2abfdcb6f19",
-      "spotify_tracks": 48,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0DhN0Ixav4XDPjowcYuoJn",
-      "spotify_title": "Dark & groovy",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020db272f444c8ec41c3303f55ab67616d00001e022e90e66e9f3116ce6fe082baab67616d00001e02588bc4cdf6e96e8f4a744553ab67616d00001e025c4d606f6c8a375875f43c34",
-      "spotify_tracks": 24,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "7Kz79fRKoGrFmZM9jVPngW",
-      "spotify_title": "deep & groovy",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021c2b36ca059a4edb6bdb442eab67616d00001e02af1a7ea39677f2abfdcb6f19ab67616d00001e02cf039805de18b2a006c9ba22ab67616d00001e02e3fca1b5712eeb308c5d0b8a",
-      "spotify_tracks": 25,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2JtX19nYeWXTUKcw188IDa",
-      "spotify_title": "bassy",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02674f1c0604493990a079c255ab67616d00001e0276a3559123d61fc0356b9995ab67616d00001e02a09f3437197ce74724d41b8cab67616d00001e02cea51a765da100823b829814",
-      "spotify_tracks": 10,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0GjJ4r82FZupkr5fOnp4h5",
-      "spotify_title": "Turbo",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0206bc55b3fb9da2f25927c822ab67616d00001e02144a0a25dcad64a61752c98bab67616d00001e02463d0c11bcfd732686c45632ab67616d00001e027f9193bae0ebd410f279f549",
-      "spotify_tracks": 6,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2VAHGxhAGobzJYRmHtfzZ3",
-      "spotify_title": "Retro",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e021d1d334d180dc7c336c33b3a",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "0Q3HZnwGYfFsDajmwfIHa9",
-      "spotify_title": "chill jazz house",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0224d7533c98518d78de5ec07dab67616d00001e029e38782f8d8dd7c65c8e7899ab67616d00001e02a63f5324bb3c5db67529d00aab67616d00001e02ea856181e66b3db22ff05958",
-      "spotify_tracks": 50,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4FOZzJWReh9TKbyhIcXIrl",
-      "spotify_title": "Tech prog",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e026c06aede47ea802b93566280",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "03HAC24FHbo6aovVj8bVRW",
-      "spotify_title": "NEOTRANCE",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0220a63117adfc02a94f76e01bab67616d00001e0289ce83b9a8f3bf90a54f8e95ab67616d00001e02cfa605ab4248590013f489c5ab67616d00001e02e9951f87053c91e0265e5a20",
-      "spotify_tracks": 24,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5Lh7TJh05hZFy0A2Bg5gXB",
-      "spotify_title": "Italo trance",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0233836194ec0ec467260479e6ab67616d00001e028d7d6d3c3894cfad073be42fab67616d00001e02a4155425cf2f481e3bd007e4ab67616d00001e02b425e0ebc4016d022211ddc5",
-      "spotify_tracks": 6,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "5401ipX3tMv75S5pQoPLzd",
-      "spotify_title": "flx_deep_melodic_house",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e020e21a5cc77e4148c7665f8eaab67616d00001e023708414686db50c93df14765ab67616d00001e02c4483c9e7108a8a408fc6063ab67616d00001e02f980b780113c39d7fa61057b",
-      "spotify_tracks": 5,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "4xwvjqeAplocvKzTeXg6D7",
-      "spotify_title": "melodic tech",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021677f484125173d96fd1f4fdab67616d00001e0243e3a85bb94d4927fc0ec6c4ab67616d00001e0260aecf1bfc11fddc0147f0dfab67616d00001e02a66e7de3ebceb60ecb45202d",
-      "spotify_tracks": 4,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "2C4LvTsgPao8rwmvFQBd24",
-      "spotify_title": "Dub techno",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e026d0dfd27bf202f737a1d8ed3",
-      "spotify_tracks": 2,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6rSUoU4AtNQOAuhPr4fGxS",
-      "spotify_title": "edm",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e0225ef6de5ddceadb4cf7e91e9",
-      "spotify_tracks": 3,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "3cBqiqjvR3F3PJ7nEZCap9",
-      "spotify_title": "random  house a trier",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e024846513506ba4bedc11fadbcab67616d00001e02e59493ba7c04a6cdf9a2ae82ab67616d00001e02ea4d7e3a90749aae26dd6751ab67616d00001e02faae2898e5b2bc3d5ee9fca5",
-      "spotify_tracks": 894,
-      "visible": false,
-      "category": "",
-      "description": ""
-    },
-    {
-      "id": "6GDwBGuPHqguem2vLODi4Z",
-      "spotify_title": "random neotrance a trier",
-      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e02154572442b02f9b4f6654582ab67616d00001e023ef0db3c76e62615b5cb5bdaab67616d00001e029fa44b0f4ce6e06f9a67b18bab67616d00001e02cfa605ab4248590013f489c5",
-      "spotify_tracks": 295,
-      "visible": false,
-      "category": "",
-      "description": ""
-    }
-  ],
-  "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "photos": []
 }
