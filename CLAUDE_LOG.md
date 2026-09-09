@@ -1,3 +1,27 @@
+### 2026-09-08 — câblage rendu des champs CMS dans les composants Astro
+
+- **son.astro** : `cover_image` hero image, `links.instagram`/`facebook` dans section Écoute, section Mixes (titre, date, genre, durée, liens Mixcloud/SC) ; type cast `SonData` pour éviter `never[]`
+- **contact.astro** : page complète remplace StubPage — `booking_email` CTA, `social.*` liens filtrés, `press_kit_url`, `cover_image` hero, fallback note_stub
+- **BaseLayout.astro** : OG meta (`og:title`, `og:type`, `og:site_name`, `og:description`, `og:image`) + `twitter:card`
+- **StubPage.astro** : `contact_email` câblé (pour la régie)
+- Build OK, pushé `7142767`
+
+---
+
+### 2026-09-08 — feat: CMS complet + face-B contenu riche
+
+- **5 JSON de facettes enrichis** : `cover_image`, listes (`mixes`, `equipment`, `references`, `courses`, `tools`, `social`), champs typés conservant les champs existants
+- **`src/data/types.ts` créé** : interfaces TypeScript `SonData`, `RegieData`, `CoursData`, `OutilsData`, `ContactData`
+- **`public/admin/config.yml` mis à jour** : collections CMS avec labels FR, widgets `image`/`markdown`/`list`/`object`/`number` par facette — édition 100% sans code
+- **`Turntable.astro` — face-B alimentée par facette** :
+  - Carré 1 : `cover_image` (ou placeholder coloré)
+  - Carré 2 : contenu contextuel selon `item.key` — grille mixes (Son), références + équipement (Régie), liste cours niveau/prix (Cours), outils avec liens (Outils), booking email + réseaux sociaux + EPK (Contact), 3 derniers articles (Blog)
+  - Guards partout : aucun champ vide ne casse le rendu
+- **Build OK** : zéro erreur TS, zéro erreur Astro — déployé sur main → Cloudflare auto
+- **À faire** : remplir les JSON via `/admin` pour voir le contenu réel en face-B ; ajouter `blog/` directory pour que la collection blog existe
+
+---
+
 ### 2026-09-07 — physique de rotation v2 (volant d'inertie)
 
 - **Refonte complète de la physique** dans `src/components/Turntable.astro`
