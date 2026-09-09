@@ -1672,7 +1672,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (idleTimer !== null) clearTimeout(idleTimer);
       idleTimer = setTimeout(() => {
         idleTimer = null;
-        if (appState !== 0) setState(0);
+        if (appState === 1) setState(0); // état 2/3 : ne pas interrompre
       }, IDLE_TIMEOUT);
     }
 
