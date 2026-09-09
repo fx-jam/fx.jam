@@ -70,6 +70,19 @@
     loadSoundCloud(url, label);
   });
 
+  // Rebind SC.Widget après navigation ViewTransitions (l'iframe persiste mais la référence widget est perdue)
+  document.addEventListener('astro:page-load', () => {
+    if (iframe.src && typeof SC !== 'undefined') {
+      iframe.onload = null; // éviter double bind
+      try {
+        widget = SC.Widget(iframe);
+        widget.bind(SC.Widget.Events.PLAY,   () => { isPlaying = true;  btnPlay.textContent = '⏸'; });
+        widget.bind(SC.Widget.Events.PAUSE,  () => { isPlaying = false; btnPlay.textContent = '▶'; });
+        widget.bind(SC.Widget.Events.FINISH, () => { isPlaying = false; btnPlay.textContent = '▶'; });
+      } catch (e) {}
+    }
+  });
+
   // Restauration depuis localStorage après hard reload
   try {
     const saved = localStorage.getItem('hamcat-player-state');
