@@ -1,3 +1,10 @@
+export interface SpotifyPlaylist {
+  title: string;
+  category?: string;
+  url: string;
+  visible: boolean;
+}
+
 export interface FacetMix {
   title: string;
   date: string;
@@ -17,6 +24,7 @@ export interface SonData {
   bio: string;
   genres: string[];
   mixes: FacetMix[];
+  spotify_playlists?: SpotifyPlaylist[];
   links: {
     soundcloud: string;
     mixcloud: string;

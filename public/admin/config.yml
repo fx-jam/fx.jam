@@ -119,6 +119,16 @@ collections:
               - { name: mixcloud_url,  label: "URL Mixcloud",  widget: string,   required: false }
               - { name: soundcloud_url, label: "URL SoundCloud", widget: string, required: false }
               - { name: image,         label: Image,           widget: image,    required: false }
+          - name: spotify_playlists
+            label: "Playlists Spotify"
+            widget: list
+            required: false
+            hint: "Chaque playlist avec son URL Spotify, sa catégorie et sa visibilité"
+            fields:
+              - { name: title,    label: Titre,      widget: string,  required: false }
+              - { name: category, label: Catégorie,  widget: string,  required: false, hint: "Ex: psytrance, goa, ambient" }
+              - { name: url,      label: "URL Spotify (playlist)", widget: string, required: false, hint: "https://open.spotify.com/playlist/..." }
+              - { name: visible,  label: Visible,    widget: boolean, default: true }
           - name: links
             label: "Liens"
             widget: object
