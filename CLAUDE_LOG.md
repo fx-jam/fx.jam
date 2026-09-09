@@ -1,3 +1,34 @@
+### 2026-09-09 — Spotify sync system + corrections physique disque + multi-panneaux son
+
+**Spotify playlist sync**
+- `scripts/sync-spotify.mjs` : Client Credentials token, pagination playlists user, merge intelligent — préserve visible/category/description, retire les playlists supprimées de Spotify
+- `.github/workflows/sync-spotify.yml` : cron 6h quotidien + workflow_dispatch, `permissions: contents: write` (fix exit 128)
+- `son.json` : `spotify_user_id` + `spotify_playlists[]` avec champs auto (id/spotify_title/spotify_cover/spotify_tracks) et champs curatoriaux (visible/category/description)
+- `types.ts` : interface `SpotifyPlaylist` mise à jour, `spotify_user_id?` dans `SonData`
+- `config.yml` : widget list avec hints "Ne pas modifier" sur champs auto
+- `son.astro` : filtre `visible && id`, groupBy catégorie via reduce, iframes 152px avec description + count
+
+**Pages facettes + SEO**
+- `regie.astro`, `cours.astro`, `outils.astro` : remplacent les stubs — même structure que son.astro, tokens `--facet-*`, responsive 640/420px, guards champs optionnels
+- `BaseLayout.astro` : objet `seo {}` centralisé, balises complètes (canonical, og:url/title/description/image, twitter:card/title/description/image), `og:image` → `media.hamcat.live/logos/logo.jpg`
+- `son.astro` : embeds SoundCloud + playlists Spotify, `extractSpotifyPlaylistId()`
+
+**Corrections physique disque (Turntable.astro)**
+- Flèches clavier états 0/1 : impulsion immédiate `velAngle += KEY_ACCEL * dir` sur keydown, `wasCoasting = false` pour éviter snap résiduel sur changement de direction
+- Drag souris : passage de δpx linéaire à angle polaire incrémental (`wrapDelta` sur `atan2`) — élimine l'inversion au relâché
+- Idle timer : ne déclenche retour état 0 que si `appState === 1` (état 2/3 non interrompus)
+
+**Multi-panneaux son.astro**
+- Header fixe compact : cover circulaire 56px + label + h1 + bio + genres + ← Accueil
+- Grille 3 colonnes `flex:1` avec scroll indépendant : Agenda (gigs + historique) / Sets (streaming + SC embed + mixes) / Playlists (iframes Spotify groupées)
+- Mobile < 768px : colonnes empilées, scroll global
+- Sections Visuels/Presskit placeholder supprimées
+
+**Prochaine session**
+- Player audio persistant site-wide : `PersistentPlayer.astro` barre fixe bottom, `transition:persist="player"`, SoundCloud Widget API (play/pause via postMessage), boutons "Écouter" sur son.astro → signal au player, localStorage pour source active
+
+---
+
 ### 2026-09-08 — câblage rendu des champs CMS dans les composants Astro
 
 - **son.astro** : `cover_image` hero image, `links.instagram`/`facebook` dans section Écoute, section Mixes (titre, date, genre, durée, liens Mixcloud/SC) ; type cast `SonData` pour éviter `never[]`
