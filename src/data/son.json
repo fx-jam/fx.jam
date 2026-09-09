@@ -8,13 +8,13 @@
   "genres": [],
   "mixes": [],
   "links": {
-    "soundcloud": "",
-    "mixcloud": "",
-    "spotify": "",
+    "soundcloud": "https://soundcloud.com/hamcatmusic",
+    "mixcloud": "https://www.mixcloud.com/fx-hamcat/",
+    "spotify": "https://open.spotify.com/user/1198265241?si=6988c8f5819b4b0d",
     "presskit": "",
     "instagram": "",
     "facebook": ""
   },
-  "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "photos": []
 }
