@@ -1,4 +1,256 @@
 ---
-import StubPage from '../layouts/StubPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFacet } from '../data/facets.ts';
+import coursJson from '../data/cours.json';
+import type { CoursData } from '../data/types';
+const coursData = coursJson as unknown as CoursData;
+
+const f = getFacet('cours');
 ---
-<StubPage facet="cours" title="Cours MAO — hamcat.live" />
+
+<BaseLayout title="Cours MAO — hamcat.live" description={f?.teaser}>
+  <main class="cours">
+
+    <!-- ── COVER HERO ──────────────────────────────────────────────── -->
+    {coursData.cover_image && (
+      <div class="cover-hero">
+        <img src={coursData.cover_image} alt={coursData.headline || 'Cours'} class="cover-img" />
+      </div>
+    )}
+
+    <!-- ── HEADER ─────────────────────────────────────────────────── -->
+    <header class="hd">
+      <span class="label">{coursData.label || 'Cours'}</span>
+      <h1>{coursData.headline || 'Cours MAO'}</h1>
+      {coursData.intro && <p class="intro">{coursData.intro}</p>}
+      {!coursData.intro && <p class="teaser">{coursData.teaser}</p>}
+    </header>
+
+    <!-- ── COURS PROPOSÉS ─────────────────────────────────────────── -->
+    {coursData.courses && coursData.courses.length > 0 && (
+      <section class="section cours-list-section">
+        <h2 class="section-title">Cours proposés</h2>
+        <ul class="cours-list">
+          {coursData.courses.map(c => (
+            <li class="cours-card">
+              <div class="cours-card-head">
+                <span class="cours-title">{c.title}</span>
+                <span class="cours-meta-row">
+                  {c.level    && <span class="tag">{c.level}</span>}
+                  {c.duration && <span class="tag tag--dim">{c.duration}</span>}
+                  {c.price    && <span class="tag tag--price">{c.price}</span>}
+                </span>
+              </div>
+              {c.description && <p class="cours-desc">{c.description}</p>}
+              {c.tools       && <p class="cours-tools">{c.tools}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- ── INFOS PRATIQUES ────────────────────────────────────────── -->
+    {coursData.schedule_info && (
+      <section class="section infos">
+        <h2 class="section-title">Infos pratiques</h2>
+        <p class="schedule-text">{coursData.schedule_info}</p>
+      </section>
+    )}
+
+    <!-- ── INSCRIPTION ────────────────────────────────────────────── -->
+    {coursData.registration_link && (
+      <section class="section inscription">
+        <a href={coursData.registration_link} target="_blank" rel="noopener" class="cta-btn">
+          S'inscrire →
+        </a>
+      </section>
+    )}
+
+    <a class="home" href="/">← Accueil</a>
+
+  </main>
+</BaseLayout>
+
+<style>
+  .cours {
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 2rem 3rem;
+    gap: 3rem;
+  }
+
+  .cover-hero {
+    width: 100%;
+    max-width: 420px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .cover-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+  .label {
+    color: var(--facet-cours);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .intro, .teaser {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 44ch;
+    margin: 0.5rem 0 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0 auto;
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--facet-cours);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  /* ── Cards cours ── */
+  .cours-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .cours-card {
+    border: 1px solid color-mix(in srgb, var(--facet-cours) 30%, var(--border));
+    border-left: 3px solid var(--facet-cours);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--facet-cours) 5%, var(--bg-surface));
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .cours-card-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .cours-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+    flex: 1;
+  }
+  .cours-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+  }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--facet-cours);
+    color: var(--facet-cours);
+    white-space: nowrap;
+  }
+  .tag--dim { border-color: var(--border); color: var(--text-tertiary); }
+  .tag--price { border-color: color-mix(in srgb, var(--facet-cours) 50%, transparent); color: var(--text-secondary); }
+
+  .cours-desc {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+  }
+  .cours-tools {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    letter-spacing: 0.05em;
+    margin: 0;
+  }
+
+  /* ── Infos pratiques ── */
+  .schedule-text {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ── Inscription ── */
+  .inscription { align-items: center; }
+  .cta-btn {
+    display: inline-block;
+    padding: 0.7rem 1.8rem;
+    border: 1px solid var(--facet-cours);
+    border-radius: 8px;
+    color: var(--facet-cours);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    letter-spacing: 0.1em;
+    transition: background 0.2s ease;
+  }
+  .cta-btn:hover { background: color-mix(in srgb, var(--facet-cours) 15%, transparent); }
+
+  .home {
+    align-self: center;
+    color: var(--facet-cours);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-cours);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .home:hover { background: color-mix(in srgb, var(--facet-cours) 15%, transparent); }
+
+  @media (max-width: 640px) {
+    .cours-card-head { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-width: 420px) {
+    .cours { padding: 3rem 1.25rem 2rem; }
+  }
+</style>

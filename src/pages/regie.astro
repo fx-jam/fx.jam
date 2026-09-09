@@ -1,4 +1,274 @@
 ---
-import StubPage from '../layouts/StubPage.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFacet } from '../data/facets.ts';
+import regieJson from '../data/regie.json';
+import type { RegieData } from '../data/types';
+const regieData = regieJson as unknown as RegieData;
+
+const f = getFacet('regie');
+
+// Grouper l'équipement par category si le champ existe
+type EquipWithCat = RegieData['equipment'][number] & { category?: string };
+const equipByCat: Record<string, RegieData['equipment']> = {};
+for (const eq of regieData.equipment) {
+  const cat = (eq as EquipWithCat).category || '';
+  if (!equipByCat[cat]) equipByCat[cat] = [];
+  equipByCat[cat].push(eq);
+}
+const equipCats = Object.keys(equipByCat);
 ---
-<StubPage facet="regie" />
+
+<BaseLayout title="Régie — hamcat.live" description={f?.teaser}>
+  <main class="regie">
+
+    <!-- ── COVER HERO ──────────────────────────────────────────────── -->
+    {regieData.cover_image && (
+      <div class="cover-hero">
+        <img src={regieData.cover_image} alt={regieData.headline || 'Régie'} class="cover-img" />
+      </div>
+    )}
+
+    <!-- ── HEADER ─────────────────────────────────────────────────── -->
+    <header class="hd">
+      <span class="label">{regieData.label || 'Régie'}</span>
+      <h1>{regieData.headline || 'Régie Son'}</h1>
+      {regieData.bio && <p class="bio">{regieData.bio}</p>}
+      {!regieData.bio && <p class="teaser">{regieData.teaser}</p>}
+    </header>
+
+    <!-- ── ÉQUIPEMENT ─────────────────────────────────────────────── -->
+    {regieData.equipment && regieData.equipment.length > 0 && (
+      <section class="section equip">
+        <h2 class="section-title">Équipement</h2>
+        {equipCats.map(cat => (
+          <div class="equip-group">
+            {cat && <h3 class="cat-label">{cat}</h3>}
+            <ul class="item-list">
+              {equipByCat[cat].map(eq => (
+                <li class="item-row">
+                  <span class="item-name">{eq.name}</span>
+                  {eq.detail && <span class="item-detail">{eq.detail}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    )}
+
+    <!-- ── RÉFÉRENCES ─────────────────────────────────────────────── -->
+    {regieData.references && regieData.references.length > 0 && (
+      <section class="section refs">
+        <details open>
+          <summary class="section-title summary-btn">
+            Références
+            <span class="count">{regieData.references.length}</span>
+            <span class="arrow" aria-hidden="true">▾</span>
+          </summary>
+          <ul class="item-list">
+            {regieData.references.map(ref => (
+              <li class="item-row">
+                <span class="item-name">{ref.event}</span>
+                {ref.venue && <span class="item-detail">{ref.venue}</span>}
+                {ref.year > 0 && <span class="item-meta">{ref.year}</span>}
+                {ref.role && <span class="item-tag">{ref.role}</span>}
+              </li>
+            ))}
+          </ul>
+        </details>
+      </section>
+    )}
+
+    <!-- ── CONTACT ────────────────────────────────────────────────── -->
+    {regieData.contact_email && (
+      <section class="section contact-section">
+        <h2 class="section-title">Contact</h2>
+        <a href={`mailto:${regieData.contact_email}`} class="cta-btn">
+          {regieData.contact_email}
+        </a>
+      </section>
+    )}
+
+    <a class="home" href="/">← Accueil</a>
+
+  </main>
+</BaseLayout>
+
+<style>
+  .regie {
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4rem 2rem 3rem;
+    gap: 3rem;
+  }
+
+  .cover-hero {
+    width: 100%;
+    max-width: 420px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .cover-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+  }
+
+  .hd {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+  }
+  .label {
+    color: var(--facet-regie);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  .bio, .teaser {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    max-width: 42ch;
+    margin: 0.5rem 0 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 auto;
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--facet-regie);
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+  }
+
+  .equip-group { display: flex; flex-direction: column; gap: 0; }
+  .cat-label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 1rem 0 0.25rem;
+  }
+
+  .item-list { list-style: none; padding: 0; margin: 0; width: 100%; }
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    column-gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .item-row:last-child { border-bottom: 1px solid var(--border); }
+
+  .item-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.96rem;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .item-detail {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+  .item-meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  .item-tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: color-mix(in srgb, var(--facet-regie) 65%, var(--text-tertiary));
+    white-space: nowrap;
+  }
+
+  .summary-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    margin-bottom: 0.25rem;
+  }
+  .summary-btn::-webkit-details-marker { display: none; }
+  .count { color: var(--text-tertiary); font-size: 0.68rem; letter-spacing: 0.1em; }
+  .arrow { color: var(--text-tertiary); font-size: 0.8rem; transition: transform 0.18s ease; }
+  details[open] .arrow { transform: rotate(180deg); }
+
+  .contact-section { align-items: center; gap: 1rem; }
+  .cta-btn {
+    display: inline-block;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid var(--facet-regie);
+    border-radius: 8px;
+    color: var(--facet-regie);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    transition: background 0.2s ease;
+  }
+  .cta-btn:hover { background: color-mix(in srgb, var(--facet-regie) 15%, transparent); }
+
+  .home {
+    align-self: center;
+    color: var(--facet-regie);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--facet-regie);
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .home:hover { background: color-mix(in srgb, var(--facet-regie) 15%, transparent); }
+
+  @media (max-width: 640px) {
+    .item-row { grid-template-columns: 1fr auto; }
+    .item-meta, .item-tag { display: none; }
+  }
+  @media (max-width: 420px) {
+    .item-row { grid-template-columns: 1fr; }
+    .item-detail { display: none; }
+  }
+</style>
