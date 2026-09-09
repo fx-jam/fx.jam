@@ -2086,10 +2086,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       // États 0/1 : rotation physique avec inertie
       if (dir !== keyDir) {
         keyDir = dir;
-        if (keyIsHeld) velAngle = 0; // inversion → reset
+        if (keyIsHeld) { velAngle = 0; wasCoasting = false; } // inversion → reset + annule snap résiduel
       }
       if (!keyIsHeld) {
         keyIsHeld = true;
+        wasCoasting = false;         // annule tout snap résiduel d'une interaction précédente
+        velAngle += KEY_ACCEL * dir; // impulsion immédiate — garantit la rotation même sur tap bref
+        targetAngle = currentAngle;  // sync la cible sur la position courante
         if (appState === 0) setState(1, getActiveIdx()); // 0→1 ; état 2 reste en état 2
       }
       resetIdleTimer();
@@ -2132,9 +2135,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       schedule();
     }, { passive: false, signal: sig } as AddEventListenerOptions);
 
-    // Drag souris — physique scratch : vélocité = δpx × sensibilité, inertie au lâcher
+    // Drag souris — angle polaire incrémental : pivot mis à jour chaque frame → pas de saut ±360°
     let mouseDown = false;
-    let mousePrevX = 0;
+    let mouseDragStartAngle = 0; // angle polaire du curseur au frame précédent
     let mouseDragDist = 0;
     let mouseDragStartX = 0;
     let mouseDragStartY = 0;
@@ -2145,22 +2148,30 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 3) return;
       e.preventDefault();
       mouseDown = true;
-      mouseDragStartX = mousePrevX = e.clientX;
+      mouseDragStartX = e.clientX;
       mouseDragStartY = e.clientY;
       mouseDragStartYFlip = e.clientY;
       mouseDragDist = 0;
       velAngle = 0;
+      mouseDragStartAngle = Math.atan2(
+        e.clientY - window.innerHeight / 2,
+        e.clientX - window.innerWidth  / 2
+      ) * (180 / Math.PI);
       resetIdleTimer();
     }, { signal: sig });
 
     window.addEventListener('mousemove', (e) => {
       if (!mouseDown) return;
-      const dx = e.clientX - mousePrevX;
-      velAngle = dx * MOUSE_SENS; // 1:1 avec la vitesse de la souris
-      currentAngle += velAngle;
+      const angle = Math.atan2(
+        e.clientY - window.innerHeight / 2,
+        e.clientX - window.innerWidth  / 2
+      ) * (180 / Math.PI);
+      const delta = wrapDelta(angle - mouseDragStartAngle); // delta toujours petit, jamais ±360°
+      velAngle = delta;
+      currentAngle += delta;
       targetAngle = currentAngle;
       mouseDragDist = Math.hypot(e.clientX - mouseDragStartX, e.clientY - mouseDragStartY);
-      mousePrevX = e.clientX;
+      mouseDragStartAngle = angle; // pivot incrémental : mise à jour chaque frame
       update();
     }, { signal: sig });
 
