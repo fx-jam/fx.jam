@@ -119,16 +119,20 @@ collections:
               - { name: mixcloud_url,  label: "URL Mixcloud",  widget: string,   required: false }
               - { name: soundcloud_url, label: "URL SoundCloud", widget: string, required: false }
               - { name: image,         label: Image,           widget: image,    required: false }
+          - { label: "Spotify User ID", name: spotify_user_id, widget: string, required: false, hint: "Identifiant URL de ton profil Spotify" }
           - name: spotify_playlists
             label: "Playlists Spotify"
             widget: list
             required: false
-            hint: "Chaque playlist avec son URL Spotify, sa catégorie et sa visibilité"
+            hint: "Synchronisé automatiquement. Ne modifier que Visible, Catégorie et Description."
             fields:
-              - { name: title,    label: Titre,      widget: string,  required: false }
-              - { name: category, label: Catégorie,  widget: string,  required: false, hint: "Ex: psytrance, goa, ambient" }
-              - { name: url,      label: "URL Spotify (playlist)", widget: string, required: false, hint: "https://open.spotify.com/playlist/..." }
-              - { name: visible,  label: Visible,    widget: boolean, default: true }
+              - { label: "ID (auto)",           name: id,             widget: string,  hint: "Ne pas modifier" }
+              - { label: "Titre Spotify (auto)", name: spotify_title,  widget: string,  hint: "Ne pas modifier" }
+              - { label: "Visible sur le site",  name: visible,        widget: boolean, default: false }
+              - { label: "Catégorie",            name: category,       widget: string,  required: false, hint: "Ex: Sets, Mixes, Ambiances" }
+              - { label: "Description",          name: description,    widget: text,    required: false }
+              - { label: "Cover (auto)",         name: spotify_cover,  widget: string,  required: false, hint: "Ne pas modifier" }
+              - { label: "Tracks (auto)",        name: spotify_tracks, widget: number,  required: false, hint: "Ne pas modifier" }
           - name: links
             label: "Liens"
             widget: object

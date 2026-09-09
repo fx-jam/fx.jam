@@ -1,0 +1,25 @@
+name: Sync Spotify Playlists
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Sync playlists
+        run: node scripts/sync-spotify.mjs
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_USER_ID: ${{ secrets.SPOTIFY_USER_ID }}
+      - name: Commit if changed
+        run: |
+          git config user.name "hamcat-sync[bot]"
+          git config user.email "sync@hamcat.live"
+          git diff --quiet src/data/son.json || (git add src/data/son.json && git commit -m "sync: spotify playlists" && git push)
