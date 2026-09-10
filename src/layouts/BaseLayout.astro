@@ -459,10 +459,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.9 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.10 ─────────────────────────
   // SC : soft-rebind + restore play explicite post-adoptNode · debounce PAUSE
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.9');
+  console.log('🐱 fx_jam_v1.10');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -577,8 +577,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
         });
         // PLAY → annule debounce-PAUSE + track index + visual state
         widget.bind((window as any).SC.Widget.Events.PLAY, () => {
+          console.log('[HMC] PLAY fired: navigating=', w.__hamcatNavigating);
           if (w.__scPauseTimer) { clearTimeout(w.__scPauseTimer); w.__scPauseTimer = null; }
-          // v1.9: NE PAS clear __hamcatNavigating ici — le PAUSE postMessage SC peut arriver après PLAY
+          // v1.9/v1.10: NE PAS clear __hamcatNavigating ici — le PAUSE postMessage SC peut arriver après PLAY
           // Flag cleared uniquement par le timeout 600ms de page-load
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
           playerDiv.classList.add('playing');
@@ -607,7 +608,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
         // Sinon → isPaused() confirme l'état après la fenêtre de cut (~250ms)
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
           if (w.__scReloading) return;
-          if (w.__hamcatNavigating) return; // v1.8 — bloc faux PAUSE adoptNode
+          if (w.__hamcatNavigating) {
+            console.log('[HMC] PAUSE blocked: navigating=true');
+            return; // v1.8 — bloc faux PAUSE adoptNode
+          }
+          console.log('[HMC] PAUSE allowed, debouncing...');
           if (w.__scPauseTimer) clearTimeout(w.__scPauseTimer);
           w.__scPauseTimer = setTimeout(() => {
             w.__scPauseTimer = null;
