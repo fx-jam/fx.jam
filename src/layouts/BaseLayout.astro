@@ -411,8 +411,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     <!-- Zone embed SC / Spotify — iframes pré-créées pour persist garanti -->
     <div id="player-embed-zone" style="width:100%;height:166px;display:none;">
-      <iframe id="sc-embed" transition:persist src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
-      <iframe id="sp-embed" transition:persist src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
+      <iframe id="sc-embed" src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
+      <iframe id="sp-embed" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
     </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
     <div id="sc-playlist" style="display:none;width:100%;max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.3);border-top:1px solid var(--border);padding:4px 0;box-sizing:border-box;"></div>
@@ -515,6 +515,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     function pauseAll() {
+      console.trace("[hamcat:pauseAll] called from:");
       audioEl.pause();
       // SC : postMessage pause (src intact, browsing context préservé)
       if (state.scIframe && state.scIframe.src) {
@@ -539,6 +540,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     function playSC(url: string, lbl: string) {
+      console.log("[hamcat:playSC] CALLED", url.substring(0, 60));
       pauseAll();
 
       // Iframe pré-créée dans le HTML — on l'obtient toujours via getElementById
@@ -596,8 +598,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
     // Les iframes SC/Spotify survivent dans #hamcat-player[transition:persist] → seamless ✅
     document.addEventListener('astro:page-load', () => {
       // Resync refs (sous-arbre persisted de #hamcat-player)
+      const _scBefore = state.scIframe;
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
+      const _scDOM = document.getElementById('sc-embed') as HTMLIFrameElement | null;
+      console.log('[hamcat:page-load]', {
+        path: window.location.pathname,
+        scInState: !!_scBefore,
+        scSrcState: (_scBefore?.src || '').substring(0, 80),
+        scSrcDOM: (_scDOM?.src || '').substring(0, 80),
+        sameNode: _scBefore === _scDOM,
+        currentSource: state.currentSource,
+        saved: JSON.parse(localStorage.getItem('hamcat-player') || 'null')
+      });
 
       if (window.location.pathname === '/') {
         playerDiv.dataset.expanded = 'false';
