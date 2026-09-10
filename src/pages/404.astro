@@ -6,7 +6,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <span class="code">404</span>
     <h1>Page introuvable</h1>
     <p class="msg">Cette page n'existe pas ou plus.</p>
-    <a class="home" href="/">← Accueil</a>
+    <a class="home" href="/"
+       onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
   </main>
 </BaseLayout>
 

@@ -377,11 +377,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
 
-  <!-- Audio bridge — jamais swappé par Astro -->
+  <!-- Audio bridge — maintenu hors du body via swap override (astro:before-swap) -->
   <iframe
     id="audio-worker-frame"
     src="/audio-worker.html"
-    transition:persist
     allow="autoplay"
     style="position:fixed;bottom:-2px;left:-2px;width:1px;height:1px;opacity:0;pointer-events:none;border:none"
   ></iframe>
@@ -417,7 +416,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     </div>
 
     <!-- Spotify direct embed (dans le player, pas dans le bridge) -->
-    <iframe id="sp-iframe" src="" allow="autoplay"
+    <iframe id="sp-iframe" src="" allow="autoplay; encrypted-media"
       style="display:none;position:absolute;bottom:56px;left:0;right:0;width:100%;height:80px;border:none"></iframe>
   </div>
 
@@ -573,6 +572,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
     }
   })();
+
+  // Swap override — maintenir l'audio-worker hors du body pendant le swap
+  // Astro ne touche que <body> ; en déplaçant l'iframe vers <html>, son browsing context
+  // reste intact → pas de rechargement, audio continu.
+  document.addEventListener('astro:before-swap', (e: any) => {
+    const worker = document.getElementById('audio-worker-frame');
+    if (!worker) return;
+    const original = e.swap;
+    e.swap = () => {
+      document.documentElement.appendChild(worker);
+      original();
+    };
+  });
   </script>
 </body>
 </html>

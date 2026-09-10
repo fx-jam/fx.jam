@@ -71,7 +71,8 @@ const hasContent = contactData.booking_email || socialLinks.length > 0 || contac
       <p class="note">{contactData.note_stub || 'Informations de contact à venir.'}</p>
     )}
 
-    <a class="home" href="/">← Accueil</a>
+    <a class="home" href="/"
+       onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
   </main>
 </BaseLayout>
 

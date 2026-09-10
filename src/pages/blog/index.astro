@@ -41,7 +41,8 @@ const formatDate = (d: Date) =>
       </ul>
     )}
 
-    <a class="home" href="/">← Accueil</a>
+    <a class="home" href="/"
+       onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
   </main>
 </BaseLayout>
 
