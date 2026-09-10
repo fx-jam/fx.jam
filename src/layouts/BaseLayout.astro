@@ -402,14 +402,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
         <div id="scrubber-fill"></div>
       </div>
       <span id="player-time">0:00 / 0:00</span>
-      <button id="btn-volume" aria-label="Volume">🔊</button>
+      <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
 
     <!-- Zone embed SC / Spotify (iframes créées dynamiquement) -->
     <div id="player-embed-zone" style="width:100%;height:166px;display:none;"></div>
+    <button class="player-embed-toggle" aria-label="Afficher/masquer le lecteur" hidden>▲</button>
   </div>
+
+  {import.meta.env.DEV && (
+    <button id="debug-audio-test" style="position:fixed;bottom:80px;right:8px;z-index:9999;font-size:11px;padding:4px 8px;background:#1f1f28;color:#f0f0f5;border:1px solid #2a2a33;border-radius:4px;cursor:pointer">
+      Test audio
+    </button>
+  )}
 
   <script>
   // ── Player audio persistant v4 — <audio transition:persist> ────────────
@@ -417,30 +424,37 @@ const facetHrefs = visibleFacets().map(f => f.href);
   // Seul le type 'audio' (fichiers directs R2) a une continuité réelle.
 
   (function() {
-    const audioEl   = document.getElementById('hamcat-audio')   as HTMLAudioElement;
+    const audioEl   = document.getElementById('hamcat-audio')      as HTMLAudioElement;
     const playerDiv = document.getElementById('hamcat-player')!;
     const embedZone = document.getElementById('player-embed-zone') as HTMLDivElement;
 
-    let currentSource: 'audio' | 'soundcloud' | 'spotify' | null = null;
-    let currentLbl = '';
-    let scIframe: HTMLIFrameElement | null = null;
-    let spIframe: HTMLIFrameElement | null = null;
+    // Store persistant sur window — survit aux navigations Astro (le module ne ré-exécute pas)
+    interface HamcatState {
+      scIframe:      HTMLIFrameElement | null;
+      spIframe:      HTMLIFrameElement | null;
+      currentSource: 'audio' | 'soundcloud' | 'spotify' | null;
+      currentLbl:    string;
+    }
+    const w = window as any;
+    w.__hamcat = w.__hamcat || { scIframe: null, spIframe: null, currentSource: null, currentLbl: '' };
+    const state: HamcatState = w.__hamcat;
+
+    const toggleBtn = playerDiv.querySelector('.player-embed-toggle') as HTMLButtonElement;
 
     function saveState(data: object) {
       try { localStorage.setItem('hamcat-player', JSON.stringify(data)); } catch (_) {}
     }
 
-    function updateUI(state: 'playing' | 'paused' | 'loading', lbl: string, src?: string) {
-      currentLbl = lbl;
+    function updateUI(uiState: 'playing' | 'paused' | 'loading', lbl: string, src?: string) {
+      state.currentLbl = lbl;
       const lblEl    = playerDiv.querySelector('.player-label')        as HTMLElement;
       const btn      = playerDiv.querySelector('.player-play-btn')     as HTMLButtonElement;
       const srcBadge = playerDiv.querySelector('#player-source-badge') as HTMLElement;
       const miniSrc  = playerDiv.querySelector('#mini-source')         as HTMLElement;
       if (lblEl) lblEl.textContent = lbl;
       if (btn) {
-        btn.setAttribute('data-state', state);
-        btn.textContent = state === 'playing' ? '⏸' : '▶';
-        // SC/Spotify n'ont pas de contrôle programmatique — bouton grisé
+        btn.setAttribute('data-state', uiState);
+        btn.textContent = uiState === 'playing' ? '⏸' : '▶';
         btn.disabled = src != null && src !== 'audio';
       }
       if (src) {
@@ -451,78 +465,88 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
       playerDiv.dataset.active   = 'true';
       playerDiv.dataset.expanded = window.location.pathname !== '/' ? 'true' : 'false';
-      playerDiv.classList.toggle('playing', state === 'playing');
+      playerDiv.classList.toggle('playing', uiState === 'playing');
     }
 
-    function hideEmbeds() {
+    function showEmbed() {
+      embedZone.style.display = 'block';
+      if (toggleBtn) { toggleBtn.hidden = false; toggleBtn.textContent = '▼'; }
+    }
+
+    function hideEmbedZone() {
       embedZone.style.display = 'none';
-      if (scIframe) scIframe.style.display = 'none';
-      if (spIframe) spIframe.style.display = 'none';
+      if (toggleBtn) { toggleBtn.hidden = true; }
+    }
+
+    function pauseAll() {
+      audioEl.pause();
+      if (state.scIframe) state.scIframe.style.display = 'none';
+      if (state.spIframe) state.spIframe.style.display = 'none';
+      hideEmbedZone();
     }
 
     function playAudio(url: string, lbl: string, startAt = 0) {
-      hideEmbeds();
-      audioEl.pause();
+      pauseAll();
       if (audioEl.src !== url) audioEl.src = url;
       audioEl.currentTime = startAt;
       audioEl.play().catch(console.error);
-      currentSource = 'audio';
+      state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
       saveState({ type: 'audio', url, lbl, position: startAt, playing: true });
     }
 
     function playSC(url: string, lbl: string) {
-      audioEl.pause();
-      hideEmbeds();
+      pauseAll();
 
-      if (!scIframe) {
-        scIframe = document.createElement('iframe');
-        scIframe.id = 'sc-embed';
-        scIframe.allow = 'autoplay; encrypted-media';
-        scIframe.setAttribute('scrolling', 'no');
-        scIframe.setAttribute('frameborder', 'no');
-        scIframe.style.width  = '100%';
-        scIframe.style.height = '166px';
-        embedZone.appendChild(scIframe);
+      if (!state.scIframe) {
+        state.scIframe = document.createElement('iframe');
+        state.scIframe.id = 'sc-embed';
+        state.scIframe.allow = 'autoplay; encrypted-media';
+        state.scIframe.setAttribute('scrolling', 'no');
+        state.scIframe.setAttribute('frameborder', 'no');
+        state.scIframe.style.width  = '100%';
+        state.scIframe.style.height = '450px';
+        embedZone.appendChild(state.scIframe);
       }
 
-      const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&color=%23ff5500&hide_related=true&show_comments=false`;
-      scIframe.src = embedUrl;
-      scIframe.style.display = 'block';
-      embedZone.style.display = 'block';
+      const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true&show_artwork=true`;
+      state.scIframe.src = embedUrl;
+      state.scIframe.style.display = 'block';
+      embedZone.style.height = '450px';
+      showEmbed();
 
-      currentSource = 'soundcloud';
+      state.currentSource = 'soundcloud';
       updateUI('playing', lbl, 'soundcloud');
       saveState({ type: 'soundcloud', url, lbl });
     }
 
     function playSpotify(playlistId: string, lbl: string) {
-      audioEl.pause();
-      hideEmbeds();
+      pauseAll();
 
-      if (!spIframe) {
-        spIframe = document.createElement('iframe');
-        spIframe.id = 'sp-embed';
-        spIframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-        spIframe.setAttribute('loading', 'lazy');
-        spIframe.style.width        = '100%';
-        spIframe.style.height       = '166px';
-        spIframe.style.borderRadius = '12px';
-        embedZone.appendChild(spIframe);
+      if (!state.spIframe) {
+        state.spIframe = document.createElement('iframe');
+        state.spIframe.id = 'sp-embed';
+        state.spIframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+        state.spIframe.setAttribute('loading', 'lazy');
+        state.spIframe.style.width        = '100%';
+        state.spIframe.style.height       = '166px';
+        state.spIframe.style.borderRadius = '12px';
+        embedZone.appendChild(state.spIframe);
       }
 
-      spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
-      spIframe.style.display = 'block';
-      embedZone.style.display = 'block';
+      state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
+      state.spIframe.style.display = 'block';
+      embedZone.style.height = '166px';
+      showEmbed();
 
-      currentSource = 'spotify';
+      state.currentSource = 'spotify';
       updateUI('playing', lbl, 'spotify');
       saveState({ type: 'spotify', playlistId, lbl });
     }
 
     // Sauvegarde position audio toutes les 5 s
     audioEl.addEventListener('timeupdate', () => {
-      if (currentSource !== 'audio') return;
+      if (state.currentSource !== 'audio') return;
       if (Math.round(audioEl.currentTime) % 5 !== 0) return;
       try {
         const saved = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
@@ -534,9 +558,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
     });
 
-    // Restore après navigation (astro:page-load)
-    // Pour 'audio' : <audio transition:persist> joue déjà — on remet juste l'UI.
+    // Restore après navigation — re-sync iframes depuis le DOM puis remet l'UI
     document.addEventListener('astro:page-load', () => {
+      if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
+      if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
+
       if (window.location.pathname === '/') {
         playerDiv.dataset.expanded = 'false';
         return;
@@ -546,7 +572,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (!saved) return;
 
         if (saved.type === 'audio') {
-          currentSource = 'audio';
+          state.currentSource = 'audio';
           if (audioEl.src && !audioEl.paused) updateUI('playing', saved.lbl, 'audio');
           else if (audioEl.src)               updateUI('paused',  saved.lbl, 'audio');
         } else if (saved.type === 'soundcloud') {
@@ -565,32 +591,51 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (type === 'spotify')    playSpotify(playlistId, lbl);
     });
 
-    // Bouton play/pause (audio uniquement — SC/Spotify utilisent leurs propres contrôles)
+    // Délégation unique pour tous les boutons du playerDiv
     playerDiv.addEventListener('click', (e) => {
-      const btn = (e.target as Element).closest('.player-play-btn');
-      if (!btn) return;
-      if (currentSource === 'audio') {
-        if (audioEl.paused) { audioEl.play(); updateUI('playing', currentLbl, 'audio'); }
-        else                { audioEl.pause(); updateUI('paused',  currentLbl, 'audio'); }
+      const target = e.target as Element;
+
+      if (target.closest('.player-play-btn')) {
+        if (state.currentSource === 'audio') {
+          if (audioEl.paused) { audioEl.play();  updateUI('playing', state.currentLbl, 'audio'); }
+          else                { audioEl.pause();  updateUI('paused',  state.currentLbl, 'audio'); }
+        }
+        return;
+      }
+
+      const muteBtn = target.closest('.player-mute-btn');
+      if (muteBtn && state.currentSource === 'audio') {
+        audioEl.muted = !audioEl.muted;
+        muteBtn.setAttribute('data-muted', String(audioEl.muted));
+        (muteBtn as HTMLElement).textContent = audioEl.muted ? '🔇' : '🔊';
+        return;
+      }
+
+      if (target.closest('.player-embed-toggle')) {
+        if (embedZone.style.display === 'none') showEmbed();
+        else hideEmbedZone();
+        return;
+      }
+
+      if (target.closest('#btn-expand'))   { playerDiv.dataset.expanded = 'true';  return; }
+      if (target.closest('#btn-collapse')) { playerDiv.dataset.expanded = 'false'; return; }
+
+      if (target.closest('#btn-close')) {
+        pauseAll();
+        audioEl.src = '';
+        state.currentSource = null;
+        playerDiv.dataset.active   = 'false';
+        playerDiv.dataset.expanded = 'false';
+        playerDiv.classList.remove('playing');
+        try { localStorage.removeItem('hamcat-player'); } catch (_) {}
       }
     });
 
-    // Bouton close
-    playerDiv.addEventListener('click', (e) => {
-      if (!(e.target as Element).closest('#btn-close')) return;
-      audioEl.pause(); audioEl.src = '';
-      hideEmbeds();
-      currentSource = null;
-      playerDiv.dataset.active   = 'false';
-      playerDiv.dataset.expanded = 'false';
-      playerDiv.classList.remove('playing');
-      try { localStorage.removeItem('hamcat-player'); } catch (_) {}
-    });
-
-    // Boutons expand / collapse
-    playerDiv.addEventListener('click', (e) => {
-      if ((e.target as Element).closest('#btn-expand'))   playerDiv.dataset.expanded = 'true';
-      if ((e.target as Element).closest('#btn-collapse')) playerDiv.dataset.expanded = 'false';
+    // Bouton debug (DEV uniquement) — teste la continuité audio cross-page
+    document.getElementById('debug-audio-test')?.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('hamcat:play', {
+        detail: { type: 'audio', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', lbl: 'Test continuité' }
+      }));
     });
 
   })();
