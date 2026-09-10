@@ -403,13 +403,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
       </div>
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
+      <button class="player-embed-toggle" aria-label="Afficher/masquer le lecteur" hidden>▲</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
 
     <!-- Zone embed SC / Spotify (iframes créées dynamiquement) -->
     <div id="player-embed-zone" style="width:100%;height:166px;display:none;"></div>
-    <button class="player-embed-toggle" aria-label="Afficher/masquer le lecteur" hidden>▲</button>
   </div>
 
   {import.meta.env.DEV && (
@@ -463,6 +463,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (srcBadge) { srcBadge.textContent = badge; srcBadge.className = cls; }
         if (miniSrc)  { miniSrc.textContent  = badge; miniSrc.className  = cls; }
       }
+      // Toggle embed visible seulement pour SC/Spotify
+      if (toggleBtn) toggleBtn.hidden = (src === 'audio' || src == null);
       playerDiv.dataset.active   = 'true';
       playerDiv.dataset.expanded = window.location.pathname !== '/' ? 'true' : 'false';
       playerDiv.classList.toggle('playing', uiState === 'playing');
@@ -470,19 +472,25 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     function showEmbed() {
       embedZone.style.display = 'block';
-      if (toggleBtn) { toggleBtn.hidden = false; toggleBtn.textContent = '▼'; }
+      if (toggleBtn) toggleBtn.textContent = '▼';
     }
 
     function hideEmbedZone() {
       embedZone.style.display = 'none';
-      if (toggleBtn) { toggleBtn.hidden = true; }
+      if (toggleBtn) toggleBtn.textContent = '▲';
     }
 
     function pauseAll() {
       audioEl.pause();
+      // SC : postMessage pause (src intact, browsing context préservé)
+      if (state.scIframe && state.scIframe.src) {
+        try { state.scIframe.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*'); } catch (_) {}
+      }
+      // Spotify : pas d'API postMessage officielle — vider src est le seul moyen d'arrêter l'audio
+      if (state.spIframe) state.spIframe.src = '';
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
-      hideEmbedZone();
+      embedZone.style.display = 'none';
     }
 
     function playAudio(url: string, lbl: string, startAt = 0) {
@@ -505,14 +513,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
         state.scIframe.setAttribute('scrolling', 'no');
         state.scIframe.setAttribute('frameborder', 'no');
         state.scIframe.style.width  = '100%';
-        state.scIframe.style.height = '450px';
+        state.scIframe.style.height = '560px';
         embedZone.appendChild(state.scIframe);
       }
 
       const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true&show_artwork=true`;
       state.scIframe.src = embedUrl;
+      state.scIframe.style.height = '560px';
       state.scIframe.style.display = 'block';
-      embedZone.style.height = '450px';
+      embedZone.style.height = '560px';
       showEmbed();
 
       state.currentSource = 'soundcloud';
@@ -612,8 +621,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       if (target.closest('.player-embed-toggle')) {
-        if (embedZone.style.display === 'none') showEmbed();
-        else hideEmbedZone();
+        // Toggle visibilité uniquement — ne pas toucher aux src (collapse ≠ pause)
+        if (embedZone.style.display === 'none') {
+          embedZone.style.display = 'block';
+          if (toggleBtn) toggleBtn.textContent = '▼';
+        } else {
+          embedZone.style.display = 'none';
+          if (toggleBtn) toggleBtn.textContent = '▲';
+        }
         return;
       }
 
@@ -624,6 +639,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         pauseAll();
         audioEl.src = '';
         state.currentSource = null;
+        if (toggleBtn) toggleBtn.hidden = true;
         playerDiv.dataset.active   = 'false';
         playerDiv.dataset.expanded = 'false';
         playerDiv.classList.remove('playing');
