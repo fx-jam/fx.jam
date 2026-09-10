@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html><body style="margin:0;overflow:hidden">
+<iframe id="sc-frame" src="" allow="autoplay"
+  style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:none"></iframe>
+<script>
+  const scFrame = document.getElementById('sc-frame');
+  let scWidget = null;
+  let totalMs = 0;
+
+  const s = document.createElement('script');
+  s.src = 'https://w.soundcloud.com/player/api.js';
+  document.head.appendChild(s);
+
+  function send(evt) { window.parent.postMessage(evt, '*'); }
+
+  function bindSC() {
+    const SC = window.SC;
+    if (!SC) return;
+    scWidget = SC.Widget(scFrame);
+    scWidget.bind(SC.Widget.Events.READY, () => {
+      send({ evt: 'ready' });
+      scWidget.getDuration(d => { totalMs = d; });
+      scWidget.getCurrentSound(snd => {
+        if (snd) send({ evt: 'track-info', title: snd.title,
+          artwork: (snd.artwork_url || '').replace('-large', '-t300x300') });
+      });
+    });
+    scWidget.bind(SC.Widget.Events.PLAY,   () => send({ evt: 'state', playing: true,  source: 'soundcloud' }));
+    scWidget.bind(SC.Widget.Events.PAUSE,  () => send({ evt: 'state', playing: false, source: 'soundcloud' }));
+    scWidget.bind(SC.Widget.Events.FINISH, () => send({ evt: 'state', playing: false, source: 'soundcloud' }));
+    scWidget.bind(SC.Widget.Events.PLAY_PROGRESS, data => {
+      send({ evt: 'progress',
+        ratio:   data.relativePosition,
+        elapsed: Math.floor(data.currentPosition / 1000),
+        total:   Math.floor(totalMs / 1000) });
+    });
+  }
+
+  window.addEventListener('message', e => {
+    const d = e.data; if (!d?.cmd) return;
+    switch (d.cmd) {
+      case 'play-sc': {
+        const src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(d.url)}&auto_play=true&visual=false&buying=false&sharing=false&show_artwork=false`;
+        scFrame.addEventListener('load', () => bindSC(), { once: true });
+        scFrame.src = src;
+        break;
+      }
+      case 'pause':  scWidget?.pause(); break;
+      case 'resume': scWidget?.play();  break;
+      case 'volume': scWidget?.setVolume(d.value); break;
+      case 'seek':   scWidget?.seekTo(d.posMs); break;
+      case 'close':
+        scFrame.src = '';
+        scWidget = null;
+        send({ evt: 'state', playing: false, source: null });
+        break;
+    }
+  });
+</script>
+</body></html>

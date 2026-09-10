@@ -202,37 +202,122 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     /* ── Player audio persistant ──────────────────────────────── */
-    #hamcat-player {
-      position: fixed; bottom: 0; left: 0; right: 0;
+    @keyframes play-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    #hamcat-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; pointer-events: none; }
+    #hamcat-player[data-active="true"] { pointer-events: auto; }
+
+    /* Pill — centré, toujours par-dessus */
+    .player-mini {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    #hamcat-player[data-active="true"] .player-mini { display: block; }
+    #hamcat-player[data-expanded="true"] .player-mini { display: none; }
+
+    .player-mini button {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+      transition: background 0.15s;
+    }
+    .player-mini button:hover { background: var(--bg-surface); }
+
+    .play-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--facet-son);
+    }
+    #hamcat-player.playing .play-dot {
+      animation: play-pulse 1.8s ease-in-out infinite;
+    }
+
+    /* Transport bar — cachée par défaut */
+    .player-full {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      height: 56px;
+      padding: 0 1.25rem;
       background: var(--bg-elevated);
       border-top: 1px solid var(--border);
-      z-index: 1000;
-      /* clip-path instead of translateY: iframe reste dans le viewport,
-         le browser ne la suspend pas pour inactivité hors-écran */
-      clip-path: inset(100% 0 0 0);
-      transition: clip-path 0.3s ease;
-      padding: 0 1.25rem;
+      backdrop-filter: blur(8px);
     }
-    #hamcat-player[data-active="true"] { clip-path: inset(0 0 0 0); }
-    .player-controls {
-      display: flex; align-items: center; gap: 0.75rem;
-      height: 56px; width: 100%;
+    #hamcat-player[data-active="true"][data-expanded="true"] .player-full { display: flex; }
+
+    #player-artwork {
+      width: 40px; height: 40px;
+      border-radius: 4px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--bg-surface);
     }
-    #player-label {
-      flex: 1;
+    .player-meta {
+      display: flex; flex-direction: column; justify-content: center;
+      min-width: 0; flex: 1;
+      gap: 0.1rem;
+    }
+    #player-title {
       font-family: var(--font-display);
       font-size: 0.88rem;
       color: var(--text-primary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .player-controls button {
+    .source-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: var(--facet-son);
+      color: #fff;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      align-self: flex-start;
+    }
+    .source-badge.sp { background: oklch(0.55 0.22 145); }
+
+    .player-scrubber {
+      flex: 1; height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      min-width: 80px;
+    }
+    #scrubber-fill {
+      height: 100%; width: 0%;
+      background: var(--facet-son);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    #player-time {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .player-full button {
       background: none; border: none; cursor: pointer;
       font-size: 1rem; color: var(--text-secondary); padding: 0.25rem 0.4rem;
-      border-radius: 4px; transition: color 0.15s ease, background 0.15s ease;
-      line-height: 1;
+      border-radius: 4px; transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
     }
-    .player-controls button:hover { color: var(--text-primary); background: var(--bg-surface); }
-    #btn-playpause { color: var(--facet-son); font-size: 1.1rem; }
+    .player-full button:hover { color: var(--text-primary); background: var(--bg-surface); }
+    #btn-playpause { color: var(--facet-son); font-size: 1.15rem; }
   </style>
 
   <!-- Mode modal (?modal=1) : scroll activé pour affichage dans iframe -->
@@ -292,142 +377,198 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
 
-  <div id="hamcat-player" data-active="false">
-    <iframe id="sc-iframe" src="" style="display:none" allow="autoplay"></iframe>
-    <iframe id="sp-iframe" src="" style="display:none;width:100%;height:80px;border:none" allow="autoplay"></iframe>
-    <div class="player-controls">
+  <!-- Audio bridge — jamais swappé par Astro -->
+  <iframe
+    id="audio-worker-frame"
+    src="/audio-worker.html"
+    transition:persist
+    allow="autoplay"
+    style="position:fixed;bottom:-2px;left:-2px;width:1px;height:1px;opacity:0;pointer-events:none;border:none"
+  ></iframe>
+
+  <!-- Player UI — 2 états -->
+  <div id="hamcat-player" data-active="false" data-expanded="false" transition:persist>
+
+    <!-- État 1 : pill discret (centré bas) -->
+    <div class="player-mini">
+      <button id="btn-expand" aria-label="Ouvrir le lecteur">
+        <span class="play-dot"></span>
+        <span id="mini-time">—</span>
+        <span id="mini-source" class="source-badge">SC</span>
+        <span class="expand-icon">⌃</span>
+      </button>
+    </div>
+
+    <!-- État 2 : transport bar (pleine largeur) -->
+    <div class="player-full">
+      <img id="player-artwork" src="" alt="" width="40" height="40" />
+      <div class="player-meta">
+        <span id="player-title">—</span>
+        <span id="player-source-badge" class="source-badge">SC</span>
+      </div>
       <button id="btn-playpause" aria-label="Play/Pause">▶</button>
-      <span id="player-label">—</span>
-      <button id="btn-mute" aria-label="Mute">🔊</button>
+      <div class="player-scrubber" id="player-scrubber" role="progressbar">
+        <div id="scrubber-fill"></div>
+      </div>
+      <span id="player-time">0:00 / 0:00</span>
+      <button id="btn-volume" aria-label="Volume">🔊</button>
+      <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
+
+    <!-- Spotify direct embed (dans le player, pas dans le bridge) -->
+    <iframe id="sp-iframe" src="" allow="autoplay"
+      style="display:none;position:absolute;bottom:56px;left:0;right:0;width:100%;height:80px;border:none"></iframe>
   </div>
 
   <script>
-  // ── Player audio persistant ──────────────────────────────────────────
-  // Stratégie : déplacer vers <html> avant le swap, revenir dans <body> après.
-  // L'élément reste toujours dans le document tree → l'iframe ne recharge jamais.
-  // L'IIFE ne s'exécute qu'une fois (guard data-initialized).
+  // ── Player audio persistant v3 — audio bridge ───────────────────────
+  // SC passe par /audio-worker.html (iframe jamais touchée par Astro via transition:persist).
+  // Spotify reste en embed direct dans le player UI (pas de continuité cross-page, accepté).
 
   (function () {
-    const player = document.getElementById('hamcat-player') as HTMLDivElement;
-    if (!player || player.dataset.initialized === 'true') return;
-    player.dataset.initialized = 'true';
-    const scIframe = document.getElementById('sc-iframe') as HTMLIFrameElement;
-    const spIframe = document.getElementById('sp-iframe') as HTMLIFrameElement;
-    const btnPlay  = document.getElementById('btn-playpause') as HTMLButtonElement;
-    const btnMute  = document.getElementById('btn-mute') as HTMLButtonElement;
-    const btnClose = document.getElementById('btn-close') as HTMLButtonElement;
-    const labelEl  = document.getElementById('player-label') as HTMLSpanElement;
+    const player   = document.getElementById('hamcat-player')    as HTMLDivElement;
+    if (!player || player.dataset.init === '1') return;
+    player.dataset.init = '1';
 
-    let scWidget: any = null;
-    let isMuted = false;
+    const worker   = document.getElementById('audio-worker-frame') as HTMLIFrameElement;
+    const spIframe = document.getElementById('sp-iframe')          as HTMLIFrameElement;
+
+    const btnPlay     = document.getElementById('btn-playpause')   as HTMLButtonElement;
+    const btnVol      = document.getElementById('btn-volume')       as HTMLButtonElement;
+    const btnClose    = document.getElementById('btn-close')        as HTMLButtonElement;
+    const btnExpand   = document.getElementById('btn-expand')       as HTMLButtonElement;
+    const btnCollapse = document.getElementById('btn-collapse')     as HTMLButtonElement;
+    const scrubber    = document.getElementById('player-scrubber')  as HTMLDivElement;
+    const scrubFill   = document.getElementById('scrubber-fill')    as HTMLDivElement;
+    const artwork     = document.getElementById('player-artwork')   as HTMLImageElement;
+    const titleEl     = document.getElementById('player-title')     as HTMLSpanElement;
+    const sourceBadge = document.getElementById('player-source-badge') as HTMLSpanElement;
+    const miniBadge   = document.getElementById('mini-source')      as HTMLSpanElement;
+    const miniTime    = document.getElementById('mini-time')        as HTMLSpanElement;
+    const timeEl      = document.getElementById('player-time')      as HTMLSpanElement;
+
     let source: 'soundcloud' | 'spotify' | null = null;
+    let isPlaying = false;
+    let isMuted   = false;
+    let totalSec  = 0;
 
-    // SC API chargée dynamiquement à la demande (pas de script bloquant dans <head>)
-    let scApiCallbacks: Array<() => void> = [];
-    function whenSCReady(cb: () => void) {
-      if ((window as any).SC) { cb(); return; }
-      scApiCallbacks.push(cb);
-      if (document.getElementById('sc-api-script')) return;
-      const s = document.createElement('script');
-      s.id  = 'sc-api-script';
-      s.src = 'https://w.soundcloud.com/player/api.js';
-      s.onload = () => { scApiCallbacks.forEach(fn => fn()); scApiCallbacks = []; };
-      document.head.appendChild(s);
+    const fallbackArtwork = 'https://media.hamcat.live/logos/logo.jpg';
+
+    function cmd(o: object) { worker.contentWindow?.postMessage(o, '*'); }
+
+    function fmt(s: number) {
+      const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+      return `${m}:${sec.toString().padStart(2, '0')}`;
     }
 
-    function bindSC() {
-      whenSCReady(() => {
-        const SC = (window as any).SC;
-        if (!SC || !scIframe.src) return;
-        scWidget = SC.Widget(scIframe);
-        scWidget.bind(SC.Widget.Events.PLAY,   () => { btnPlay.textContent = '⏸'; });
-        scWidget.bind(SC.Widget.Events.PAUSE,  () => { btnPlay.textContent = '▶'; });
-        scWidget.bind(SC.Widget.Events.FINISH, () => { btnPlay.textContent = '▶'; });
-      });
+    function setActive(v: boolean) { player.dataset.active = String(v); }
+
+    function setExpanded(v: boolean) {
+      if (v && window.location.pathname === '/') return;
+      player.dataset.expanded = String(v);
     }
 
-    function loadSoundCloud(url: string, lbl: string) {
-      spIframe.src = '';
-      spIframe.style.display = 'none';
-      source = 'soundcloud';
-      scWidget = null;
-      btnPlay.textContent = '▶';
-      const encoded = encodeURIComponent(url);
-      const newSrc  = `https://w.soundcloud.com/player/?url=${encoded}&auto_play=true&visual=false&buying=false&sharing=false&show_artwork=false`;
-      // addEventListener AVANT de setter src pour ne jamais rater l'event
-      scIframe.addEventListener('load', function onLoad() {
-        scIframe.removeEventListener('load', onLoad);
-        bindSC();
-      }, { once: true });
-      scIframe.src = newSrc;
-      labelEl.textContent = lbl;
-      player.dataset.active = 'true';
-      try { localStorage.setItem('hamcat-player', JSON.stringify({ url, lbl, type: 'soundcloud' })); } catch (_) {}
-    }
-
-    function loadSpotify(playlistId: string, lbl: string) {
-      if (scWidget) { scWidget.pause(); }
-      scIframe.src = '';
-      source = 'spotify';
-      spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?autoplay=1&theme=0`;
-      spIframe.style.display = 'block';
-      labelEl.textContent = lbl;
-      player.dataset.active = 'true';
-      btnPlay.textContent = '▶';
-      try { localStorage.setItem('hamcat-player', JSON.stringify({ playlistId, lbl, type: 'spotify' })); } catch (_) {}
-    }
-
-    btnPlay.addEventListener('click', () => {
-      if (source === 'soundcloud' && scWidget) {
-        scWidget.isPaused((p: boolean) => { p ? scWidget.play() : scWidget.pause(); });
+    // Messages depuis l'audio-worker (SC)
+    window.addEventListener('message', (e) => {
+      const d = e.data; if (!d?.evt) return;
+      switch (d.evt) {
+        case 'state':
+          isPlaying = d.playing;
+          btnPlay.textContent = isPlaying ? '⏸' : '▶';
+          player.classList.toggle('playing', isPlaying);
+          break;
+        case 'progress':
+          totalSec = d.total;
+          scrubFill.style.width = `${d.ratio * 100}%`;
+          miniTime.textContent  = fmt(d.elapsed);
+          timeEl.textContent    = `${fmt(d.elapsed)} / ${fmt(d.total)}`;
+          break;
+        case 'track-info':
+          titleEl.textContent = d.title || '—';
+          artwork.src = d.artwork || fallbackArtwork;
+          artwork.onerror = () => { artwork.src = fallbackArtwork; };
+          break;
       }
     });
 
-    btnMute.addEventListener('click', () => {
-      isMuted = !isMuted;
-      btnMute.textContent = isMuted ? '🔇' : '🔊';
-      if (source === 'soundcloud' && scWidget) scWidget.setVolume(isMuted ? 0 : 100);
+    // Scrubber
+    scrubber.addEventListener('click', (e) => {
+      if (source !== 'soundcloud') return;
+      const r = (e.clientX - scrubber.getBoundingClientRect().left) / scrubber.offsetWidth;
+      cmd({ cmd: 'seek', posMs: Math.round(r * totalSec * 1000) });
     });
 
+    btnPlay.addEventListener('click', () => {
+      if (source === 'soundcloud') cmd(isPlaying ? { cmd: 'pause' } : { cmd: 'resume' });
+    });
+
+    btnVol.addEventListener('click', () => {
+      isMuted = !isMuted;
+      btnVol.textContent = isMuted ? '🔇' : '🔊';
+      cmd({ cmd: 'volume', value: isMuted ? 0 : 100 });
+    });
+
+    btnExpand.addEventListener('click',   () => setExpanded(true));
+    btnCollapse.addEventListener('click', () => setExpanded(false));
+
     btnClose.addEventListener('click', () => {
-      player.dataset.active = 'false';
-      if (scWidget) { scWidget.pause(); scWidget = null; }
-      scIframe.src = '';
-      spIframe.src = '';
-      spIframe.style.display = 'none';
-      source = null;
+      cmd({ cmd: 'close' });
+      spIframe.src = ''; spIframe.style.display = 'none';
+      source = null; isPlaying = false;
+      player.classList.remove('playing');
+      setActive(false); setExpanded(false);
       try { localStorage.removeItem('hamcat-player'); } catch (_) {}
     });
 
+    // Événement depuis son.astro (et autres pages)
     document.addEventListener('hamcat:play', (e: Event) => {
       const d = (e as CustomEvent).detail;
-      if (d.type === 'soundcloud') loadSoundCloud(d.url, d.lbl);
-      else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
-    });
 
-    // Déplacer vers <html> avant le swap : Astro ne touche que <body>,
-    // l'iframe reste dans le document tree → pas de reset du browsing context.
-    document.addEventListener('astro:before-swap', () => {
-      document.documentElement.appendChild(player);
-    });
+      if (d.type === 'soundcloud') {
+        cmd({ cmd: 'close' });
+        spIframe.src = ''; spIframe.style.display = 'none';
+        source = 'soundcloud';
+        titleEl.textContent = d.lbl;
+        artwork.src = fallbackArtwork;
+        sourceBadge.textContent = 'SC'; sourceBadge.className = 'source-badge';
+        miniBadge.textContent   = 'SC'; miniBadge.className   = 'source-badge';
+        cmd({ cmd: 'play-sc', url: d.url });
+        setActive(true);
+        try { localStorage.setItem('hamcat-player', JSON.stringify({ type: 'soundcloud', url: d.url, lbl: d.lbl })); } catch (_) {}
 
-    document.addEventListener('astro:after-swap', () => {
-      document.body.appendChild(player);
-      if (window.location.pathname === '/') {
-        player.dataset.active = 'false';
+      } else if (d.type === 'spotify') {
+        cmd({ cmd: 'close' });
+        source = 'spotify';
+        titleEl.textContent = d.lbl;
+        artwork.src = fallbackArtwork;
+        sourceBadge.textContent = 'SP'; sourceBadge.className = 'source-badge sp';
+        miniBadge.textContent   = 'SP'; miniBadge.className   = 'source-badge sp';
+        spIframe.src = `https://open.spotify.com/embed/playlist/${d.playlistId}?autoplay=1&theme=0`;
+        spIframe.style.display = 'block';
+        isPlaying = true; player.classList.add('playing');
+        btnPlay.textContent = '⏸';
+        setActive(true);
+        try { localStorage.setItem('hamcat-player', JSON.stringify({ type: 'spotify', playlistId: d.playlistId, lbl: d.lbl })); } catch (_) {}
       }
     });
 
-    // Restauration après hard reload (ignorée sur homepage)
+    // Homepage → forcer mini (pill uniquement)
+    document.addEventListener('astro:page-load', () => {
+      if (window.location.pathname === '/') setExpanded(false);
+    });
+
+    // Restore après hard reload (ignoré sur homepage)
     if (window.location.pathname !== '/') {
       try {
         const saved = localStorage.getItem('hamcat-player');
         if (saved) {
           const s = JSON.parse(saved);
-          if (s.type === 'soundcloud' && s.url) loadSoundCloud(s.url, s.lbl);
-          else if (s.type === 'spotify' && s.playlistId) loadSpotify(s.playlistId, s.lbl);
+          document.dispatchEvent(new CustomEvent('hamcat:play', { detail:
+            s.type === 'soundcloud'
+              ? { type: 'soundcloud', url: s.url, lbl: s.lbl }
+              : { type: 'spotify', playlistId: s.playlistId, lbl: s.lbl }
+          }));
         }
       } catch (_) {}
     }
