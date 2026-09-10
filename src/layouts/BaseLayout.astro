@@ -410,8 +410,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
     </div>
 
     <!-- Zone embed SC / Spotify — iframes pré-créées pour persist garanti -->
-    <div id="player-embed-zone" style="width:100%;height:166px;display:none;">
+    <div id="player-embed-zone" style="position:relative;width:100%;height:166px;display:none;">
       <iframe id="sc-embed" src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
+      <img id="sc-art-overlay" src="" alt="" style="display:none;position:absolute;top:8px;left:8px;width:72px;height:72px;border-radius:2px;object-fit:cover;z-index:2;pointer-events:none;" />
       <iframe id="sp-embed" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
     </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
@@ -459,6 +460,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const scrubFill    = document.getElementById('scrubber-fill') as HTMLElement;
     const playerTimeEl = document.getElementById('player-time') as HTMLSpanElement;
     const miniTimeEl   = document.getElementById('mini-time') as HTMLSpanElement;
+    const scrubberEl   = document.getElementById('player-scrubber') as HTMLElement;
+    if (scrubberEl) {
+      scrubberEl.addEventListener('click', (e: MouseEvent) => {
+        const rect  = scrubberEl.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        if (state.currentSource === 'soundcloud' && (w as any).__scWidget && (w as any).__scDuration) {
+          (w as any).__scWidget.seekTo(ratio * (w as any).__scDuration);
+        } else if (state.currentSource === 'audio' && audioEl) {
+          audioEl.currentTime = ratio * audioEl.duration;
+        }
+      });
+    }
 
     function fmtMs(ms: number): string {
       const s = Math.floor(ms / 1000);
@@ -473,6 +486,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const artEl   = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
       if (titleEl) titleEl.textContent = title;
       if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; }
+      const overlayEl = document.getElementById('sc-art-overlay') as HTMLImageElement;
+      if (artwork && overlayEl) { overlayEl.src = artwork; overlayEl.style.display = 'block'; }
       state.currentLbl = title;
     }
 
@@ -500,6 +515,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           if (scrubFill) scrubFill.style.width = (rel * 100) + '%';
           if (rel > 0) {
             const dur = pos / rel;
+            (w as any).__scDuration = dur;
             if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(pos)} / ${fmtMs(dur)}`;
             if (miniTimeEl) miniTimeEl.textContent = fmtMs(pos);
           }
@@ -621,6 +637,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (state.spIframe) state.spIframe.src = 'about:blank';
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
+      const artOvl = document.getElementById('sc-art-overlay') as HTMLImageElement;
+      if (artOvl) artOvl.style.display = 'none';
       embedZone.style.display = 'none';
       if (playlistEl) playlistEl.style.display = 'none';
     }
