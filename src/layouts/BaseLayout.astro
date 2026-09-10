@@ -553,7 +553,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (!playlistEl) return;
       widget.bind((window as any).SC.Widget.Events.READY, () => {
         w.__scReloading = false;
-        w.__hamcatNavigating = false; // Widget prêt — guard nav levé
         // PLAY_PROGRESS → scrubber + position save
         widget.bind((window as any).SC.Widget.Events.PLAY_PROGRESS, (prog: any) => {
           const pos = prog.currentPosition || 0;
@@ -596,14 +595,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
             });
           });
         });
-        // PAUSE → état sauvegardé
+        // PAUSE → vérifier l'état réel avant de mettre l'UI en pause
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
-          if (w.__hamcatNavigating || w.__scReloading) return;
-          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-          playerDiv.classList.remove('playing');
-          const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
-          if (pbtn) pbtn.textContent = '▶';
-          if (!w.__hamcatNavigating) {
+          if (w.__scReloading) return;
+          // SC émet PAUSE spurieux pendant adoptNode (transition:persist) même si l'audio continue.
+          // widget.isPaused() vérifie l'état réel via postMessage : si l'audio joue encore → ignore.
+          widget.isPaused((actuallyPaused: boolean) => {
+            if (!actuallyPaused) return;
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+            playerDiv.classList.remove('playing');
+            const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
+            if (pbtn) pbtn.textContent = '▶';
             try {
               const sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
               if (sv.type === 'soundcloud') {
@@ -611,7 +613,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
                 localStorage.setItem('hamcat-player', JSON.stringify(sv));
               }
             } catch (_) {}
-          }
+          });
         });
         // Titre + pochette du track courant
         widget.getCurrentSound((sound: any) => updateSCInfo(sound));
