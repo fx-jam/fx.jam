@@ -227,11 +227,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 999px;
-      padding: 0.35rem 0.75rem;
+      padding: 0.55rem 1.2rem;
+      min-height: 44px;
       cursor: pointer;
       color: var(--text-primary);
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       backdrop-filter: blur(8px);
       white-space: nowrap;
       box-shadow: 0 2px 12px rgba(0,0,0,0.4);
@@ -291,15 +292,25 @@ const facetHrefs = visibleFacets().map(f => f.href);
     .source-badge.sp { background: oklch(0.55 0.22 145); }
 
     .player-scrubber {
-      flex: 1; height: 3px;
-      background: var(--border);
-      border-radius: 2px;
+      flex: 1; height: 20px;
+      background: transparent;
       cursor: pointer;
       position: relative;
       min-width: 80px;
     }
+    .player-scrubber::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%; transform: translateY(-50%);
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+    }
     #scrubber-fill {
-      height: 100%; width: 0%;
+      position: absolute;
+      left: 0; top: 50%; transform: translateY(-50%);
+      height: 3px; width: 0%;
       background: var(--facet-son);
       border-radius: 2px;
       pointer-events: none;
@@ -319,6 +330,24 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
     .player-full button:hover { color: var(--text-primary); background: var(--bg-surface); }
     #btn-playpause { color: var(--facet-son); font-size: 1.15rem; }
+    /* Barre de toggle embed — sous transport, indépendante */
+    #embed-toggle-bar {
+      display: none;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    #embed-toggle-bar .player-embed-toggle {
+      width: 100%; background: none; border: none; cursor: pointer;
+      padding: 5px 0; color: var(--text-secondary);
+      font-family: var(--font-mono); font-size: 0.72rem;
+      transition: color 0.15s;
+    }
+    #embed-toggle-bar .player-embed-toggle:hover { color: var(--text-primary); }
+    /* Toujours cacher en mode mini (sur-clasé par !important) */
+    #hamcat-player:not([data-expanded='true']) #embed-toggle-bar,
+    #hamcat-player:not([data-expanded='true']) #player-embed-zone,
+    #hamcat-player:not([data-expanded='true']) #sc-playlist { display: none !important; }
   </style>
 
   <!-- Mode modal (?modal=1) : scroll activé pour affichage dans iframe -->
@@ -404,16 +433,20 @@ const facetHrefs = visibleFacets().map(f => f.href);
       </div>
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
-      <button class="player-embed-toggle" aria-label="Afficher/masquer le lecteur" hidden>▲</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
+    </div>
+
+    <!-- Barre de toggle embed — indépendante du transport -->
+    <div id="embed-toggle-bar">
+      <button class="player-embed-toggle" aria-label="Afficher/masquer l'embed">▼</button>
     </div>
 
     <!-- Zone embed SC / Spotify — iframes pré-créées pour persist garanti -->
     <div id="player-embed-zone" style="position:relative;width:100%;height:166px;display:none;">
       <iframe id="sc-embed" src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
       <img id="sc-art-overlay" src="" alt="" style="display:none;position:absolute;top:8px;left:8px;width:72px;height:72px;border-radius:2px;object-fit:cover;z-index:2;pointer-events:none;" />
-      <iframe id="sp-embed" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
+      <iframe id="sp-embed" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
     </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
     <div id="sc-playlist" style="display:none;width:100%;max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.3);border-top:1px solid var(--border);padding:4px 0;box-sizing:border-box;"></div>
@@ -456,6 +489,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const state: HamcatState = w.__hamcat;
 
     const toggleBtn    = playerDiv.querySelector('.player-embed-toggle') as HTMLButtonElement;
+    const toggleBar    = document.getElementById('embed-toggle-bar') as HTMLDivElement;
     const playlistEl   = document.getElementById('sc-playlist') as HTMLDivElement;
     const scrubFill    = document.getElementById('scrubber-fill') as HTMLElement;
     const playerTimeEl = document.getElementById('player-time') as HTMLSpanElement;
@@ -496,7 +530,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     function initSCWidget(startAtMs = 0, trackIndex = 0, shouldPlay = true) {
-      w.__scReloading = false;
       const iframe = state.scIframe;
       if (!iframe || !iframe.src || !(window as any).SC) return;
       const widget = (window as any).SC.Widget(iframe);
@@ -509,6 +542,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
       if (!playlistEl) return;
       widget.bind((window as any).SC.Widget.Events.READY, () => {
+        w.__scReloading = false; // Nouveau widget prêt — PAUSE autorisé à nouveau
         // PLAY_PROGRESS → scrubber + position save
         widget.bind((window as any).SC.Widget.Events.PLAY_PROGRESS, (prog: any) => {
           const pos = prog.currentPosition || 0;
@@ -614,6 +648,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
       // Toggle embed visible seulement pour SC/Spotify
       if (toggleBtn) toggleBtn.hidden = (src === 'audio' || src == null);
+      if (toggleBar) toggleBar.style.display = (src === 'audio' || src == null) ? 'none' : 'block';
       playerDiv.dataset.active   = 'true';
       playerDiv.dataset.expanded = window.location.pathname !== '/' ? 'true' : 'false';
       playerDiv.classList.toggle('playing', uiState === 'playing');
@@ -622,6 +657,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     function showEmbed() {
       embedZone.style.display = 'block';
       if (toggleBtn) toggleBtn.textContent = '▼';
+      if (toggleBar) toggleBar.style.display = 'block';
     }
 
     function hideEmbedZone() {
@@ -644,6 +680,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (artOvl) artOvl.style.display = 'none';
       embedZone.style.display = 'none';
       if (playlistEl) playlistEl.style.display = 'none';
+      if (toggleBar) toggleBar.style.display = 'none';
     }
 
     function playAudio(url: string, lbl: string, startAt = 0) {
@@ -695,10 +732,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement;
       if (!state.spIframe) return;
 
-      state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
+      embedZone.style.height = '166px';
       state.spIframe.style.height = '166px';
       state.spIframe.style.display = 'block';
-      embedZone.style.height = '166px';
+      state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
       state.spExpanded = false;
       showEmbed();
 
@@ -845,6 +882,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         audioEl.src = '';
         state.currentSource = null;
         if (state.scIframe) { state.scIframe.src = ''; state.scIframe = null; }
+        w.__scWidget = null;
         state.spIframe = null;
         if (toggleBtn) toggleBtn.hidden = true;
         playerDiv.dataset.active   = 'false';
