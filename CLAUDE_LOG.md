@@ -137,3 +137,39 @@
 - **→ Import mémoire Claude** : 699 conversations, memories.json, projets.json — ingérés dans Hermes
 - **→ MEMORY.md créé** : fichier partagé dans le projet fx.jam
 - **→ Sync SSH établie** : Hermes peut exécuter PowerShell à distance sur M2
+---
+
+## SESSION 2026-09-10 — Player seamless : état des travaux
+
+### Objectif
+Lecture site-wide sans coupure : quand l'user navigue entre pages, la musique continue.
+
+### Ce qui a été fait
+**Commit `9624bb4`** — `astro:page-load` ne recrée plus les iframes SC/Spotify.
+Si `state.scIframe?.src` existe → `updateUI()` uniquement, pas de reset src.
+
+**Commit `4f4cfef`** — Iframes SC/Spotify pré-créées en HTML statique avec `transition:persist`.
+Plus de `document.createElement` dans `playSC`/`playSpotify` → `getElementById` seulement.
+
+### Résultat observé par Fx
+Toujours les mêmes symptômes malgré les 2 commits :
+- Changement de page → lecture reset à 0:00
+- Retour accueil ou état 1 (pill) → player se ferme complètement
+
+### Hypothèses à vérifier en prochaine session
+1. **Scripts Astro 5** : les `<script>` non-`is:inline` sont recompilés en modules ES — est-ce qu'ils ré-exécutent à chaque navigation ? Si oui, `w.__hamcat` pourrait être réinitialisé.
+2. **Turntable.astro** : la page d'accueil a peut-être du code qui appelle `pauseAll()` ou ferme le player — à inspecter.
+3. **`transition:persist` imbriqués** : `#hamcat-player[transition:persist]` contient maintenant `#sc-embed[transition:persist]` et `#sp-embed[transition:persist]`. Astro 5 gère-t-il bien les persist imbriqués ? Alternatives : mettre les iframes en siblings de `#hamcat-player` plutôt qu'enfants.
+4. **Debug direct** : ajouter `console.log` dans `astro:page-load` pour voir `state.scIframe`, `.src`, `state.currentSource` au moment du check.
+
+### Plan pour prochaine session
+1. Lire `src/pages/index.astro` et `src/components/Turntable.astro` pour détecter code qui ferme player
+2. Ajouter `console.log` debug temporaire dans `astro:page-load`
+3. Tester avec debug : ouvrir devtools > console, lancer SC, naviguer, voir les logs
+4. Si persist imbriqué est le pb : déplacer les iframes comme siblings de `#hamcat-player` dans `<body>`, les positionner avec `position:fixed` et z-index approprié
+5. Si scripts ré-exécutent : passer le player en `<script is:inline>` pour éviter le recompile module
+
+### Fichiers clés
+- `src/layouts/BaseLayout.astro` — tout le player (CSS tokens, HTML player, JS player)
+- `src/pages/index.astro` ou `src/components/Turntable.astro` — homepage à inspecter
+- RÈGLE : tokens CSS uniquement dans `:root` de BaseLayout.astro
