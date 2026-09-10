@@ -210,8 +210,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       transform: translateY(100%);
       transition: transform 0.3s ease;
       padding: 0 1.25rem;
+      view-transition-name: hamcat-player;
     }
     #hamcat-player[data-active="true"] { transform: translateY(0); }
+    ::view-transition-old(hamcat-player),
+    ::view-transition-new(hamcat-player) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
     .player-controls {
       display: flex; align-items: center; gap: 0.75rem;
       height: 56px; width: 100%;
@@ -406,6 +412,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
     });
 
+    document.addEventListener('astro:after-swap', () => {
+      if (window.location.pathname === '/') {
+        player.dataset.active = 'false';
+        return;
+      }
+      if (source === 'soundcloud' && scIframe.src) {
+        scWidget = null;
+        scIframe.addEventListener('load', () => bindSC(), { once: true });
+      }
+    });
+
     // FIX PRINCIPAL : déplace le player dans le nouveau document AVANT le swap de body.
     // Sans ça, ViewTransitions détruit l'élément à chaque navigation.
     document.addEventListener('astro:before-swap', (e: Event) => {
@@ -413,15 +430,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (p) (e as any).newDocument.body.appendChild(p);
     });
 
-    // Restauration après hard reload
-    try {
-      const saved = localStorage.getItem('hamcat-player');
-      if (saved) {
-        const s = JSON.parse(saved);
-        if (s.type === 'soundcloud' && s.url) loadSoundCloud(s.url, s.lbl);
-        else if (s.type === 'spotify' && s.playlistId) loadSpotify(s.playlistId, s.lbl);
-      }
-    } catch (_) {}
+    // Restauration après hard reload (ignorée sur homepage)
+    if (window.location.pathname !== '/') {
+      try {
+        const saved = localStorage.getItem('hamcat-player');
+        if (saved) {
+          const s = JSON.parse(saved);
+          if (s.type === 'soundcloud' && s.url) loadSoundCloud(s.url, s.lbl);
+          else if (s.type === 'spotify' && s.playlistId) loadSpotify(s.playlistId, s.lbl);
+        }
+      } catch (_) {}
+    }
   })();
   </script>
 </body>
