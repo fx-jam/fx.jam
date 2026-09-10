@@ -459,10 +459,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.7 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.8 ─────────────────────────
   // SC : soft-rebind + restore play explicite post-adoptNode · debounce PAUSE
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.7');
+  console.log('🐱 fx_jam_v1.8');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -578,6 +578,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         // PLAY → annule debounce-PAUSE + track index + visual state
         widget.bind((window as any).SC.Widget.Events.PLAY, () => {
           if (w.__scPauseTimer) { clearTimeout(w.__scPauseTimer); w.__scPauseTimer = null; }
+          w.__hamcatNavigating = false; // v1.8 — navigation terminée, PAUSE autorisé
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
           playerDiv.classList.add('playing');
           const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
@@ -605,6 +606,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         // Sinon → isPaused() confirme l'état après la fenêtre de cut (~250ms)
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
           if (w.__scReloading) return;
+          if (w.__hamcatNavigating) return; // v1.8 — bloc faux PAUSE adoptNode
           if (w.__scPauseTimer) clearTimeout(w.__scPauseTimer);
           w.__scPauseTimer = setTimeout(() => {
             w.__scPauseTimer = null;
@@ -848,7 +850,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
             initSCWidget(0, saved.scTrackIndex || 0, false);
             // v1.7: force play apres soft-rebind (widget bloque apres adoptNode)
             if (saved.scPlaying !== false) {
-              setTimeout(() => { try { w.__scWidget?.play(); } catch(_) {} }, 350);
+              setTimeout(() => { try { w.__scWidget?.play(); } catch(_) {} }, 100);
             }
           } else {
             state.currentSource = 'soundcloud';
