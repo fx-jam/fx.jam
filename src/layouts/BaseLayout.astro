@@ -459,10 +459,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.10 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.11 ─────────────────────────
   // SC : soft-rebind + restore play explicite post-adoptNode · debounce PAUSE
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.10');
+  console.log('🐱 fx_jam_v1.11');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -799,7 +799,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     // Avant navigation : bloquer le faux PAUSE émis par le reset d'iframe
     document.addEventListener('astro:before-preparation', () => {
+      // v1.11: snapshot état SC AVANT toute corruption localStorage par PAUSE adoptNode
+      try {
+        const _sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
+        w.__hamcatWasPlaying = _sv.type === 'soundcloud' ? (_sv.scPlaying !== false) : false;
+      } catch (_be) { w.__hamcatWasPlaying = false; }
       w.__hamcatNavigating = true;
+      console.log('[HMC] before-prep: wasPlaying=', w.__hamcatWasPlaying, 'navigating=true');
     }, { signal });
 
     // Restaure l'UI et l'audio après chaque navigation Astro
@@ -825,8 +831,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
             // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
             if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
               state.currentSource = 'soundcloud';
-              updateUI(saved.scPlaying !== false ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+              // v1.11: snapshot pris avant navigation => immune à corruption SC
+              const _spH = w.__hamcatWasPlaying !== undefined ? w.__hamcatWasPlaying : (saved.scPlaying !== false);
+              w.__hamcatWasPlaying = undefined;
+              console.log('[HMC] HOME: shouldPlay=', _spH, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
+              updateUI(_spH ? 'playing' : 'paused', saved.lbl, 'soundcloud');
               initSCWidget(0, saved.scTrackIndex || 0, false);
+              if (_spH) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_ph) {} }, 100); }
             } else {
               playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
             }
@@ -852,12 +863,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
           // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
           if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
             state.currentSource = 'soundcloud';
-            updateUI(saved.scPlaying !== false ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+            // v1.11: snapshot pris avant navigation => immune à corruption SC
+            const _spP = w.__hamcatWasPlaying !== undefined ? w.__hamcatWasPlaying : (saved.scPlaying !== false);
+            w.__hamcatWasPlaying = undefined;
+            console.log('[HMC] PAGE: shouldPlay=', _spP, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
+            updateUI(_spP ? 'playing' : 'paused', saved.lbl, 'soundcloud');
             initSCWidget(0, saved.scTrackIndex || 0, false);
-            // v1.7: force play apres soft-rebind (widget bloque apres adoptNode)
-            if (saved.scPlaying !== false) {
-              setTimeout(() => { try { w.__scWidget?.play(); } catch(_) {} }, 100);
-            }
+            if (_spP) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_pp) {} }, 100); }
           } else {
             state.currentSource = 'soundcloud';
             playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
