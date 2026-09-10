@@ -422,9 +422,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant v4 — <audio transition:persist> ────────────
-  // SC et Spotify = embeds display-only (pas de continuité cross-page attendue).
-  // Seul le type 'audio' (fichiers directs R2) a une continuité réelle.
+  // ── Player audio persistant v5 — seamless site-wide ────────────────────
+  // Toutes sources continuent sans coupure lors des navigations Astro :
+  // • audio  : <audio transition:persist> → survit nativement
+  // • SC/SP  : iframes créées dans #hamcat-player[transition:persist] → subtree persist
+  // astro:page-load restaure uniquement l'UI, JAMAIS le src → pas de reset.
 
   (function() {
     const audioEl   = document.getElementById('hamcat-audio')      as HTMLAudioElement;
@@ -601,8 +603,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
     });
 
-    // Restore après navigation — re-sync iframes depuis le DOM puis remet l'UI
+    // Restaure l'UI après navigation Astro SANS toucher aux iframes
+    // Les iframes SC/Spotify survivent dans #hamcat-player[transition:persist] → seamless ✅
     document.addEventListener('astro:page-load', () => {
+      // Resync refs (sous-arbre persisted de #hamcat-player)
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
 
@@ -610,6 +614,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         playerDiv.dataset.expanded = 'false';
         return;
       }
+
       try {
         const saved = JSON.parse(localStorage.getItem('hamcat-player') || 'null');
         if (!saved) return;
@@ -618,10 +623,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
           state.currentSource = 'audio';
           if (audioEl.src && !audioEl.paused) updateUI('playing', saved.lbl, 'audio');
           else if (audioEl.src)               updateUI('paused',  saved.lbl, 'audio');
+
         } else if (saved.type === 'soundcloud') {
-          playSC(saved.url, saved.lbl);
+          state.currentSource = 'soundcloud';
+          if (state.scIframe?.src) {
+            // iframe déjà vivant via persist → UI uniquement, src intact, pas de reset
+            updateUI('playing', saved.lbl, 'soundcloud');
+          } else {
+            // hard refresh ou premier load → initialiser normalement
+            playSC(saved.url, saved.lbl);
+          }
+
         } else if (saved.type === 'spotify') {
-          playSpotify(saved.playlistId, saved.lbl);
+          state.currentSource = 'spotify';
+          if (state.spIframe?.src) {
+            // iframe déjà vivant via persist → UI uniquement, pas de reset src
+            updateUI('playing', saved.lbl, 'spotify');
+          } else {
+            // hard refresh ou premier load → initialiser normalement
+            playSpotify(saved.playlistId, saved.lbl);
+          }
         }
       } catch (_) {}
     });
