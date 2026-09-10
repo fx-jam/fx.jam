@@ -515,6 +515,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     function updateSCInfo(sound: any) {
       if (!sound) return;
       const title   = sound.title || state.currentLbl || 'SoundCloud';
+      const artist  = sound.user?.username || '';
       const artwork = (sound.artwork_url || '').replace('-large', '-t300x300');
       const titleEl = playerDiv.querySelector('#player-title')   as HTMLElement;
       const artEl   = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
@@ -523,6 +524,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const overlayEl = document.getElementById('sc-art-overlay') as HTMLImageElement;
       if (artwork && overlayEl) { overlayEl.src = artwork; overlayEl.style.display = 'block'; overlayEl.style.filter = 'none'; }
       state.currentLbl = title;
+      // Media Session API — lock screen / transport bar
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title,
+          artist,
+          album: 'hamcat.live',
+          artwork: artwork ? [{ src: artwork, sizes: '300x300', type: 'image/jpeg' }] : []
+        });
+      }
     }
 
     function saveState(data: object) {
@@ -564,6 +574,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         });
         // PLAY → track index + visual state
         widget.bind((window as any).SC.Widget.Events.PLAY, () => {
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
           playerDiv.classList.add('playing');
           const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
           if (pbtn) pbtn.textContent = '⏸';
@@ -587,6 +598,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         // PAUSE → état sauvegardé
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
           if (w.__hamcatNavigating || w.__scReloading) return;
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
           playerDiv.classList.remove('playing');
           const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
           if (pbtn) pbtn.textContent = '▶';
@@ -602,6 +614,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
         });
         // Titre + pochette du track courant
         widget.getCurrentSound((sound: any) => updateSCInfo(sound));
+        // Media Session transport controls (lock screen, notification bar)
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.setActionHandler('play',  () => { try { widget.play();  } catch (_) {} });
+          navigator.mediaSession.setActionHandler('pause', () => { try { widget.pause(); } catch (_) {} });
+          navigator.mediaSession.setActionHandler('stop',  () => { try { widget.pause(); } catch (_) {} });
+          navigator.mediaSession.playbackState = 'playing';
+        }
         // Restore: skip vers le bon track puis seek + play
         if (trackIndex > 0 || startAtMs > 100) {
           widget.skip(trackIndex);
@@ -778,8 +797,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
           if (!saved) return;
           playerDiv.dataset.active = 'true';
           if (saved.type === 'soundcloud') {
-            // SC iframe reset sur adoptNode → recharger meme sur homepage
-            playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
+            // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
+            if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
+              state.currentSource = 'soundcloud';
+              updateUI(saved.scPlaying !== false ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+              initSCWidget(0, saved.scTrackIndex || 0, false);
+            } else {
+              playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
+            }
           } else if (saved.type === 'audio') {
             updateUI(!audioEl.paused ? 'playing' : 'paused', saved.lbl, 'audio');
           } else if (saved.type === 'spotify') {
@@ -799,9 +824,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
           if (audioEl.src && !audioEl.paused) updateUI('playing', saved.lbl, 'audio');
           else if (audioEl.src)               updateUI('paused',  saved.lbl, 'audio');
         } else if (saved.type === 'soundcloud') {
-          // SC iframe se reset sur chaque navigation → recharger + skip track + seekTo
-          state.currentSource = 'soundcloud';
-          playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
+          // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
+          if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
+            state.currentSource = 'soundcloud';
+            updateUI(saved.scPlaying !== false ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+            initSCWidget(0, saved.scTrackIndex || 0, false);
+          } else {
+            state.currentSource = 'soundcloud';
+            playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
+          }
         } else if (saved.type === 'spotify') {
           state.currentSource = 'spotify';
           if (state.spIframe?.src?.includes('open.spotify.com')) {
