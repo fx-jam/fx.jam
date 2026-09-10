@@ -594,7 +594,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         try { state.scIframe.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*'); } catch (_) {}
       }
       // Spotify : pas d'API postMessage officielle — vider src est le seul moyen d'arrêter l'audio
-      if (state.spIframe) state.spIframe.src = '';
+      if (state.spIframe) state.spIframe.src = 'about:blank';
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
       embedZone.style.display = 'none';
@@ -619,13 +619,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const needsSeek = startAtMs > 100 || trackIndex > 0;
       const autoPlay  = (!needsSeek) && shouldPlay;
       const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=${autoPlay}&color=%23ff5500&hide_related=true&show_comments=false`;
+      // onload + 500ms buffer — plus rapide que timeout fixe 1500ms
+      state.scIframe.onload = () => setTimeout(() => initSCWidget(startAtMs, trackIndex, shouldPlay), 500);
       state.scIframe.src = embedUrl;
       state.scIframe.style.height = '166px';
       state.scIframe.style.display = 'block';
       embedZone.style.height = '166px';
       showEmbed();
       if (playlistEl) playlistEl.style.display = 'none';
-      setTimeout(() => initSCWidget(startAtMs, trackIndex, shouldPlay), 1500);
+      // Fallback si onload ne fire pas (ex: same-origin cache)
+      setTimeout(() => { if (!w.__scWidget) initSCWidget(startAtMs, trackIndex, shouldPlay); }, 3000);
       state.currentSource = 'soundcloud';
       updateUI(shouldPlay ? 'playing' : 'paused', lbl, 'soundcloud');
       saveState({ type: 'soundcloud', url, lbl, scPosition: startAtMs, scTrackIndex: trackIndex, scPlaying: shouldPlay });
@@ -675,11 +678,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
         if (window.location.pathname === '/') {
           playerDiv.dataset.expanded = 'false';
-          // Garder la pill visible sur homepage si quelque chose jouait
-          if (saved) {
-            playerDiv.dataset.active = 'true';
-            playerDiv.classList.toggle('playing',
-              saved.type === 'audio' ? !audioEl.paused : true);
+          if (!saved) return;
+          playerDiv.dataset.active = 'true';
+          if (saved.type === 'soundcloud') {
+            // SC iframe reset sur adoptNode → recharger meme sur homepage
+            playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
+          } else if (saved.type === 'audio') {
+            updateUI(!audioEl.paused ? 'playing' : 'paused', saved.lbl, 'audio');
+          } else if (saved.type === 'spotify') {
+            if (state.spIframe?.src?.includes('open.spotify.com')) {
+              updateUI('playing', saved.lbl, 'spotify');
+            } else {
+              playSpotify(saved.playlistId, saved.lbl);
+            }
           }
           return;
         }
@@ -696,7 +707,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
         } else if (saved.type === 'spotify') {
           state.currentSource = 'spotify';
-          if (state.spIframe?.src) {
+          if (state.spIframe?.src?.includes('open.spotify.com')) {
             updateUI('playing', saved.lbl, 'spotify');
           } else {
             playSpotify(saved.playlistId, saved.lbl);
