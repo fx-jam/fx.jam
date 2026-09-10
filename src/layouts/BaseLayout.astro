@@ -43,6 +43,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <ViewTransitions />
+  <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
 
   <style is:global>
     /* ============================================================
@@ -410,6 +411,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     <!-- Zone embed SC / Spotify (iframes créées dynamiquement) -->
     <div id="player-embed-zone" style="width:100%;height:166px;display:none;"></div>
+    <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
+    <div id="sc-playlist" style="display:none;max-height:120px;overflow-y:auto;font-size:11px;margin-top:4px;"></div>
   </div>
 
   {import.meta.env.DEV && (
@@ -440,10 +443,35 @@ const facetHrefs = visibleFacets().map(f => f.href);
     w.__hamcat = w.__hamcat || { scIframe: null, spIframe: null, currentSource: null, currentLbl: '', spExpanded: false };
     const state: HamcatState = w.__hamcat;
 
-    const toggleBtn = playerDiv.querySelector('.player-embed-toggle') as HTMLButtonElement;
+    const toggleBtn  = playerDiv.querySelector('.player-embed-toggle') as HTMLButtonElement;
+    const playlistEl = document.getElementById('sc-playlist') as HTMLDivElement;
 
     function saveState(data: object) {
       try { localStorage.setItem('hamcat-player', JSON.stringify(data)); } catch (_) {}
+    }
+
+    function initSCWidget() {
+      const iframe = state.scIframe;
+      if (!iframe || !iframe.src || !(window as any).SC) return;
+      const widget = (window as any).SC.Widget(iframe);
+      if (!playlistEl) return;
+      widget.bind((window as any).SC.Widget.Events.READY, () => {
+        widget.getSounds((sounds: any[]) => {
+          if (!sounds || sounds.length <= 1) return;
+          playlistEl.innerHTML = '';
+          sounds.forEach((track: any, idx: number) => {
+            const btn = document.createElement('button');
+            btn.textContent = track.title || `Track ${idx + 1}`;
+            btn.dataset.idx = String(idx);
+            btn.style.cssText = 'display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:2px 4px;cursor:pointer;font-size:11px;font-family:inherit;opacity:0.7;';
+            btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
+            btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.7'; });
+            btn.addEventListener('click', () => { widget.skip(idx); widget.play(); });
+            playlistEl.appendChild(btn);
+          });
+          playlistEl.style.display = 'block';
+        });
+      });
     }
 
     function updateUI(uiState: 'playing' | 'paused' | 'loading', lbl: string, src?: string) {
@@ -492,6 +520,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
       embedZone.style.display = 'none';
+      if (playlistEl) playlistEl.style.display = 'none';
     }
 
     function playAudio(url: string, lbl: string, startAt = 0) {
@@ -524,6 +553,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       state.scIframe.style.display = 'block';
       embedZone.style.height = '166px';
       showEmbed();
+      if (playlistEl) playlistEl.style.display = 'none'; // vider pendant le chargement
+      setTimeout(() => initSCWidget(), 1500);
 
       state.currentSource = 'soundcloud';
       updateUI('playing', lbl, 'soundcloud');
@@ -672,19 +703,20 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <!-- Moteur audio persistant — transition:persist empêche le rechargement entre pages -->
   <audio id="hamcat-audio" transition:persist preload="none" style="display:none"></audio>
 
-  <!-- Version toast — Shift+V affiche le hash git pendant 2 s -->
-  <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;transition:opacity 0.15s;font-family:monospace;z-index:9999;"></div>
+  <!-- Version toast — V affiche le hash git tant que la touche est enfoncée -->
+  <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     declare const __COMMIT__: string;
     const _vt = document.getElementById('version-toast')!;
     _vt.textContent = __COMMIT__;
-    let _vtTimer: ReturnType<typeof setTimeout>;
     document.addEventListener('keydown', (e) => {
-      if (e.key !== 'v' && e.key !== 'V') return;
-      if ((e.target as Element).closest?.('input, textarea, [contenteditable]')) return;
-      _vt.style.opacity = '1';
-      clearTimeout(_vtTimer);
-      _vtTimer = setTimeout(() => { _vt.style.opacity = '0'; }, 2000);
+      if (e.key === 'v' || e.key === 'V') {
+        _vt.style.transition = 'none';
+        _vt.style.opacity = '1';
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'v' || e.key === 'V') _vt.style.opacity = '0';
     });
   </script>
 </body>
