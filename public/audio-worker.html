@@ -3,6 +3,7 @@
 <iframe id="sc-frame" src="" allow="autoplay"
   style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;border:none"></iframe>
 <script>
+  console.log('[audio-worker] LOADED at', Date.now());
   const scFrame = document.getElementById('sc-frame');
   let scWidget = null;
   let totalMs = 0;
