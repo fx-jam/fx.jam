@@ -485,9 +485,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const titleEl = playerDiv.querySelector('#player-title')   as HTMLElement;
       const artEl   = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
       if (titleEl) titleEl.textContent = title;
-      if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; }
+      if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; artEl.style.filter = 'none'; }
       const overlayEl = document.getElementById('sc-art-overlay') as HTMLImageElement;
-      if (artwork && overlayEl) { overlayEl.src = artwork; overlayEl.style.display = 'block'; }
+      if (artwork && overlayEl) { overlayEl.src = artwork; overlayEl.style.display = 'block'; overlayEl.style.filter = 'none'; }
       state.currentLbl = title;
     }
 
@@ -496,6 +496,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     function initSCWidget(startAtMs = 0, trackIndex = 0, shouldPlay = true) {
+      w.__scReloading = false;
       const iframe = state.scIframe;
       if (!iframe || !iframe.src || !(window as any).SC) return;
       const widget = (window as any).SC.Widget(iframe);
@@ -551,6 +552,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         });
         // PAUSE → état sauvegardé
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
+          if (w.__hamcatNavigating || w.__scReloading) return;
           playerDiv.classList.remove('playing');
           const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
           if (pbtn) pbtn.textContent = '▶';
@@ -629,7 +631,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     function pauseAll() {
       audioEl.pause();
-      // SC : postMessage pause (src intact, browsing context préservé)
+      // SC : widget.pause() direct + postMessage fallback
+      if (w.__scWidget) { try { w.__scWidget.pause(); } catch (_) {} }
       if (state.scIframe && state.scIframe.src) {
         try { state.scIframe.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*'); } catch (_) {}
       }
@@ -661,6 +664,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const needsSeek = startAtMs > 100 || trackIndex > 0;
       const autoPlay  = (!needsSeek) && shouldPlay;
       const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=${autoPlay}&color=%23ff5500&hide_related=true&show_comments=false`;
+      // Marque rechargement pour supprimer faux PAUSE sur l'ancien widget
+      w.__scReloading = true;
+      if (w.__scWidget) {
+        try { w.__scWidget.unbind((window as any).SC.Widget.Events.PAUSE); } catch (_) {}
+        try { w.__scWidget.unbind((window as any).SC.Widget.Events.PLAY); } catch (_) {}
+        w.__scWidget = null;
+      }
       // onload + 500ms buffer — plus rapide que timeout fixe 1500ms
       state.scIframe.onload = () => setTimeout(() => initSCWidget(startAtMs, trackIndex, shouldPlay), 500);
       state.scIframe.src = embedUrl;
@@ -817,9 +827,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
           if (embedZone.style.display === 'none') {
             embedZone.style.display = 'block';
             if (toggleBtn) toggleBtn.textContent = '▼';
+            if (playlistEl && state.currentSource === 'soundcloud') playlistEl.style.display = 'block';
           } else {
             embedZone.style.display = 'none';
             if (toggleBtn) toggleBtn.textContent = '▲';
+            if (playlistEl) playlistEl.style.display = 'none';
           }
         }
         return;
