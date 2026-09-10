@@ -437,6 +437,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
     w.__hamcatAbort = _abort;
     const signal = _abort.signal;
     w.__scWidget = null; // reset widget ref — sera re-set par initSCWidget
+    w.__hamcatNavigating = false;
+    w.__scMuted = false;
 
     const audioEl   = document.getElementById('hamcat-audio')      as HTMLAudioElement;
     const playerDiv = document.getElementById('hamcat-player')!;
@@ -463,6 +465,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     }
 
+    function updateSCInfo(sound: any) {
+      if (!sound) return;
+      const title   = sound.title || state.currentLbl || 'SoundCloud';
+      const artwork = (sound.artwork_url || '').replace('-large', '-t300x300');
+      const titleEl = playerDiv.querySelector('#player-title')   as HTMLElement;
+      const artEl   = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
+      if (titleEl) titleEl.textContent = title;
+      if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; }
+      state.currentLbl = title;
+    }
+
     function saveState(data: object) {
       try { localStorage.setItem('hamcat-player', JSON.stringify(data)); } catch (_) {}
     }
@@ -472,6 +485,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (!iframe || !iframe.src || !(window as any).SC) return;
       const widget = (window as any).SC.Widget(iframe);
       w.__scWidget = widget;
+      try {
+        widget.unbind((window as any).SC.Widget.Events.READY);
+        widget.unbind((window as any).SC.Widget.Events.PLAY_PROGRESS);
+        widget.unbind((window as any).SC.Widget.Events.PLAY);
+        widget.unbind((window as any).SC.Widget.Events.PAUSE);
+      } catch (_) {}
       if (!playlistEl) return;
       widget.bind((window as any).SC.Widget.Events.READY, () => {
         // PLAY_PROGRESS → scrubber + position save
@@ -501,6 +520,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           widget.getSounds((sounds: any[]) => {
             widget.getCurrentSound((cur: any) => {
               if (!cur || !sounds) return;
+              updateSCInfo(cur);
               const idx = sounds.findIndex((s: any) => s.id === cur.id);
               try {
                 const sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
@@ -518,14 +538,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
           playerDiv.classList.remove('playing');
           const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
           if (pbtn) pbtn.textContent = '▶';
-          try {
-            const sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
-            if (sv.type === 'soundcloud') {
-              sv.scPlaying = false;
-              localStorage.setItem('hamcat-player', JSON.stringify(sv));
-            }
-          } catch (_) {}
+          if (!w.__hamcatNavigating) {
+            try {
+              const sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
+              if (sv.type === 'soundcloud') {
+                sv.scPlaying = false;
+                localStorage.setItem('hamcat-player', JSON.stringify(sv));
+              }
+            } catch (_) {}
+          }
         });
+        // Titre + pochette du track courant
+        widget.getCurrentSound((sound: any) => updateSCInfo(sound));
         // Restore: skip vers le bon track puis seek + play
         if (trackIndex > 0 || startAtMs > 100) {
           widget.skip(trackIndex);
@@ -627,6 +651,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       embedZone.style.height = '166px';
       showEmbed();
       if (playlistEl) playlistEl.style.display = 'none';
+      if (state.scIframe) state.scIframe.style.filter = 'invert(0.88) hue-rotate(195deg) saturate(0.55)';
+      hideEmbedZone();
       // Fallback si onload ne fire pas (ex: same-origin cache)
       setTimeout(() => { if (!w.__scWidget) initSCWidget(startAtMs, trackIndex, shouldPlay); }, 3000);
       state.currentSource = 'soundcloud';
@@ -667,8 +693,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
     }, { signal });
 
+    // Avant navigation : bloquer le faux PAUSE émis par le reset d'iframe
+    document.addEventListener('astro:before-preparation', () => {
+      w.__hamcatNavigating = true;
+    }, { signal });
+
     // Restaure l'UI et l'audio après chaque navigation Astro
     document.addEventListener('astro:page-load', () => {
+      w.__hamcatNavigating = false;
       // Resync refs (les iframes se reset sur navigation même si #hamcat-player persist)
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
@@ -742,10 +774,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       const muteBtn = target.closest('.player-mute-btn');
-      if (muteBtn && state.currentSource === 'audio') {
-        audioEl.muted = !audioEl.muted;
-        muteBtn.setAttribute('data-muted', String(audioEl.muted));
-        (muteBtn as HTMLElement).textContent = audioEl.muted ? '🔇' : '🔊';
+      if (muteBtn) {
+        if (state.currentSource === 'audio') {
+          audioEl.muted = !audioEl.muted;
+          (muteBtn as HTMLElement).textContent = audioEl.muted ? '🔇' : '🔊';
+        } else if (state.currentSource === 'soundcloud' && w.__scWidget) {
+          w.__scMuted = !w.__scMuted;
+          w.__scWidget.setVolume(w.__scMuted ? 0 : 100);
+          (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
+        }
         return;
       }
 
