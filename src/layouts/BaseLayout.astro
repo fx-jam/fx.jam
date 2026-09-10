@@ -207,17 +207,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
       background: var(--bg-elevated);
       border-top: 1px solid var(--border);
       z-index: 1000;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
+      /* clip-path instead of translateY: iframe reste dans le viewport,
+         le browser ne la suspend pas pour inactivité hors-écran */
+      clip-path: inset(100% 0 0 0);
+      transition: clip-path 0.3s ease;
       padding: 0 1.25rem;
-      view-transition-name: hamcat-player;
     }
-    #hamcat-player[data-active="true"] { transform: translateY(0); }
-    ::view-transition-old(hamcat-player),
-    ::view-transition-new(hamcat-player) {
-      animation: none;
-      mix-blend-mode: normal;
-    }
+    #hamcat-player[data-active="true"] { clip-path: inset(0 0 0 0); }
     .player-controls {
       display: flex; align-items: center; gap: 0.75rem;
       height: 56px; width: 100%;
