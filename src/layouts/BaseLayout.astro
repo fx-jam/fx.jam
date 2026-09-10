@@ -296,28 +296,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
 
+  <div id="hamcat-player" data-active="false" transition:persist>
+    <iframe id="sc-iframe" src="" style="display:none" allow="autoplay"></iframe>
+    <iframe id="sp-iframe" src="" style="display:none;width:100%;height:80px;border:none" allow="autoplay"></iframe>
+    <div class="player-controls">
+      <button id="btn-playpause" aria-label="Play/Pause">▶</button>
+      <span id="player-label">—</span>
+      <button id="btn-mute" aria-label="Mute">🔊</button>
+      <button id="btn-close" aria-label="Fermer">✕</button>
+    </div>
+  </div>
+
   <script>
   // ── Player audio persistant ──────────────────────────────────────────
-  // Exécuté UNE SEULE FOIS par session (déduplication Astro).
-  // Le player survit aux ViewTransitions grâce à astro:before-swap.
+  // transition:persist maintient l'élément in-place entre navigations.
+  // L'IIFE ne s'exécute qu'une fois (guard data-initialized).
 
   (function () {
-    if (document.getElementById('hamcat-player')) return;
-
-    const player = document.createElement('div');
-    player.id = 'hamcat-player';
-    player.dataset.active = 'false';
-    player.innerHTML =
-      '<iframe id="sc-iframe" src="" style="display:none" allow="autoplay"></iframe>' +
-      '<iframe id="sp-iframe" src="" style="display:none;width:100%;height:80px;border:none" allow="autoplay"></iframe>' +
-      '<div class="player-controls">' +
-        '<button id="btn-playpause" aria-label="Play/Pause">▶</button>' +
-        '<span id="player-label">—</span>' +
-        '<button id="btn-mute" aria-label="Mute">🔊</button>' +
-        '<button id="btn-close" aria-label="Fermer">✕</button>' +
-      '</div>';
-    document.body.appendChild(player);
-
+    const player = document.getElementById('hamcat-player') as HTMLDivElement;
+    if (!player || player.dataset.initialized === 'true') return;
+    player.dataset.initialized = 'true';
     const scIframe = document.getElementById('sc-iframe') as HTMLIFrameElement;
     const spIframe = document.getElementById('sp-iframe') as HTMLIFrameElement;
     const btnPlay  = document.getElementById('btn-playpause') as HTMLButtonElement;
@@ -412,22 +410,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
     });
 
-    document.addEventListener('astro:after-swap', () => {
+    document.addEventListener('astro:page-load', () => {
       if (window.location.pathname === '/') {
         player.dataset.active = 'false';
-        return;
       }
-      if (source === 'soundcloud' && scIframe.src) {
-        scWidget = null;
-        scIframe.addEventListener('load', () => bindSC(), { once: true });
-      }
-    });
-
-    // FIX PRINCIPAL : déplace le player dans le nouveau document AVANT le swap de body.
-    // Sans ça, ViewTransitions détruit l'élément à chaque navigation.
-    document.addEventListener('astro:before-swap', (e: Event) => {
-      const p = document.getElementById('hamcat-player');
-      if (p) (e as any).newDocument.body.appendChild(p);
     });
 
     // Restauration après hard reload (ignorée sur homepage)
