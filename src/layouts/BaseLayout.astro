@@ -292,7 +292,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="facet-nav" data-hrefs={JSON.stringify(facetHrefs)} style="display:none" aria-hidden="true"></div>
   <slot />
 
-  <div id="hamcat-player" data-active="false" transition:persist>
+  <div id="hamcat-player" data-active="false">
     <iframe id="sc-iframe" src="" style="display:none" allow="autoplay"></iframe>
     <iframe id="sp-iframe" src="" style="display:none;width:100%;height:80px;border:none" allow="autoplay"></iframe>
     <div class="player-controls">
@@ -305,7 +305,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
   <script>
   // ── Player audio persistant ──────────────────────────────────────────
-  // transition:persist maintient l'élément in-place entre navigations.
+  // Stratégie : détacher avant le swap (même document), réattacher après.
+  // Pas d'adoption cross-document → l'iframe ne recharge pas.
   // L'IIFE ne s'exécute qu'une fois (guard data-initialized).
 
   (function () {
@@ -406,7 +407,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
     });
 
-    document.addEventListener('astro:page-load', () => {
+    // Détacher avant le swap, réattacher au même document après → pas de reload iframe
+    document.addEventListener('astro:before-swap', () => {
+      player.remove();
+    });
+
+    document.addEventListener('astro:after-swap', () => {
+      document.body.appendChild(player);
       if (window.location.pathname === '/') {
         player.dataset.active = 'false';
       }
