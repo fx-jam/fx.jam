@@ -409,8 +409,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
 
-    <!-- Zone embed SC / Spotify (iframes créées dynamiquement) -->
-    <div id="player-embed-zone" style="width:100%;height:166px;display:none;"></div>
+    <!-- Zone embed SC / Spotify — iframes pré-créées pour persist garanti -->
+    <div id="player-embed-zone" style="width:100%;height:166px;display:none;">
+      <iframe id="sc-embed" transition:persist src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
+      <iframe id="sp-embed" transition:persist src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
+    </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
     <div id="sc-playlist" style="display:none;width:100%;max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.3);border-top:1px solid var(--border);padding:4px 0;box-sizing:border-box;"></div>
   </div>
@@ -538,16 +541,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
     function playSC(url: string, lbl: string) {
       pauseAll();
 
-      if (!state.scIframe) {
-        state.scIframe = document.createElement('iframe');
-        state.scIframe.id = 'sc-embed';
-        state.scIframe.allow = 'autoplay; encrypted-media';
-        state.scIframe.setAttribute('scrolling', 'no');
-        state.scIframe.setAttribute('frameborder', 'no');
-        state.scIframe.style.width  = '100%';
-        state.scIframe.style.height = '166px';
-        embedZone.appendChild(state.scIframe);
-      }
+      // Iframe pré-créée dans le HTML — on l'obtient toujours via getElementById
+      if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement;
+      if (!state.scIframe) return;
 
       const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&color=%23ff5500&hide_related=true&show_comments=false`;
       state.scIframe.src = embedUrl;
@@ -566,16 +562,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
     function playSpotify(playlistId: string, lbl: string) {
       pauseAll();
 
-      if (!state.spIframe) {
-        state.spIframe = document.createElement('iframe');
-        state.spIframe.id = 'sp-embed';
-        state.spIframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
-        state.spIframe.setAttribute('loading', 'lazy');
-        state.spIframe.style.width        = '100%';
-        state.spIframe.style.height       = '166px';
-        state.spIframe.style.borderRadius = '12px';
-        embedZone.appendChild(state.spIframe);
-      }
+      // Iframe pré-créée dans le HTML
+      if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement;
+      if (!state.spIframe) return;
 
       state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
       state.spIframe.style.height = '166px';
