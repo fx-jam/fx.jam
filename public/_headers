@@ -1,2 +1,3 @@
 /*
-  Permissions-Policy: autoplay=*, encrypted-media=*
+  Permissions-Policy: autoplay=*, encrypted-media=*, unload=*
+  X-Content-Type-Options: nosniff
