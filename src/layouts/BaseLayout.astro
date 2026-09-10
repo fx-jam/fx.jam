@@ -471,8 +471,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
     w.__hamcatAbort = _abort;
     const signal = _abort.signal;
     w.__scWidget = null; // reset widget ref — sera re-set par initSCWidget
-    w.__hamcatNavigating = false;
     w.__scMuted = false;
+    // __hamcatNavigating reset délayé dans astro:page-load (guard SC adoptNode PAUSE)
 
     const audioEl   = document.getElementById('hamcat-audio')      as HTMLAudioElement;
     const playerDiv = document.getElementById('hamcat-player')!;
@@ -552,7 +552,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       } catch (_) {}
       if (!playlistEl) return;
       widget.bind((window as any).SC.Widget.Events.READY, () => {
-        w.__scReloading = false; // Nouveau widget prêt — PAUSE autorisé à nouveau
+        w.__scReloading = false;
+        w.__hamcatNavigating = false; // Widget prêt — guard nav levé
         // PLAY_PROGRESS → scrubber + position save
         widget.bind((window as any).SC.Widget.Events.PLAY_PROGRESS, (prog: any) => {
           const pos = prog.currentPosition || 0;
@@ -784,10 +785,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     // Restaure l'UI et l'audio après chaque navigation Astro
     document.addEventListener('astro:page-load', () => {
-      w.__hamcatNavigating = false;
       // Resync refs (les iframes se reset sur navigation même si #hamcat-player persist)
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
+      // Guard SC adoptNode PAUSE : si iframe SC vivante, délayer la levée du flag
+      if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
+        setTimeout(() => { w.__hamcatNavigating = false; }, 600);
+      } else {
+        w.__hamcatNavigating = false;
+      }
 
       try {
         const saved = JSON.parse(localStorage.getItem('hamcat-player') || 'null');
