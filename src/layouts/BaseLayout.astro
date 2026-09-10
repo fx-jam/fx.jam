@@ -305,8 +305,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
   <script>
   // ── Player audio persistant ──────────────────────────────────────────
-  // Stratégie : détacher avant le swap (même document), réattacher après.
-  // Pas d'adoption cross-document → l'iframe ne recharge pas.
+  // Stratégie : déplacer vers <html> avant le swap, revenir dans <body> après.
+  // L'élément reste toujours dans le document tree → l'iframe ne recharge jamais.
   // L'IIFE ne s'exécute qu'une fois (guard data-initialized).
 
   (function () {
@@ -407,9 +407,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (d.type === 'spotify') loadSpotify(d.playlistId, d.lbl);
     });
 
-    // Détacher avant le swap, réattacher au même document après → pas de reload iframe
+    // Déplacer vers <html> avant le swap : Astro ne touche que <body>,
+    // l'iframe reste dans le document tree → pas de reset du browsing context.
     document.addEventListener('astro:before-swap', () => {
-      player.remove();
+      document.documentElement.appendChild(player);
     });
 
     document.addEventListener('astro:after-swap', () => {
