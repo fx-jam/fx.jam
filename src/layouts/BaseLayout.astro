@@ -434,9 +434,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       spIframe:      HTMLIFrameElement | null;
       currentSource: 'audio' | 'soundcloud' | 'spotify' | null;
       currentLbl:    string;
+      spExpanded:    boolean;
     }
     const w = window as any;
-    w.__hamcat = w.__hamcat || { scIframe: null, spIframe: null, currentSource: null, currentLbl: '' };
+    w.__hamcat = w.__hamcat || { scIframe: null, spIframe: null, currentSource: null, currentLbl: '', spExpanded: false };
     const state: HamcatState = w.__hamcat;
 
     const toggleBtn = playerDiv.querySelector('.player-embed-toggle') as HTMLButtonElement;
@@ -513,15 +514,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
         state.scIframe.setAttribute('scrolling', 'no');
         state.scIframe.setAttribute('frameborder', 'no');
         state.scIframe.style.width  = '100%';
-        state.scIframe.style.height = '560px';
+        state.scIframe.style.height = '166px';
         embedZone.appendChild(state.scIframe);
       }
 
-      const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true&show_artwork=true`;
+      const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&color=%23ff5500&hide_related=true&show_comments=false`;
       state.scIframe.src = embedUrl;
-      state.scIframe.style.height = '560px';
+      state.scIframe.style.height = '166px';
       state.scIframe.style.display = 'block';
-      embedZone.style.height = '560px';
+      embedZone.style.height = '166px';
       showEmbed();
 
       state.currentSource = 'soundcloud';
@@ -544,8 +545,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
+      state.spIframe.style.height = '166px';
       state.spIframe.style.display = 'block';
       embedZone.style.height = '166px';
+      state.spExpanded = false;
       showEmbed();
 
       state.currentSource = 'spotify';
@@ -621,13 +624,22 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       if (target.closest('.player-embed-toggle')) {
-        // Toggle visibilité uniquement — ne pas toucher aux src (collapse ≠ pause)
-        if (embedZone.style.display === 'none') {
-          embedZone.style.display = 'block';
-          if (toggleBtn) toggleBtn.textContent = '▼';
+        if (state.currentSource === 'spotify') {
+          // Spotify : toujours visible, toggle hauteur 166 ↔ 352px
+          state.spExpanded = !state.spExpanded;
+          const h = state.spExpanded ? '352px' : '166px';
+          if (state.spIframe) state.spIframe.style.height = h;
+          embedZone.style.height = h;
+          if (toggleBtn) toggleBtn.textContent = state.spExpanded ? '▼' : '▲';
         } else {
-          embedZone.style.display = 'none';
-          if (toggleBtn) toggleBtn.textContent = '▲';
+          // SC : show/hide classique (ne pas toucher au src)
+          if (embedZone.style.display === 'none') {
+            embedZone.style.display = 'block';
+            if (toggleBtn) toggleBtn.textContent = '▼';
+          } else {
+            embedZone.style.display = 'none';
+            if (toggleBtn) toggleBtn.textContent = '▲';
+          }
         }
         return;
       }
@@ -659,5 +671,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
   <!-- Moteur audio persistant — transition:persist empêche le rechargement entre pages -->
   <audio id="hamcat-audio" transition:persist preload="none" style="display:none"></audio>
+
+  <!-- Version toast — Shift+V affiche le hash git pendant 2 s -->
+  <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;transition:opacity 0.15s;font-family:monospace;z-index:9999;"></div>
+  <script>
+    declare const __COMMIT__: string;
+    const _vt = document.getElementById('version-toast')!;
+    _vt.textContent = __COMMIT__;
+    let _vtTimer: ReturnType<typeof setTimeout>;
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'v' && e.key !== 'V') return;
+      if ((e.target as Element).closest?.('input, textarea, [contenteditable]')) return;
+      _vt.style.opacity = '1';
+      clearTimeout(_vtTimer);
+      _vtTimer = setTimeout(() => { _vt.style.opacity = '0'; }, 2000);
+    });
+  </script>
 </body>
 </html>
