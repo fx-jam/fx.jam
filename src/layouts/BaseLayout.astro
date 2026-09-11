@@ -45,6 +45,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <ViewTransitions />
   <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
   <script src="https://open.spotify.com/embed/iframe-api/v1" is:inline></script>
+  <script src="https://sdk.scdn.co/spotify-player.js" is:inline></script>
 
   <style is:global>
     /* ============================================================
@@ -291,6 +292,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
       align-self: flex-start;
     }
     .source-badge.sp { background: oklch(0.55 0.22 145); }
+    .player-spotify-connect {
+      font-family: var(--font-mono) !important;
+      font-size: 0.62rem !important;
+      color: oklch(0.65 0.22 145) !important;
+      border: 1px solid oklch(0.55 0.22 145) !important;
+      padding: 0.2rem 0.5rem !important;
+      white-space: nowrap;
+    }
+    .player-spotify-connect:hover { background: oklch(0.55 0.22 145 / 0.15) !important; color: oklch(0.65 0.22 145) !important; }
 
     .player-scrubber {
       flex: 1; height: 20px;
@@ -456,6 +466,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       </div>
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
+      <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
@@ -482,10 +493,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.25 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.26 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.25');
+  console.log('🐱 fx_jam_v1.26');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -612,6 +623,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
         const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         if (state.currentSource === 'soundcloud' && (w as any).__scWidget && (w as any).__scDuration) {
           (w as any).__scWidget.seekTo(ratio * (w as any).__scDuration);
+        } else if (state.currentSource === 'spotify' && (w as any).__spWebPlayer && (w as any).__spDeviceId) {
+          (w as any).__spWebPlayer.getCurrentState().then((st: any) => {
+            if (st && st.duration) { try { (w as any).__spWebPlayer.seek(Math.round(ratio * st.duration)); } catch (_) {} }
+          });
         } else if (state.currentSource === 'spotify' && (w as any).__spController && (w as any).__spDurationMs) {
           try { (w as any).__spController.seek(Math.round((ratio * (w as any).__spDurationMs) / 1000)); } catch (_) {}
         } else if (state.currentSource === 'audio' && audioEl) {
@@ -805,14 +820,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (miniSrc)  { miniSrc.textContent  = badge; miniSrc.className  = cls; }
       }
       // v1.24: mute non supporte par l'API embed Spotify (pas de setVolume expose) -> bouton desactive
+      // v1.26: sauf en full playback (Web Playback SDK), ou le mute redevient possible
       const muteBtnEl = playerDiv.querySelector('.player-mute-btn') as HTMLButtonElement;
       if (muteBtnEl) {
-        const spotifyMuteUnavailable = src === 'spotify';
+        const spotifyMuteUnavailable = src === 'spotify' && !(w.__spWebPlayer && w.__spDeviceId);
         muteBtnEl.disabled = spotifyMuteUnavailable;
         muteBtnEl.title = spotifyMuteUnavailable ? 'Spotify ne permet pas de couper le son via son player embarque' : '';
         muteBtnEl.style.opacity = spotifyMuteUnavailable ? '0.35' : '';
         muteBtnEl.style.cursor = spotifyMuteUnavailable ? 'not-allowed' : '';
       }
+      updateSpotifyConnectBtn(src); // v1.26
       // Toggle embed visible seulement pour SC/Spotify
       if (toggleBtn) toggleBtn.hidden = (src === 'audio' || src == null);
       if (toggleBar) toggleBar.style.display = (src === 'audio' || src == null) ? 'none' : 'block';
@@ -841,6 +858,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
       // v1.23: Spotify pilote via IFrame API — pause reelle plutot que detruire l'iframe
       if (w.__spController) { try { w.__spController.pause(); } catch (_) {} }
+      // v1.26: idem pour le Web Playback SDK (full playback)
+      if (w.__spWebPlayer) { try { w.__spWebPlayer.pause(); } catch (_) {} }
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
       const artOvl = document.getElementById('sc-art-overlay') as HTMLImageElement;
@@ -931,9 +950,220 @@ const facetHrefs = visibleFacets().map(f => f.href);
       return w.__spControllerPromise;
     }
 
+    // ===== v1.26: Spotify OAuth (PKCE) + Web Playback SDK — full playback pour comptes Premium connectes =====
+    const SP_CLIENT_ID    = 'f10100812b4146f199243927da29d982';
+    const SP_REDIRECT_URI = 'https://hamcat.live';
+    const SP_SCOPES       = 'streaming user-read-email user-read-private user-modify-playback-state';
+
+    function spRandomString(len: number): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const rnd = crypto.getRandomValues(new Uint8Array(len));
+      let s = '';
+      for (let i = 0; i < len; i++) s += chars[rnd[i] % chars.length];
+      return s;
+    }
+
+    function spBase64UrlEncode(buf: ArrayBuffer): string {
+      const bytes = new Uint8Array(buf);
+      let str = '';
+      for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
+      return btoa(str).split('+').join('-').split('/').join('_').replace(/=+$/, '');
+    }
+
+    async function spPkceChallenge(verifier: string): Promise<string> {
+      const data = new TextEncoder().encode(verifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return spBase64UrlEncode(digest);
+    }
+
+    async function spStartAuth() {
+      const verifier = spRandomString(64);
+      try { sessionStorage.setItem('sp_pkce_verifier', verifier); } catch (_) {}
+      const challenge = await spPkceChallenge(verifier);
+      const params = new URLSearchParams({
+        client_id: SP_CLIENT_ID,
+        response_type: 'code',
+        redirect_uri: SP_REDIRECT_URI,
+        code_challenge_method: 'S256',
+        code_challenge: challenge,
+        scope: SP_SCOPES,
+      });
+      location.href = 'https://accounts.spotify.com/authorize?' + params.toString();
+    }
+
+    function spGetTokens(): any {
+      try { return JSON.parse(localStorage.getItem('hamcat-spotify-auth') || 'null'); } catch (_) { return null; }
+    }
+
+    function spSaveTokens(tok: any): any {
+      const prev = spGetTokens();
+      const data = {
+        access_token: tok.access_token,
+        refresh_token: tok.refresh_token || prev?.refresh_token,
+        expires_at: Date.now() + ((tok.expires_in || 3600) * 1000) - 30000,
+      };
+      try { localStorage.setItem('hamcat-spotify-auth', JSON.stringify(data)); } catch (_) {}
+      return data;
+    }
+
+    async function spExchangeCode(code: string): Promise<any> {
+      let verifier = '';
+      try { verifier = sessionStorage.getItem('sp_pkce_verifier') || ''; } catch (_) {}
+      if (!verifier) return null;
+      try {
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: SP_REDIRECT_URI,
+            client_id: SP_CLIENT_ID,
+            code_verifier: verifier,
+          }),
+        });
+        try { sessionStorage.removeItem('sp_pkce_verifier'); } catch (_) {}
+        if (!res.ok) return null;
+        return spSaveTokens(await res.json());
+      } catch (_) { return null; }
+    }
+
+    async function spRefreshToken(): Promise<any> {
+      const cur = spGetTokens();
+      if (!cur?.refresh_token) return null;
+      try {
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: cur.refresh_token,
+            client_id: SP_CLIENT_ID,
+          }),
+        });
+        if (!res.ok) return null;
+        return spSaveTokens(await res.json());
+      } catch (_) { return null; }
+    }
+
+    async function spGetValidToken(): Promise<string | null> {
+      let t = spGetTokens();
+      if (!t) return null;
+      if (Date.now() >= t.expires_at) t = await spRefreshToken();
+      return t?.access_token || null;
+    }
+
+    function spDisconnect() {
+      try { localStorage.removeItem('hamcat-spotify-auth'); } catch (_) {}
+      if (w.__spWebPlayer) { try { w.__spWebPlayer.disconnect(); } catch (_) {} }
+      w.__spWebPlayer = null; w.__spDeviceId = null; w.__spWebPlayerPromise = null;
+      updateSpotifyConnectBtn(state.currentSource);
+    }
+
+    function updateSpotifyConnectBtn(src?: string | null) {
+      const btn = playerDiv.querySelector('#btn-spotify-connect') as HTMLButtonElement;
+      if (!btn) return;
+      const authed = !!spGetTokens();
+      btn.hidden = src !== 'spotify' || authed;
+    }
+
+    // Web Playback SDK — singleton, cree un vrai device Spotify Connect pilotable
+    function spEnsureWebPlayer(): Promise<string | null> {
+      if (w.__spWebPlayerPromise) return w.__spWebPlayerPromise;
+      w.__spWebPlayerPromise = new Promise((resolve) => {
+        const init = () => {
+          const player = new (window as any).Spotify.Player({
+            name: 'hamcat.live',
+            getOAuthToken: async (cb: (t: string) => void) => {
+              const tok = await spGetValidToken();
+              if (tok) cb(tok);
+            },
+            volume: 1,
+          });
+          player.addListener('ready', ({ device_id }: any) => {
+            w.__spDeviceId = device_id;
+            hmcLog('[HMC] Spotify Web Playback ready device_id=' + device_id);
+            resolve(device_id);
+          });
+          player.addListener('not_ready', () => { w.__spDeviceId = null; });
+          player.addListener('initialization_error', ({ message }: any) => { hmcLog('[HMC] SP SDK initialization_error ' + message); resolve(null); });
+          player.addListener('authentication_error', ({ message }: any) => { hmcLog('[HMC] SP SDK authentication_error ' + message); spDisconnect(); resolve(null); });
+          player.addListener('account_error', ({ message }: any) => { hmcLog('[HMC] SP SDK account_error (Premium requis) ' + message); resolve(null); });
+          player.addListener('player_state_changed', (st: any) => {
+            if (!st || state.currentSource !== 'spotify') return;
+            const playing = !st.paused;
+            playerDiv.classList.toggle('playing', playing);
+            const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
+            if (pbtn) pbtn.textContent = playing ? '⏸' : '▶';
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+            const pos = st.position || 0;
+            const dur = st.duration || 0;
+            if (dur > 0) {
+              if (scrubFill) scrubFill.style.width = ((pos / dur) * 100) + '%';
+              if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(pos)} / ${fmtMs(dur)}`;
+              if (miniTimeEl) miniTimeEl.textContent = fmtMs(pos);
+            }
+            const tr = st.track_window?.current_track;
+            if (tr) {
+              const title  = tr.name || state.currentLbl || 'Spotify';
+              const artist = (tr.artists || []).map((a: any) => a.name).join(', ');
+              const artwork = tr.album?.images?.[0]?.url || '';
+              const titleEl = playerDiv.querySelector('#player-title') as HTMLElement;
+              if (titleEl) titleEl.textContent = title;
+              state.currentLbl = title;
+              const artEl = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
+              if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; artEl.style.filter = 'none'; }
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'hamcat.live', artwork: artwork ? [{ src: artwork, sizes: '300x300', type: 'image/jpeg' }] : [] });
+              }
+            }
+            updateUI(playing ? 'playing' : 'paused', state.currentLbl, 'spotify');
+          });
+          player.connect();
+          w.__spWebPlayer = player;
+        };
+        if ((window as any).Spotify) init();
+        else (window as any).onSpotifyWebPlaybackSDKReady = init;
+      });
+      return w.__spWebPlayerPromise;
+    }
+
+    async function spPlayFull(playlistId: string, lbl: string): Promise<boolean> {
+      const deviceId = await spEnsureWebPlayer();
+      if (!deviceId) return false;
+      const token = await spGetValidToken();
+      if (!token) return false;
+      try {
+        const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ context_uri: `spotify:playlist:${playlistId}` }),
+        });
+        if (!res.ok && res.status !== 204) return false;
+        updateSpotifyConnectBtn('spotify');
+        return true;
+      } catch (_) { return false; }
+    }
+
     function playSpotify(playlistId: string, lbl: string) {
       pauseAll();
 
+      state.currentSource = 'spotify';
+      updateUI('loading', lbl, 'spotify'); // v1.23: l'etat reel arrive via playback_update / player_state_changed
+      saveState({ type: 'spotify', playlistId, lbl });
+
+      // v1.26: si un compte Spotify (Premium) est connecte, tente le full playback (Web Playback SDK)
+      if (spGetTokens()) {
+        spPlayFull(playlistId, lbl).then((ok: boolean) => {
+          if (!ok) playSpotifyPreview(playlistId, lbl); // fallback si pas Premium / erreur SDK
+        });
+        return;
+      }
+      playSpotifyPreview(playlistId, lbl);
+    }
+
+    // Fallback / mode par defaut : embed IFrame (preview 30s pour non-Premium ou non-connecte)
+    function playSpotifyPreview(playlistId: string, lbl: string) {
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement;
       if (!state.spIframe) return;
 
@@ -943,10 +1173,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
       state.spExpanded = false;
       showEmbed();
       hideEmbedZone(); // v1.24: masque le player natif Spotify par defaut (bouton expand dispo), comme pour SC
-
-      state.currentSource = 'spotify';
-      updateUI('loading', lbl, 'spotify'); // v1.23: l'etat reel arrive via playback_update
-      saveState({ type: 'spotify', playlistId, lbl });
 
       const uri = `spotify:playlist:${playlistId}`;
       if (w.__spController) {
@@ -1008,7 +1234,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           } else if (saved.type === 'audio') {
             updateUI(!audioEl.paused ? 'playing' : 'paused', saved.lbl, 'audio');
           } else if (saved.type === 'spotify') {
-            if ((w as any).__spController) {
+            if ((w as any).__spController || ((w as any).__spWebPlayer && (w as any).__spDeviceId)) {
               updateUI('playing', saved.lbl, 'spotify');
             } else {
               playSpotify(saved.playlistId, saved.lbl);
@@ -1043,7 +1269,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           }
         } else if (saved.type === 'spotify') {
           state.currentSource = 'spotify';
-          if ((w as any).__spController) {
+          if ((w as any).__spController || ((w as any).__spWebPlayer && (w as any).__spDeviceId)) {
             updateUI('playing', saved.lbl, 'spotify');
           } else {
             playSpotify(saved.playlistId, saved.lbl);
@@ -1073,6 +1299,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
             if (paused) w.__scWidget.play();
             else        w.__scWidget.pause();
           });
+        } else if (state.currentSource === 'spotify' && w.__spWebPlayer && w.__spDeviceId) {
+          // v1.26: full playback (Web Playback SDK) — togglePlay pilote le vrai device Spotify Connect
+          try { w.__spWebPlayer.togglePlay(); } catch (_) {}
         } else if (state.currentSource === 'spotify' && w.__spController) {
           // v1.23: togglePlay() pilote le vrai etat, playback_update remet l'UI a jour
           try { w.__spController.togglePlay(); } catch (_) {}
@@ -1092,6 +1321,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
         }
         // v1.24: pas de mute Spotify - l'API embed IFrame n'expose pas de setVolume (verifie sur le controller live).
         // Le bouton est desactive pour cette source via updateUI().
+        return;
+      }
+
+      if (target.closest('#btn-spotify-connect')) {
+        spStartAuth(); // v1.26: lance le flow OAuth PKCE Spotify
         return;
       }
 
@@ -1140,6 +1374,27 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
     }, { signal });
 
+    // v1.26: retour du redirect OAuth Spotify (?code=...) — echange le code, puis upgrade
+    // en full playback si une lecture Spotify etait deja en cours (localStorage hamcat-player)
+    (async () => {
+      const qp = new URLSearchParams(location.search);
+      const code = qp.get('code');
+      const err  = qp.get('error');
+      if (!code && !err) { updateSpotifyConnectBtn(state.currentSource); return; }
+      history.replaceState({}, '', location.pathname); // nettoie l'URL immediatement
+      if (err) { hmcLog('[HMC] Spotify OAuth refuse/erreur: ' + err); updateSpotifyConnectBtn(state.currentSource); return; }
+      const tok = await spExchangeCode(code);
+      if (!tok) { hmcLog('[HMC] Spotify OAuth: echange du code echoue'); updateSpotifyConnectBtn(state.currentSource); return; }
+      hmcLog('[HMC] Spotify OAuth OK — connecte');
+      try {
+        const saved = JSON.parse(localStorage.getItem('hamcat-player') || 'null');
+        if (saved?.type === 'spotify' && saved.playlistId) {
+          playSpotify(saved.playlistId, saved.lbl); // relance en full playback
+        }
+      } catch (_) {}
+      updateSpotifyConnectBtn(state.currentSource);
+    })();
+
     // Bouton debug (DEV uniquement) — teste la continuité audio cross-page
     document.getElementById('debug-audio-test')?.addEventListener('click', () => {
       document.dispatchEvent(new CustomEvent('hamcat:play', {
@@ -1157,7 +1412,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.25';
+    _vt.textContent = 'fx_jam_v1.26';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
