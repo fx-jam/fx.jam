@@ -481,10 +481,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.20b ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.21 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.20b');
+  console.log('🐱 fx_jam_v1.21');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -540,6 +540,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
     const w = window as any;
+
+    // v1.21 — MODE EMBARQUE (page ouverte dans la modale iframe de la platine, ?modal=1).
+    // Le player vit UNIQUEMENT dans la page parente. Avant : ce script re-instanciait un 2e widget
+    // SoundCloud (auto_play) dans l'iframe modale → conflit de session audio iOS → PAUSE du parent.
+    const _embedded = (() => {
+      const q = new URLSearchParams(location.search).has('modal');
+      try { return q || (window.top !== window && !!window.parent.document); } catch (_) { return q; }
+    })();
+    if (_embedded) {
+      console.log('[HMC] embedded mode → player délégué au parent');
+      document.addEventListener('hamcat:play', (e: any) => {
+        try { window.parent.document.dispatchEvent(new CustomEvent('hamcat:play', { detail: e.detail })); } catch (_) {}
+      });
+      return;
+    }
     const _isRerun = !!w.__hamcatAbort; // v1.13 : true si View Transitions re-exec l'IIFE
     // v1.20b: journal persistant (sessionStorage) — survit aux navigations ET aux reloads
     const hmcLog = (...a: any[]) => {
@@ -1102,7 +1117,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.20b';
+    _vt.textContent = 'fx_jam_v1.21';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
