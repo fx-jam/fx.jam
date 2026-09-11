@@ -45,6 +45,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <ViewTransitions />
   <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
   <script src="https://open.spotify.com/embed/iframe-api/v1" is:inline></script>
+  <script is:inline>window.onSpotifyWebPlaybackSDKReady = function () {};</script>
   <script src="https://sdk.scdn.co/spotify-player.js" is:inline></script>
 
   <style is:global>
