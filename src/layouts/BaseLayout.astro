@@ -482,10 +482,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.23 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.24 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.23');
+  console.log('🐱 fx_jam_v1.24');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -804,6 +804,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (srcBadge) { srcBadge.textContent = badge; srcBadge.className = cls; }
         if (miniSrc)  { miniSrc.textContent  = badge; miniSrc.className  = cls; }
       }
+      // v1.24: mute non supporte par l'API embed Spotify (pas de setVolume expose) -> bouton desactive
+      const muteBtnEl = playerDiv.querySelector('.player-mute-btn') as HTMLButtonElement;
+      if (muteBtnEl) {
+        const spotifyMuteUnavailable = src === 'spotify';
+        muteBtnEl.disabled = spotifyMuteUnavailable;
+        muteBtnEl.title = spotifyMuteUnavailable ? 'Spotify ne permet pas de couper le son via son player embarque' : '';
+        muteBtnEl.style.opacity = spotifyMuteUnavailable ? '0.35' : '';
+        muteBtnEl.style.cursor = spotifyMuteUnavailable ? 'not-allowed' : '';
+      }
       // Toggle embed visible seulement pour SC/Spotify
       if (toggleBtn) toggleBtn.hidden = (src === 'audio' || src == null);
       if (toggleBar) toggleBar.style.display = (src === 'audio' || src == null) ? 'none' : 'block';
@@ -933,6 +942,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       state.spIframe.style.display = 'block';
       state.spExpanded = false;
       showEmbed();
+      hideEmbedZone(); // v1.24: masque le player natif Spotify par defaut (bouton expand dispo), comme pour SC
 
       state.currentSource = 'spotify';
       updateUI('loading', lbl, 'spotify'); // v1.23: l'etat reel arrive via playback_update
@@ -1079,11 +1089,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
           w.__scMuted = !w.__scMuted;
           w.__scWidget.setVolume(w.__scMuted ? 0 : 100);
           (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
-        } else if (state.currentSource === 'spotify' && w.__spController) {
-          w.__scMuted = !w.__scMuted; // v1.23: meme flag reutilise, un seul source active a la fois
-          try { w.__spController.setVolume(w.__scMuted ? 0 : 1); } catch (_) {}
-          (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
         }
+        // v1.24: pas de mute Spotify - l'API embed IFrame n'expose pas de setVolume (verifie sur le controller live).
+        // Le bouton est desactive pour cette source via updateUI().
         return;
       }
 
@@ -1145,7 +1153,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.23';
+    _vt.textContent = 'fx_jam_v1.24';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
