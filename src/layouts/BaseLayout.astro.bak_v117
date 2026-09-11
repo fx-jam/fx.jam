@@ -472,10 +472,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.18 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.17 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.18');
+  console.log('🐱 fx_jam_v1.17');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -634,17 +634,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
           }
           // v1.17: guard post-nav (1500ms) — supprime PAUSE SC oscillation
           const _navEnd17 = (w as any).__hamcatNavEndTime || 0;
-          if (_navEnd17 > 0 && Date.now() - _navEnd17 < 4000) {
+          if (_navEnd17 > 0 && Date.now() - _navEnd17 < 1500) {
             console.log('[HMC] PAUSE skip post-nav', Math.round(Date.now()-_navEnd17)+'ms');
             if (!(w as any).__hamcatGraceCheck) {
               (w as any).__hamcatGraceCheck = setTimeout(() => {
                 (w as any).__hamcatGraceCheck = null;
-                // v1.18: pas de reset navEndTime — guard reste actif 4000ms
+                (w as any).__hamcatNavEndTime = 0; // expire guard
                 widget.isPaused((p: boolean) => {
                   console.log('[HMC] grace isPaused:', p);
                   if (p) { widget.play(); console.log('[HMC] grace widget.play()'); }
                 });
-              }, 2000);
+              }, 1600);
             }
             return;
           }
@@ -1062,7 +1062,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.18';
+    _vt.textContent = 'fx_jam_v1.17';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
