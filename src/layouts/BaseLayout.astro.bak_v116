@@ -472,10 +472,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.16b ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.16 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.16b');
+  console.log('🐱 fx_jam_v1.16');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -489,7 +489,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
     if (!_isRerun) w.__scWidget = null;
       if (!_isRerun) (w as any).__hamcatPlaySeq = 0; // v1.15: compteur PLAY anti-race
       if (!_isRerun) (w as any).__hamcatNavEndTime = 0; // v1.16: timestamp fin nav
-        console.log('[HMC] INIT v1.16b navEndTime OK'); // v1.16b: log diagnostic cache
     w.__scMuted = false;
     // __hamcatNavigating reset délayé dans astro:page-load (guard SC adoptNode PAUSE)
 
@@ -1052,7 +1051,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.16b';
+    _vt.textContent = 'fx_jam_v1.16';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
