@@ -329,3 +329,67 @@ Les embeds Spotify non authentifies sont limites a 30s de lecture par Spotify lu
 
 ### Deploiement
 Commit `5c4ef0c` (rebase sur `8bd55b1` — sync Spotify nocturne + CMS UX deja en remote), push -> Cloudflare Workers, deploye et verifie en prod.
+
+
+## v1.24 — Fix mute Spotify casse + panneau natif visible par defaut — 2026-09-11
+
+### Contexte
+Suite au v1.23 (Spotify pilote via IFrame API), Fx signale que le play/pause et la seek bar fonctionnent mais pas le mute, et que l'embed natif Spotify reste visible par defaut (au lieu d'etre masque comme pour SoundCloud), avec son propre bandeau "extrait" + invitation a ouvrir Spotify.
+
+### Root cause
+- Inspection directe de `window.__spController` en prod : l'API embed IFrame de Spotify n'expose **aucune methode `setVolume`** (liste complete verifiee : `setIframeDimensions, onWindowMessages, addListener, ..., play, playFromStart, restart, pause, resume, togglePlay, seek, ...` — pas de volume). Le mute v1.23 appelait une methode inexistante, echouait silencieusement (`catch (_) {}`).
+- `playSpotify()` appelait `showEmbed()` mais jamais `hideEmbedZone()`, contrairement a `playSC()` — regression/oubli, le panneau natif restait donc `display:block` en permanence.
+
+### Fix
+- Bouton mute desactive pour la source Spotify (`disabled`, opacite reduite, tooltip explicatif) plutot que silencieusement casse — honnete sur une limitation plateforme non contournable.
+- `playSpotify()` appelle desormais `hideEmbedZone()` juste apres `showEmbed()`, comme `playSC()`.
+
+### Deploiement
+Commit `24407d2`, deploye et verifie en prod (panneau natif masque par defaut, bouton mute grise avec tooltip).
+
+## v1.25 — Fix toggle panneau Spotify (ne reagissait plus au clic) — 2026-09-11
+
+### Contexte
+Suite au v1.24, Fx signale que le bouton toggle (▲/▼) ne fait plus rien pour Spotify : le panneau natif ne se rouvre pas au clic.
+
+### Root cause
+Le handler de toggle Spotify datait d'avant le v1.24 : il ne touchait que la hauteur du panneau (166↔352px, mode "toujours visible, juste plus grand"), jamais `display`. Comme le v1.24 masque desormais le panneau par defaut (`display:none`), cliquer sur toggle changeait une hauteur sans jamais repasser `display` a `block` — aucun effet visible.
+
+### Fix
+Toggle Spotify reecrit pour un vrai show/hide (`display: none ↔ block`), sur le meme modele que SoundCloud.
+
+### Deploiement
+Commit `ada99fd`, deploye et verifie en prod (toggle ouvre/ferme reellement le panneau, lecture non affectee).
+
+## v1.26 / v1.26b — OAuth Spotify (PKCE) + Web Playback SDK, full playback pour comptes Premium connectes — 2026-09-11
+
+### Contexte
+Fx demande si un "vrai" player Spotify sans la limitation 30s est possible. Recherche confirmee : meme connecte en Premium dans le navigateur, l'embed IFrame reste limite a l'extrait (teste et confirme par Fx : "1 c'est toujours un preview"). Seule voie fiable : Web Playback SDK + OAuth utilisateur (obligatoirement Premium). Disclaimer donne a Fx sur les conditions Spotify (usage non-commercial, pas de sync/broadcast) — risque accepte explicitement ("je suis chaud qu'on essaye").
+
+Fx precise avant implementation : ne pas ancrer le redirect OAuth sur `/son` (facette pas gravee, le player deviendra site-wide) → utilise le redirect URI deja enregistre sur l'app existante, la racine `https://hamcat.live`.
+
+### Implementation
+- **PKCE côté client** (`spStartAuth`, `spExchangeCode`, `spRefreshToken`) — pas de client secret expose, `code_verifier`/`code_challenge` (SHA-256 + base64url), scopes `streaming user-read-email user-read-private user-modify-playback-state`.
+- Tokens stockes dans `localStorage` (`hamcat-spotify-auth`), refresh automatique a l'expiration (`spGetValidToken`).
+- **Web Playback SDK** (`sdk.scdn.co/spotify-player.js`) — singleton `spEnsureWebPlayer()` (pattern deja utilise pour `__scWidget`/`__spController`), cree un vrai device Spotify Connect (`w.__spWebPlayer` / `w.__spDeviceId`), ecoute `player_state_changed` pour synchroniser l'UI (play/pause, scrubber, titre/artiste/pochette, MediaSession) exactement comme pour SC/preview.
+- `spPlayFull()` demarre la lecture sur ce device via l'API Web (`PUT /me/player/play?device_id=...`).
+- `playSpotify()` tente desormais le full playback si un token existe, avec **fallback automatique** vers l'embed IFrame preview (`playSpotifyPreview()`, ex-`playSpotify()`) si pas Premium ou erreur SDK.
+- Bouton "Connexion Spotify" (visible uniquement source=spotify + non-connecte) declenche `spStartAuth()`.
+- Retour du redirect OAuth (`?code=...` sur la racine) : echange automatique + relance en full playback si une lecture Spotify etait deja sauvegardee (`localStorage hamcat-player`).
+- Mute redevient possible en mode full playback (SDK expose bien le volume, contrairement a l'IFrame API).
+- **v1.26b (fix immediat)** : le script SDK appelle `window.onSpotifyWebPlaybackSDKReady()` des son chargement sans verifier son existence → `Uncaught ... is not defined` detecte en verification live. Fix : stub no-op pose dans le `<head>` avant le chargement du script ; `spEnsureWebPlayer()` detecte ensuite `window.Spotify` deja pret et demarre directement.
+
+### Limite connue (a communiquer a Fx)
+L'app Spotify `hamcat.live` (Client ID `f10100812b4146f199243927da29d982`) est en **Development mode** : seuls les comptes explicitement ajoutes sous "User Management" dans le dashboard Spotify (25 max) peuvent terminer l'OAuth, jusqu'a approbation d'un Extended Quota Mode par Spotify. Fx doit s'ajouter lui-meme pour tester.
+
+### Verification live (hamcat.live/son)
+- `fx_jam_v1.26` confirme charge, `window.Spotify` present, aucune erreur console apres fix v1.26b.
+- Bouton "Connexion Spotify" declenche une redirection vers `accounts.spotify.com` avec une URL PKCE bien formee (`redirect_uri=https://hamcat.live`, `client_id`, `code_challenge_method=S256`, scopes corrects) — verifie via inspection directe de `location.href`, sans completer de connexion (hors perimetre de l'agent : identifiants).
+- Build `npx astro build` sans erreur avant chaque deploiement.
+- Connexion effective par un compte Premium reel reste a valider par Fx lui-meme.
+
+### Deploiement
+Commits `fe8853c` (v1.26) puis `7ecdbe7` (v1.26b, fix), push -> Cloudflare Workers, deployes et verifies en prod.
+
+### Commits
+- `24407d2` v1.24 · `ada99fd` v1.25 · `fe8853c` v1.26 · `7ecdbe7` v1.26b
