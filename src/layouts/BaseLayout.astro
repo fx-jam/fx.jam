@@ -44,6 +44,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <ViewTransitions />
   <script src="https://w.soundcloud.com/player/api.js" is:inline></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" is:inline></script>
 
   <style is:global>
     /* ============================================================
@@ -468,7 +469,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     <div id="player-embed-zone" style="position:relative;width:100%;height:166px;display:none;">
       <iframe id="sc-embed" src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
       <img id="sc-art-overlay" src="" alt="" style="display:none;position:absolute;top:8px;left:8px;width:72px;height:72px;border-radius:2px;object-fit:cover;z-index:2;pointer-events:none;" />
-      <iframe id="sp-embed" src="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="display:none;width:100%;height:166px;border-radius:12px;"></iframe>
+      <div id="sp-embed" style="display:none;width:100%;height:166px;border-radius:12px;overflow:hidden;"></div>
     </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
     <div id="sc-playlist" style="display:none;width:100%;max-height:130px;overflow-y:auto;background:rgba(0,0,0,0.3);border-top:1px solid var(--border);padding:4px 0;box-sizing:border-box;"></div>
@@ -481,10 +482,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.22 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.23 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.22');
+  console.log('🐱 fx_jam_v1.23');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -611,6 +612,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
         const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         if (state.currentSource === 'soundcloud' && (w as any).__scWidget && (w as any).__scDuration) {
           (w as any).__scWidget.seekTo(ratio * (w as any).__scDuration);
+        } else if (state.currentSource === 'spotify' && (w as any).__spController && (w as any).__spDurationMs) {
+          try { (w as any).__spController.seek(Math.round((ratio * (w as any).__spDurationMs) / 1000)); } catch (_) {}
         } else if (state.currentSource === 'audio' && audioEl) {
           audioEl.currentTime = ratio * audioEl.duration;
         }
@@ -827,8 +830,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (state.scIframe && state.scIframe.src) {
         try { state.scIframe.contentWindow?.postMessage(JSON.stringify({ method: 'pause' }), '*'); } catch (_) {}
       }
-      // Spotify : pas d'API postMessage officielle — vider src est le seul moyen d'arrêter l'audio
-      if (state.spIframe) state.spIframe.src = 'about:blank';
+      // v1.23: Spotify pilote via IFrame API — pause reelle plutot que detruire l'iframe
+      if (w.__spController) { try { w.__spController.pause(); } catch (_) {} }
       if (state.scIframe) state.scIframe.style.display = 'none';
       if (state.spIframe) state.spIframe.style.display = 'none';
       const artOvl = document.getElementById('sc-art-overlay') as HTMLImageElement;
@@ -881,23 +884,66 @@ const facetHrefs = visibleFacets().map(f => f.href);
       saveState({ type: 'soundcloud', url, lbl, scPosition: startAtMs, scTrackIndex: trackIndex, scPlaying: shouldPlay });
     }
 
+    // v1.23: IFrame API Spotify — controller reutilise entre lectures (comme __scWidget pour SC)
+    function getSpotifyIframeAPI(): Promise<any> {
+      if (w.__spotifyAPI) return Promise.resolve(w.__spotifyAPI);
+      if (!w.__spotifyAPIPromise) {
+        w.__spotifyAPIPromise = new Promise((resolve) => {
+          w.onSpotifyIframeApiReady = (IFrameAPI: any) => { w.__spotifyAPI = IFrameAPI; resolve(IFrameAPI); };
+        });
+      }
+      return w.__spotifyAPIPromise;
+    }
+
+    function ensureSpController(initialUri: string): Promise<any> {
+      if (w.__spController) return Promise.resolve(w.__spController);
+      if (!w.__spControllerPromise) {
+        w.__spControllerPromise = getSpotifyIframeAPI().then((IFrameAPI: any) => new Promise((resolve) => {
+          const el = document.getElementById('sp-embed');
+          IFrameAPI.createController(el, { uri: initialUri, width: '100%', height: '166' }, (EmbedController: any) => {
+            w.__spController = EmbedController;
+            (w as any).__spDurationMs = 0;
+            EmbedController.addListener('playback_update', (e: any) => {
+              if (state.currentSource !== 'spotify') return;
+              const d = e.data || {};
+              (w as any).__spDurationMs = d.duration || 0;
+              playerDiv.classList.toggle('playing', !d.isPaused);
+              if ('mediaSession' in navigator) navigator.mediaSession.playbackState = d.isPaused ? 'paused' : 'playing';
+              const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
+              if (pbtn) pbtn.textContent = d.isPaused ? '▶' : '⏸';
+              if (scrubFill && d.duration) scrubFill.style.width = ((d.position / d.duration) * 100) + '%';
+              if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(d.position || 0)} / ${fmtMs(d.duration || 0)}`;
+              if (miniTimeEl) miniTimeEl.textContent = fmtMs(d.position || 0);
+            });
+            resolve(EmbedController);
+          });
+        }));
+      }
+      return w.__spControllerPromise;
+    }
+
     function playSpotify(playlistId: string, lbl: string) {
       pauseAll();
 
-      // Iframe pré-créée dans le HTML
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement;
       if (!state.spIframe) return;
 
       embedZone.style.height = '166px';
       state.spIframe.style.height = '166px';
       state.spIframe.style.display = 'block';
-      state.spIframe.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator&theme=0`;
       state.spExpanded = false;
       showEmbed();
 
       state.currentSource = 'spotify';
-      updateUI('playing', lbl, 'spotify');
+      updateUI('loading', lbl, 'spotify'); // v1.23: l'etat reel arrive via playback_update
       saveState({ type: 'spotify', playlistId, lbl });
+
+      const uri = `spotify:playlist:${playlistId}`;
+      if (w.__spController) {
+        try { w.__spController.loadUri(uri); w.__spController.play(); } catch (_) {}
+      } else {
+        ensureSpController(uri).then((ctrl: any) => { try { ctrl.play(); } catch (_) {} });
+      }
     }
 
     // Sauvegarde position audio toutes les 5 s
@@ -952,7 +998,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           } else if (saved.type === 'audio') {
             updateUI(!audioEl.paused ? 'playing' : 'paused', saved.lbl, 'audio');
           } else if (saved.type === 'spotify') {
-            if (state.spIframe?.src?.includes('open.spotify.com')) {
+            if ((w as any).__spController) {
               updateUI('playing', saved.lbl, 'spotify');
             } else {
               playSpotify(saved.playlistId, saved.lbl);
@@ -987,7 +1033,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           }
         } else if (saved.type === 'spotify') {
           state.currentSource = 'spotify';
-          if (state.spIframe?.src?.includes('open.spotify.com')) {
+          if ((w as any).__spController) {
             updateUI('playing', saved.lbl, 'spotify');
           } else {
             playSpotify(saved.playlistId, saved.lbl);
@@ -1017,6 +1063,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
             if (paused) w.__scWidget.play();
             else        w.__scWidget.pause();
           });
+        } else if (state.currentSource === 'spotify' && w.__spController) {
+          // v1.23: togglePlay() pilote le vrai etat, playback_update remet l'UI a jour
+          try { w.__spController.togglePlay(); } catch (_) {}
         }
         return;
       }
@@ -1029,6 +1078,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
         } else if (state.currentSource === 'soundcloud' && w.__scWidget) {
           w.__scMuted = !w.__scMuted;
           w.__scWidget.setVolume(w.__scMuted ? 0 : 100);
+          (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
+        } else if (state.currentSource === 'spotify' && w.__spController) {
+          w.__scMuted = !w.__scMuted; // v1.23: meme flag reutilise, un seul source active a la fois
+          try { w.__spController.setVolume(w.__scMuted ? 0 : 1); } catch (_) {}
           (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
         }
         return;
@@ -1092,7 +1145,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.22';
+    _vt.textContent = 'fx_jam_v1.23';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
