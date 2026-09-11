@@ -472,10 +472,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.14 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.15 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.14');
+  console.log('🐱 fx_jam_v1.15');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -487,6 +487,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const signal = _abort.signal;
     // v1.13 : ne reset __scWidget que sur 1er chargement (View Transitions maintient le widget)
     if (!_isRerun) w.__scWidget = null;
+      if (!_isRerun) (w as any).__hamcatPlaySeq = 0; // v1.15: compteur PLAY anti-race
     w.__scMuted = false;
     // __hamcatNavigating reset délayé dans astro:page-load (guard SC adoptNode PAUSE)
 
@@ -595,6 +596,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           console.log('[HMC] PLAY fired: navigating=', w.__hamcatNavigating);
           if (w.__scPauseTimer) { clearTimeout(w.__scPauseTimer); w.__scPauseTimer = null; }
           if ((w as any).__hamcatPlayTimeout) { clearTimeout((w as any).__hamcatPlayTimeout); (w as any).__hamcatPlayTimeout = null; } // v1.14
+          (w as any).__hamcatPlaySeq = ((w as any).__hamcatPlaySeq || 0) + 1; // v1.15
           // v1.9/v1.10: NE PAS clear __hamcatNavigating ici — le PAUSE postMessage SC peut arriver après PLAY
           // Flag cleared uniquement par le timeout 600ms de page-load
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
@@ -630,10 +632,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
           }
           console.log('[HMC] PAUSE allowed, debouncing...');
           if (w.__scPauseTimer) clearTimeout(w.__scPauseTimer);
+          const _seqAtPause = (w as any).__hamcatPlaySeq || 0; // v1.15
           w.__scPauseTimer = setTimeout(() => {
             w.__scPauseTimer = null;
+            // v1.15: PLAY arrivé pendant debounce ? → oscillation SC, skip
+            if (((w as any).__hamcatPlaySeq || 0) > _seqAtPause) {
+              console.log('[HMC] PAUSE skip: PLAY pendant debounce seq', _seqAtPause, '→', (w as any).__hamcatPlaySeq);
+              return;
+            }
             widget.isPaused((actuallyPaused: boolean) => {
               if (!actuallyPaused) return;
+              // v1.15: vérifier encore après roundtrip isPaused()
+              if (((w as any).__hamcatPlaySeq || 0) > _seqAtPause) {
+                console.log('[HMC] isPaused cb skip: PLAY pendant roundtrip');
+                return;
+              }
               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
               playerDiv.classList.remove('playing');
               const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
@@ -1031,7 +1044,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.14';
+    _vt.textContent = 'fx_jam_v1.15';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
