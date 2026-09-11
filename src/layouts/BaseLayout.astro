@@ -459,10 +459,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.11 ─────────────────────────
-  // SC : soft-rebind + restore play explicite post-adoptNode · debounce PAUSE
+  // ── Player audio persistant · fx_jam_v1.12 ─────────────────────────
+  // SC : v1.12 skip initSCWidget si widget vivant (READY ne refire pas sans reload iframe)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.11');
+  console.log('🐱 fx_jam_v1.12');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -836,8 +836,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
               w.__hamcatWasPlaying = undefined;
               console.log('[HMC] HOME: shouldPlay=', _spH, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
               updateUI(_spH ? 'playing' : 'paused', saved.lbl, 'soundcloud');
-              initSCWidget(0, saved.scTrackIndex || 0, false);
-              if (_spH) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_ph) {} }, 100); }
+              // v1.12: widget vivant → évite initSCWidget (READY ne refire pas, délie PAUSE/PLAY)
+              if (w.__scWidget) {
+                if (_spH) { setTimeout(() => { try { (w.__scWidget as any).play(); } catch (_ph) {} }, 150); }
+              } else {
+                initSCWidget(0, saved.scTrackIndex || 0, false);
+                if (_spH) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_ph) {} }, 800); }
+              }
             } else {
               playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
             }
@@ -868,8 +873,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
             w.__hamcatWasPlaying = undefined;
             console.log('[HMC] PAGE: shouldPlay=', _spP, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
             updateUI(_spP ? 'playing' : 'paused', saved.lbl, 'soundcloud');
-            initSCWidget(0, saved.scTrackIndex || 0, false);
-            if (_spP) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_pp) {} }, 100); }
+            // v1.12: widget vivant → évite initSCWidget (READY ne refire pas, délie PAUSE/PLAY)
+            if (w.__scWidget) {
+              if (_spP) { setTimeout(() => { try { (w.__scWidget as any).play(); } catch (_pp) {} }, 150); }
+            } else {
+              initSCWidget(0, saved.scTrackIndex || 0, false);
+              if (_spP) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_pp) {} }, 800); }
+            }
           } else {
             state.currentSource = 'soundcloud';
             playSC(saved.url, saved.lbl, saved.scPosition || 0, saved.scTrackIndex || 0, saved.scPlaying !== false);
@@ -977,12 +987,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <!-- Moteur audio persistant — transition:persist empêche le rechargement entre pages -->
   <audio id="hamcat-audio" transition:persist preload="none" style="display:none"></audio>
 
-  <!-- Version toast — V affiche le hash git tant que la touche est enfoncée -->
+  <!-- Version toast — V affiche la version lisible (appui touche v) -->
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
-    declare const __COMMIT__: string;
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = __COMMIT__;
+    _vt.textContent = 'fx_jam_v1.12';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
