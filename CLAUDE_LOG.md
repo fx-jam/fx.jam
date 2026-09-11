@@ -298,3 +298,34 @@ Idée posée par Fx le 2026-09-11, à garder pour une prochaine session de conce
 
 ### Statut
 Idée capturée, non planifiée. Prochaine étape : brief détaillé (UI panneaux, structure CMS, wireframe) avant tout code.
+
+## v1.23 — Player Spotify reel (IFrame API), fix "deux players deconnectes" — 2026-09-11
+
+### Contexte
+Fx signale via screenshot : sur `/son`, deux UIs de lecture Spotify coexistent et sont desynchronisees — la barre custom (play/pause/mute/scrub) affiche un faux etat "playing" fige, pendant que l'embed natif Spotify (iframe) joue reellement en preview 30s, sans lien avec nos boutons.
+
+### Root cause
+`playSpotify()` ne faisait que poser un `src` sur un `<iframe>` et appeler `updateUI('playing', ...)` de facon optimiste — aucune API de controle Spotify n'etait utilisee. Les handlers play/pause-btn et mute-btn n'avaient tout simplement pas de branche `spotify` : ces boutons ne faisaient rien quand Spotify etait la source active. Le "player" visible et fonctionnel etait en realite l'UI native Spotify (limitee a 30s de preview pour les embeds non authentifies — restriction plateforme Spotify, non contournable cote code).
+
+### Fix
+- Ajout du script `https://open.spotify.com/embed/iframe-api/v1` dans le `<head>`.
+- `sp-embed` : `<iframe>` -> `<div>` conteneur (l'IFrame API injecte son propre iframe dedans ; confirme en prod que le div est remplace par un vrai iframe Spotify).
+- Nouveaux helpers `getSpotifyIframeAPI()` / `ensureSpController(uri)` — pattern singleton `window.__spController` (meme logique que `window.__scWidget` pour SoundCloud), pour survivre aux navigations Astro (soft nav).
+- `playSpotify()` reecrit : `controller.loadUri()` + `.play()` au lieu d'un simple `src=`.
+- `pauseAll()`, play-btn, mute-btn, scrubber : branches `spotify` ajoutees, cablees sur `controller.pause()/togglePlay()/setVolume()/seek()`.
+- Event `playback_update` du controller -> sync reel de l'UI (icone play/pause, largeur scrubber, temps ecoule/duree, `classList.toggle('playing', ...)`, `navigator.mediaSession`).
+- **Bug auto-detecte avant deploiement** : le passage `sp-embed` iframe->div cassait silencieusement la detection de restauration apres navigation (`state.spIframe?.src?.includes('open.spotify.com')` — un div n'a pas de `.src` pertinent), ce qui aurait fait rejouer `playSpotify()` (donc `pauseAll()` + reload complet) a chaque changement de page, reintroduisant cote Spotify le bug de coupure deja corrige cote SC en v1.19-1.21. Corrige en testant `(w as any).__spController` a la place.
+
+### Verification live (production, hamcat.live/son)
+- `fx_jam_v1.23` confirme charge.
+- Clic sur une playlist Spotify -> `__spController` cree, `playback_update` recu (duree ~29.7s, coherent avec la limite preview Spotify).
+- Bouton play/pause custom -> pause et reprise reelles, confirmees via `playback_update` (icone + classe `playing` synchronisees).
+- Bouton mute custom -> `setVolume(0)`/`setVolume(1)` reel, confirme.
+- Reload complet de page pendant lecture -> restauration correcte de l'etat sauvegarde (recree un controller propre, meme playlist).
+- Build `npx astro build` sans erreur avant deploiement.
+
+### Limite connue (non fixable cote code)
+Les embeds Spotify non authentifies sont limites a 30s de lecture par Spotify lui-meme (restriction plateforme, meme comportement sur n'importe quel site tiers utilisant l'IFrame API sans OAuth utilisateur). Communique a Fx.
+
+### Deploiement
+Commit `5c4ef0c` (rebase sur `8bd55b1` — sync Spotify nocturne + CMS UX deja en remote), push -> Cloudflare Workers, deploye et verifie en prod.
