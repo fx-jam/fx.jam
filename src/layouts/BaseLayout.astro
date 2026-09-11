@@ -393,6 +393,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }, { signal: ctrl.signal });
     });
   </script>
+  <!-- ERUDA DEBUG CONSOLE — activer avec ?dbg=1 dans l'URL -->
+  <script>
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('dbg')) {
+      var _e = document.createElement('script');
+      _e.src = 'https://cdn.jsdelivr.net/npm/eruda@3/eruda.min.js';
+      _e.onload = function() {
+        eruda.init();
+        eruda.show();
+        console.log('[ERUDA] Console mobile activée - hamcat.live debug');
+      };
+      document.head.appendChild(_e);
+    }
+  </script>
 </head>
 <body>
   <!-- Fond de page (si fond_url rempli dans site.json) -->
