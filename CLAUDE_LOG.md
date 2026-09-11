@@ -234,3 +234,40 @@ Suite directe de la session pr??c??dente. Les hypoth??ses de debug ont ??t?? tes
 1. Tester embed Spotify post-deploy v9
 2. V??rifier le toggle embed SC (bouton ???)
 3. Explorer r??duction de la coupure inter-pages (preload iframe avant navigation ?)
+
+---
+
+## SESSION 2026-09-11 — Player SC : bug "pause à l'ouverture d'une facette" RÉSOLU (v1.14 → v1.21)
+
+### Vraie cause (v1.21)
+- Depuis la platine, une facette s'ouvre dans **l'iframe modale** (`#modal-iframe`, `href + '?modal=1'`), pas par navigation.
+- La page modale charge le BaseLayout complet → **2e instance du script player** → lit le localStorage partagé (`scPlaying=true`) → `playSC()` → 2e widget SoundCloud invisible (`#hamcat-player{display:none}` en modal) avec `auto_play` → conflit de session audio (iOS : un seul média) → **PAUSE du SC parent**.
+- Swipe facette→facette dans la modale = reload de l'iframe modale → rebelote, invisible depuis le parent.
+- **Fix** : en mode embarqué (`?modal=1` ou `window.top !== window` same-origin), le script player `return` immédiatement et relaie `hamcat:play` au `window.parent.document` → le player vit uniquement dans la page parente. Vérifié : `__hamcat` null dans la modale, aucun PAUSE parent, bouton play de `/son` en modale → player parent.
+
+### Pourquoi 24h de tâtonnement (v1.14 → v1.19)
+- **Instrumentation aveugle** : Eruda s'accrochait dans `<body>`, remplacé à chaque vraie navigation → aucun log de navigation n'a jamais été observé ; chaque log envoyé était un chargement de page ou une ouverture de modale, interprété à tort comme une navigation View Transitions.
+- Les guards `__hamcatNavigating` / `navEndTime` / `playSeq` / `wasPlaying` / grace-check `widget.play()` traitaient des symptômes inexistants et, à partir de v1.12/v1.16, `widget.play()` post-nav aggravait le problème. **Code mort à nettoyer.**
+
+### Trouvaille annexe réelle (v1.20) — conservée
+- `transition:persist` **ne protège pas une iframe** : le swap Astro fait `oldBody.replaceWith(newBody)` → iframe détachée → browsing context détruit → SoundCloud rechargé à chaque navigation VT (prouvé : event `load` de l'iframe refire ; Astro 5.16.4 `swap-functions.js`).
+- **Fix** : swap custom via `astro:before-swap` (`e.swap = …`) réutilisant `swapFunctions.{deselectScripts,swapRootAttributes,swapHeadElements,saveFocus}` ; `document.body` conservé, nouveau contenu inséré autour des nœuds persistants (`[data-astro-transition-persist]` enfants directs + `[data-hmc-keep]`) sans jamais les déplacer. Vérifié : 0 reload d'iframe sur 4 navigations. Utile pour la nav clavier ←→ et l'accès direct aux facettes.
+- Retiré au passage : `widget.play()` à 150ms + `isPaused` à 2s dans `astro:page-load` (chemin "widget vivant").
+
+### Instrumentation fiable (v1.20b) — conservée
+- `?dbg=1` collant via `sessionStorage['hmc-dbg']` ; `?dbg=0` coupe et vide le journal.
+- Eruda dans un conteneur `data-hmc-keep` → **survit aux navigations**.
+- `hmcLog()` : journal `sessionStorage['hmc-log']` (80 entrées, timestamp + path), rejoué en `[HMC] HISTORY` au chargement ; `INIT navType=…` distingue reload / navigation ; logs `before-prep`, `custom swap ok`, `after-swap`, `⚠ SC iframe (re)loaded` (ne doit apparaître qu'au 1er chargement).
+
+### Méthode qui a débloqué
+- Lire le code complet plutôt que patcher par anchors ; vérifier les hypothèses **dans le navigateur intégré** (Claude Browser : `javascript_tool`, sonde `load` sur l'iframe, `astro:before-swap` prototypé en live avant déploiement).
+- Build `npx astro build` sur le VPS avant chaque push.
+
+### Reste à faire
+1. **Nettoyage code mort** player : `__hamcatNavigating`, `__hamcatNavEndTime`, `__hamcatPlaySeq`, `__hamcatWasPlaying`, `__hamcatPlayTimeout`, timer 1500ms dans page-load, logs `navigating=` dans PLAY.
+2. **Reload de `/` sur iOS** : restauration SC avec `auto_play=true` → bloqué par iOS → PLAY/PAUSE ×2 → UI pause. Restaurer position sans autoplay sur mobile (UI en pause, un tap relance).
+3. iPad Firefox : voile devant le texte du disque + facettes qui disparaissent près du haut (visuel, non lié).
+4. Reliquat log précédent : tester embed Spotify, toggle embed SC, `blog/` directory pour la collection.
+
+### Commits
+- `f493a7c` v1.19 · `97b49a6` v1.20 swap custom · `9575395` v1.20b instrumentation · `04e5008` v1.21 mode embarqué (fix)
