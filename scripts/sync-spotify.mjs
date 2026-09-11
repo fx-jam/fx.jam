@@ -75,6 +75,13 @@ async function main() {
       };
     });
 
+  // Tri : playlists deja visibles en premier (curation existante remonte en haut),
+  // puis ordre alphabetique -> liste scannable dans /admin malgre le volume (129+)
+  merged.sort((a, b) => {
+    if (a.visible !== b.visible) return a.visible ? -1 : 1;
+    return a.spotify_title.localeCompare(b.spotify_title, 'fr', { sensitivity: 'base' });
+  });
+
   sonJson.spotify_playlists = merged;
 
   writeFileSync(SON_JSON, JSON.stringify(sonJson, null, 2) + '\n');

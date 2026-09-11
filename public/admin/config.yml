@@ -124,15 +124,17 @@ collections:
             label: "Playlists Spotify"
             widget: list
             required: false
-            hint: "Synchronisé automatiquement. Ne modifier que Visible, Catégorie et Description."
+            collapsed: true
+            summary: "{{visible}} · {{spotify_title}} ({{spotify_tracks}}t) {{category}}"
+            hint: "Synchronisé automatiquement chaque nuit. Coche Visible + remplis Catégorie/Description pour les playlists à montrer — le reste (titre, cover, tracks) vient de Spotify, ne touche pas."
             fields:
-              - { label: "ID (auto)",           name: id,             widget: string,  hint: "Ne pas modifier" }
-              - { label: "Titre Spotify (auto)", name: spotify_title,  widget: string,  hint: "Ne pas modifier" }
               - { label: "Visible sur le site",  name: visible,        widget: boolean, default: false }
               - { label: "Catégorie",            name: category,       widget: string,  required: false, hint: "Ex: Sets, Mixes, Ambiances" }
               - { label: "Description",          name: description,    widget: text,    required: false }
-              - { label: "Cover (auto)",         name: spotify_cover,  widget: string,  required: false, hint: "Ne pas modifier" }
-              - { label: "Tracks (auto)",        name: spotify_tracks, widget: number,  required: false, hint: "Ne pas modifier" }
+              - { label: "ID (auto)",           name: id,             widget: hidden }
+              - { label: "Titre Spotify (auto)", name: spotify_title,  widget: hidden }
+              - { label: "Cover (auto)",         name: spotify_cover,  widget: hidden }
+              - { label: "Tracks (auto)",        name: spotify_tracks, widget: hidden }
           - name: links
             label: "Liens"
             widget: object
