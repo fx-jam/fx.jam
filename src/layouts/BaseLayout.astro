@@ -850,7 +850,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
                     try { (w.__scWidget as any).isPaused((p: boolean) => {
                       if (!p) return;
                       updateUI('paused', state.currentLbl || saved.lbl, 'soundcloud');
-                      try { const _sv2 = JSON.parse(localStorage.getItem('hamcat-player')||'{}); if(_sv2.type==='soundcloud'){_sv2.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv2));} } catch(_){}
+                      try { const _sv2 = JSON.parse(localStorage.getItem('hamcat-player')||'{}'); if(_sv2.type==='soundcloud'){_sv2.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv2));} } catch(_){}
                     }); } catch(_) {}
                   }, 2000);
                 }
@@ -899,7 +899,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
                   try { (w.__scWidget as any).isPaused((p: boolean) => {
                     if (!p) return;
                     updateUI('paused', state.currentLbl || saved.lbl, 'soundcloud');
-                    try { const _sv3 = JSON.parse(localStorage.getItem('hamcat-player')||'{}); if(_sv3.type==='soundcloud'){_sv3.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv3));} } catch(_){}
+                    try { const _sv3 = JSON.parse(localStorage.getItem('hamcat-player')||'{}'); if(_sv3.type==='soundcloud'){_sv3.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv3));} } catch(_){}
                   }); } catch(_) {}
                 }, 2000);
               }

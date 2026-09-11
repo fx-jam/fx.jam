@@ -173,3 +173,64 @@ Toujours les mêmes symptômes malgré les 2 commits :
 - `src/layouts/BaseLayout.astro` — tout le player (CSS tokens, HTML player, JS player)
 - `src/pages/index.astro` ou `src/components/Turntable.astro` — homepage à inspecter
 - RÈGLE : tokens CSS uniquement dans `:root` de BaseLayout.astro
+
+
+---
+
+## SESSION 2026-09-10 (suite) ??? Player v7/v8/v9 : seamless SC site-wide
+
+### Contexte
+Suite directe de la session pr??c??dente. Les hypoth??ses de debug ont ??t?? test??es :
+- Scripts Astro 5 r??-ex??cutent ?? chaque navigation ??? confirm??, g??r?? via AbortController pattern
+- `transition:persist` sur `#hamcat-player` : les iframes resetent leur contexte lors de `document.adoptNode` ??? limitation navigateur incontournable
+
+### Architecture retenue (BaseLayout.astro, ~36KB)
+- `window.__hamcat` : ??tat global persistant entre navigations
+- `window.__scWidget` : instance SC Widget API (reset + reinit ?? chaque navigation)
+- `window.__hamcatNavigating` : flag pour bloquer le PAUSE spurieux lors d'un changement de page
+- `window.__scMuted` : ??tat mute SC (le widget n'a pas de mute persistant)
+- `AbortController` pattern : chaque re-run du script IIFE annule les listeners pr??c??dents via `{ signal }`
+- `iframe.onload + 500ms` : plus rapide que d??lai fixe 1500ms pour l'init SC Widget
+
+### Commits d??ploy??s
+
+**Commit `7a17ac7` ??? v7 : SC Widget API compl??te**
+- `initSCWidget(startAtMs, trackIndex, shouldPlay)` : bind READY/PLAY/PAUSE/PLAY_PROGRESS
+- Restore track : `skip(index)` + 600ms + `seekTo(ms)` + `play()`
+- Play/pause transport bar c??bl?? sur `isPaused()` ??? `play()/pause()`
+- `playSC()` : sauvegarde `scTrackIndex` et `scPlaying` dans localStorage
+- `updateUI` : suppression du `btn.disabled` qui bloquait les contr??les SC
+
+**Commit `737cfbd` ??? v8 : fixes navigation**
+- `pauseAll()` : `spIframe.src = 'about:blank'` (emp??che iframe SP de charger la page courante)
+- Homepage : `playSC()` appel?? m??me sur `/` (les iframes resetent via `adoptNode` m??me avec `transition:persist`)
+- SC restore : `scIframe.onload = () => setTimeout(initSCWidget, 500)` + fallback 3000ms
+
+**Commit `04d0c8e` ??? v9 : qualit?? + dark embed**
+- `w.__hamcatNavigating` flag dans `astro:before-preparation` ??? guard dans PAUSE handler
+- `widget.unbind()` pour les 4 ??v??nements avant rebind (handlers accumul??s)
+- `updateSCInfo(sound)` helper : titre + artwork depuis SC API ??? affich?? dans transport bar
+- Mute SC via `widget.setVolume(0/100)` + flag `__scMuted`
+- Embed SC : filtre dark `invert(0.88) hue-rotate(195deg) saturate(0.55)`
+- Embed SC cach?? par d??faut, toggle via bouton `???`
+
+### R??sultat observ??
+- ??? Lecture SC site-wide (avec coupure in??vitable au changement de page, ~500ms)
+- ??? Reprise au bon track et ?? la bonne position
+- ??? Transport bar fonctionnelle (play/pause/scrubber/mute)
+- ??? Titre + pochette SC dans le player
+- ??? Embed SC sombre, cach?? par d??faut
+- ?????? Spotify embed : ?? tester post-deploy
+- ?????? Coupure inter-pages : limitation browser (iframe reset sur adoptNode), non r??ductible davantage
+
+### SSH VPS ??? note importante
+- Cloud container Anthropic : bloqu?? par firewall OCI sur tous les ports
+- Desktop Commander Windows : ??galement bloqu?? (egress allowlist)
+- Solution : Fx ex??cute les commandes SSH depuis son propre PowerShell avec `ssh fx-vps`
+- Cl?? fonctionnelle : `C:\Users\FX\.ssh\oracle_hermes_ed25519` (alias `hamcat-m2` dans authorized_keys)
+- Ne jamais faire `ssh ubuntu@129.151.240.139` directement (pas de cl?? par d??faut sur Windows)
+
+### Prochaine session
+1. Tester embed Spotify post-deploy v9
+2. V??rifier le toggle embed SC (bouton ???)
+3. Explorer r??duction de la coupure inter-pages (preload iframe avant navigation ?)
