@@ -271,3 +271,30 @@ Suite directe de la session pr??c??dente. Les hypoth??ses de debug ont ??t?? tes
 
 ### Commits
 - `f493a7c` v1.19 · `97b49a6` v1.20 swap custom · `9575395` v1.20b instrumentation · `04e5008` v1.21 mode embarqué (fix)
+
+---
+
+## NOTE — Player + sélecteur site-wide (v2, pas encore implémenté)
+
+Idée posée par Fx le 2026-09-11, à garder pour une prochaine session de conception.
+
+### Vision
+- Le player bottom bar reste (position actuelle, `#hamcat-player`, `transition:persist`).
+- **2 panneaux latéraux hide/show**, indépendants de la platine et des pages facettes — accessibles depuis n'importe où sur le site (pas ancrés au disque) :
+  - **Gauche** : panneau SoundCloud (sets/mixes)
+  - **Droite** : panneau Spotify (playlists)
+- Chaque panneau = **sélecteur curé**, pas un embed brut du profil complet. Toutes les releases/playlists existent en base, mais Fx choisit lesquelles apparaissent dans le panneau (logique déjà utilisée : toggle CMS par item).
+
+### Annotations par release (à terme, pas prioritaire)
+- **SoundCloud (par set)** : commentaire libre — anecdote, historique, contexte de l'événement où le set a été joué, + médias liés (flyer, photos/vidéos de l'événement).
+- **Spotify (par playlist)** : note personnelle simple.
+- Implique un champ `note` (markdown/texte) + `media` (liste d'images/vidéos, probablement R2 comme les autres assets) sur chaque item curé.
+
+### Pistes d'architecture (à challenger en session dédiée, pas figées)
+- Nouvelle collection CMS (Sveltia) : `curated_soundcloud.json` / `curated_spotify.json` — liste d'objets `{ id, title, url|playlistId, cover, curated: bool, note?, media?[] }`. Cohérent avec le pattern existant (JSON par facette, édité via `/admin`).
+- Panneaux = éléments `transition:persist` dans `BaseLayout.astro`, au même niveau que `#hamcat-player` — le swap custom v1.20 les garderait automatiquement (ajout à la liste des nœuds persistants ou `data-hmc-keep`), donc pas de rechargement en changeant de page pendant qu'un panneau est ouvert.
+- Réutilise l'event `hamcat:play` existant (`{type, url|playlistId, lbl}`) déclenché depuis les items du panneau — zéro nouvelle plomberie côté lecture, juste la UI de sélection.
+- Question ouverte à trancher ensemble : les panneaux affichent-ils juste une liste cliquable (déclenche le player bottom), ou un embed inline par item (plus lourd, iframe par item) ? Vu l'historique du bug player, privilégier la liste cliquable qui réutilise le seul widget SC/Spotify existant plutôt que multiplier les iframes.
+
+### Statut
+Idée capturée, non planifiée. Prochaine étape : brief détaillé (UI panneaux, structure CMS, wireframe) avant tout code.
