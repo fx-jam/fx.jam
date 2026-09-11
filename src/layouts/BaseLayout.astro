@@ -472,10 +472,59 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.19 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.20 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.19');
+  console.log('🐱 fx_jam_v1.20');
+  import { swapFunctions } from 'astro:transitions/client';
+
+  // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
+  // Astro stock : oldBody.replaceWith(newBody) detache #hamcat-player → l'iframe SC
+  // recharge integralement (spec HTML : iframe detachee = browsing context detruit).
+  // Ici : on garde document.body, on retire les enfants non persistants, on insere le
+  // nouveau contenu AUTOUR des noeuds persistants sans jamais les deplacer.
+  if (!(window as any).__hamcatSwapInstalled) {
+    (window as any).__hamcatSwapInstalled = true;
+    const PERSIST = 'data-astro-transition-persist';
+    document.addEventListener('astro:before-swap', (e: any) => {
+      const doc: Document = e.newDocument;
+      e.swap = () => {
+        swapFunctions.deselectScripts(doc);
+        swapFunctions.swapRootAttributes(doc);
+        swapFunctions.swapHeadElements(doc);
+        const restoreFocus = swapFunctions.saveFocus();
+        const body = document.body, nbody = doc.body;
+        for (const a of [...body.attributes]) body.removeAttribute(a.name);
+        for (const a of [...nbody.attributes]) body.setAttribute(a.name, a.value);
+        // Persistants enfants directs de body ayant un homologue dans la nouvelle page
+        const kept: Element[] = [];
+        const keptById = new Map<string, Element>();
+        for (const el of [...body.children]) {
+          const id = el.getAttribute(PERSIST);
+          if (id !== null && nbody.querySelector(`[${PERSIST}="${id}"]`)) { kept.push(el); keptById.set(id, el); }
+        }
+        // Persistants imbriques (non enfants directs) : comportement Astro stock (deplacement)
+        for (const el of [...body.querySelectorAll(`[${PERSIST}]`)]) {
+          if (el.parentElement === body) continue;
+          const id = el.getAttribute(PERSIST);
+          const newEl = id !== null ? nbody.querySelector(`[${PERSIST}="${id}"]`) : null;
+          if (newEl) newEl.replaceWith(el);
+        }
+        for (const n of [...body.childNodes]) if (!kept.includes(n as Element)) n.remove();
+        let i = 0;
+        for (const n of [...nbody.childNodes]) {
+          const id = n.nodeType === 1 ? (n as Element).getAttribute(PERSIST) : null;
+          if (id !== null && keptById.has(id)) {
+            const idx = kept.indexOf(keptById.get(id)!);
+            if (idx >= i) i = idx + 1;
+            continue; // homologue deja en place, on ne le touche pas
+          }
+          if (i < kept.length) body.insertBefore(n, kept[i]); else body.appendChild(n);
+        }
+        restoreFocus();
+      };
+    });
+  }
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
@@ -627,17 +676,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
         // Sinon → isPaused() confirme l'état après la fenêtre de cut (~250ms)
         widget.bind((window as any).SC.Widget.Events.PAUSE, () => {
           if (w.__scReloading) return;
-          if (w.__hamcatNavigating) {
-            console.log('[HMC] PAUSE blocked: navigating=true');
-            return; // v1.8 — bloc faux PAUSE adoptNode
-          }
-          // v1.17: guard post-nav (1500ms) — supprime PAUSE SC oscillation
-          const _navEnd17 = (w as any).__hamcatNavEndTime || 0;
-          if (_navEnd17 > 0 && Date.now() - _navEnd17 < 4000) {
-            console.log('[HMC] PAUSE skip post-nav', Math.round(Date.now()-_navEnd17)+'ms');
-            return; // v1.19: pas de widget.play() — il coupe l'audio
-          }
-          console.log('[HMC] PAUSE allowed, debouncing...');
+          // v1.20: plus de guard nav — l'iframe n'est plus rechargee, un PAUSE est un vrai PAUSE
+          console.log('[HMC] PAUSE fired, debouncing...');
           if (w.__scPauseTimer) clearTimeout(w.__scPauseTimer);
           const _seqAtPause = (w as any).__hamcatPlaySeq || 0; // v1.15
           w.__scPauseTimer = setTimeout(() => {
@@ -849,6 +889,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       // Resync refs (les iframes se reset sur navigation même si #hamcat-player persist)
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement | null;
       if (!state.spIframe) state.spIframe = document.getElementById('sp-embed') as HTMLIFrameElement | null;
+      // v1.20: sonde — ne doit JAMAIS logger apres une navigation (1 seul log legitime au 1er chargement)
+      if (state.scIframe && !(state.scIframe as any).__hmcLoadProbe) {
+        (state.scIframe as any).__hmcLoadProbe = true;
+        state.scIframe.addEventListener('load', () => console.log('[HMC] ⚠ SC iframe (re)loaded on', location.pathname));
+      }
       // Guard SC adoptNode PAUSE : si iframe SC vivante, délayer la levée du flag
       if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
         setTimeout(() => { w.__hamcatNavigating = false; (w as any).__hamcatNavEndTime = Date.now(); }, 1500); // v1.14 v1.16
@@ -871,22 +916,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
               const _spH = w.__hamcatWasPlaying !== undefined ? w.__hamcatWasPlaying : (saved.scPlaying !== false);
               w.__hamcatWasPlaying = undefined;
               console.log('[HMC] HOME: shouldPlay=', _spH, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
-              updateUI(_spH ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+              updateUI(playerDiv.classList.contains('playing') ? 'playing' : 'paused', saved.lbl, 'soundcloud'); // v1.20
               // v1.12: widget vivant → évite initSCWidget (READY ne refire pas, délie PAUSE/PLAY)
               if (w.__scWidget) {
-                if (_spH) {
-                  if ((w as any).__hamcatPlayTimeout) clearTimeout((w as any).__hamcatPlayTimeout);
-                  setTimeout(() => { try { (w.__scWidget as any).play(); } catch (_ph) {} }, 150);
-                  (w as any).__hamcatPlayTimeout = setTimeout(() => {
-                    (w as any).__hamcatPlayTimeout = null;
-                    if (state.currentSource !== 'soundcloud') return;
-                    try { (w.__scWidget as any).isPaused((p: boolean) => {
-                      if (!p) return;
-                      updateUI('paused', state.currentLbl || saved.lbl, 'soundcloud');
-                      try { const _sv2 = JSON.parse(localStorage.getItem('hamcat-player')||'{}'); if(_sv2.type==='soundcloud'){_sv2.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv2));} } catch(_){}
-                    }); } catch(_) {}
-                  }, 2000);
-                }
+                // v1.20: iframe jamais rechargee → l'audio continue tel quel, rien a faire
               } else {
                 initSCWidget(0, saved.scTrackIndex || 0, false);
                 if (_spH) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_ph) {} }, 800); }
@@ -920,22 +953,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
             const _spP = w.__hamcatWasPlaying !== undefined ? w.__hamcatWasPlaying : (saved.scPlaying !== false);
             w.__hamcatWasPlaying = undefined;
             console.log('[HMC] PAGE: shouldPlay=', _spP, 'scPlaying=', saved.scPlaying, 'nav=', w.__hamcatNavigating);
-            updateUI(_spP ? 'playing' : 'paused', saved.lbl, 'soundcloud');
+            updateUI(playerDiv.classList.contains('playing') ? 'playing' : 'paused', saved.lbl, 'soundcloud'); // v1.20
             // v1.12: widget vivant → évite initSCWidget (READY ne refire pas, délie PAUSE/PLAY)
             if (w.__scWidget) {
-              if (_spP) {
-                if ((w as any).__hamcatPlayTimeout) clearTimeout((w as any).__hamcatPlayTimeout);
-                setTimeout(() => { try { (w.__scWidget as any).play(); } catch (_pp) {} }, 150);
-                (w as any).__hamcatPlayTimeout = setTimeout(() => {
-                  (w as any).__hamcatPlayTimeout = null;
-                  if (state.currentSource !== 'soundcloud') return;
-                  try { (w.__scWidget as any).isPaused((p: boolean) => {
-                    if (!p) return;
-                    updateUI('paused', state.currentLbl || saved.lbl, 'soundcloud');
-                    try { const _sv3 = JSON.parse(localStorage.getItem('hamcat-player')||'{}'); if(_sv3.type==='soundcloud'){_sv3.scPlaying=false;localStorage.setItem('hamcat-player',JSON.stringify(_sv3));} } catch(_){}
-                  }); } catch(_) {}
-                }, 2000);
-              }
+              // v1.20: iframe jamais rechargee → l'audio continue tel quel, rien a faire
             } else {
               initSCWidget(0, saved.scTrackIndex || 0, false);
               if (_spP) { setTimeout(() => { try { w.__scWidget?.play(); } catch (_pp) {} }, 800); }
@@ -1051,7 +1072,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.19';
+    _vt.textContent = 'fx_jam_v1.20';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
