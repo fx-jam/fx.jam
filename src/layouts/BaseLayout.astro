@@ -459,19 +459,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.12 ─────────────────────────
-  // SC : v1.12 skip initSCWidget si widget vivant (READY ne refire pas sans reload iframe)
+  // ── Player audio persistant · fx_jam_v1.13 ─────────────────────────
+  // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.12');
+  console.log('🐱 fx_jam_v1.13');
 
   (function() {
     // Abort previous IIFE's listeners (évite accumulation sur re-exec Astro)
     const w = window as any;
+    const _isRerun = !!w.__hamcatAbort; // v1.13 : true si View Transitions re-exec l'IIFE
     if (w.__hamcatAbort) w.__hamcatAbort.abort();
     const _abort = new AbortController();
     w.__hamcatAbort = _abort;
     const signal = _abort.signal;
-    w.__scWidget = null; // reset widget ref — sera re-set par initSCWidget
+    // v1.13 : ne reset __scWidget que sur 1er chargement (View Transitions maintient le widget)
+    if (!_isRerun) w.__scWidget = null;
     w.__scMuted = false;
     // __hamcatNavigating reset délayé dans astro:page-load (guard SC adoptNode PAUSE)
 
@@ -991,7 +993,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.12';
+    _vt.textContent = 'fx_jam_v1.13';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
