@@ -494,10 +494,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.26 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.26c ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.26');
+  console.log('🐱 fx_jam_v1.26c');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -831,9 +831,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
         muteBtnEl.style.cursor = spotifyMuteUnavailable ? 'not-allowed' : '';
       }
       updateSpotifyConnectBtn(src); // v1.26
-      // Toggle embed visible seulement pour SC/Spotify
-      if (toggleBtn) toggleBtn.hidden = (src === 'audio' || src == null);
-      if (toggleBar) toggleBar.style.display = (src === 'audio' || src == null) ? 'none' : 'block';
+      // Toggle embed visible seulement pour SC/Spotify — pas en full playback SDK (aucun iframe a montrer)
+      const spFullMode = src === 'spotify' && !!(w.__spWebPlayer && w.__spDeviceId);
+      const hideEmbedToggle = src === 'audio' || src == null || spFullMode;
+      if (toggleBtn) toggleBtn.hidden = hideEmbedToggle;
+      if (toggleBar) toggleBar.style.display = hideEmbedToggle ? 'none' : 'block';
+      if (spFullMode) embedZone.style.display = 'none';
       playerDiv.dataset.active   = 'true';
       playerDiv.dataset.expanded = window.location.pathname !== '/' ? 'true' : 'false';
       playerDiv.classList.toggle('playing', uiState === 'playing');
@@ -1319,9 +1322,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
           w.__scMuted = !w.__scMuted;
           w.__scWidget.setVolume(w.__scMuted ? 0 : 100);
           (muteBtn as HTMLElement).textContent = w.__scMuted ? '🔇' : '🔊';
+        } else if (state.currentSource === 'spotify' && w.__spWebPlayer && w.__spDeviceId) {
+          // v1.26c: mute reel via Web Playback SDK (getVolume/setVolume, echelle 0..1) — oublie en v1.26
+          w.__spWebPlayer.getVolume().then((vol: number) => {
+            const muted = vol > 0;
+            w.__spWebPlayer.setVolume(muted ? 0 : 1);
+            (muteBtn as HTMLElement).textContent = muted ? '🔇' : '🔊';
+          });
         }
-        // v1.24: pas de mute Spotify - l'API embed IFrame n'expose pas de setVolume (verifie sur le controller live).
-        // Le bouton est desactive pour cette source via updateUI().
+        // v1.24: pas de mute Spotify en mode preview (IFrame API) - bouton desactive via updateUI() dans ce cas.
         return;
       }
 
@@ -1413,7 +1422,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.26';
+    _vt.textContent = 'fx_jam_v1.26c';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
