@@ -532,3 +532,25 @@ Commits `5f7d53c` (v1.31+v1.32) puis `dbf8227` (v1.33, fix), push -> Cloudflare 
 
 ### Commits
 - `8425999` v1.30 · `5f7d53c` v1.31+v1.32 · `dbf8227` v1.33
+
+
+## v1.34 — Shuffle + repeat Spotify (full playback) — 2026-09-12
+
+### Contexte
+Fx demande si d'autres fonctionnalites du SDK Spotify sont disponibles (exemple cite : shuffle). Choix retenu apres question : shuffle + repeat, oui ; le reste (queue, transfert d'appareil...) pas demande pour l'instant.
+
+### Implementation
+- Boutons `#btn-sp-shuffle` (🔀, avant precedent) et `#btn-sp-repeat` (🔁/🔂, apres suivant), visibles uniquement en full playback Spotify (meme logique que like) — masques sur mobile (`@media max-width:480px`) pour ne pas surcharger une barre deja compacte, prev/next/play/mute/like restant prioritaires sur petit ecran.
+- Le Web Playback SDK ne pilote pas shuffle/repeat directement : `spSetShuffle()` / `spSetRepeat()` appellent l'API Web Spotify (`PUT /me/player/shuffle`, `PUT /me/player/repeat`) avec le `device_id` du player — aucun nouveau scope OAuth requis (`user-modify-playback-state` deja present couvre ces endpoints).
+- Etat reflete automatiquement via `player_state_changed` (le SDK renvoie `st.shuffle` et `st.repeat_mode` a chaque changement) : bouton shuffle colore (`--facet-son`) quand actif, bouton repeat colore + icone 🔂 en mode "repeter la piste".
+
+### Verification live (hamcat.live/son)
+- `fx_jam_v1.34` confirme charge, `#btn-sp-shuffle` et `#btn-sp-repeat` presents dans le DOM.
+- Build `npx astro build` sans erreur avant deploiement.
+- Comportement reel (toggle shuffle, cycle repeat) avec un compte Premium connecte reste a valider par Fx.
+
+### Deploiement
+Commit `edc3020` (rebase sur `4959cc9`, sync automatique des playlists Spotify entre-temps), push -> Cloudflare Workers, deploye et verifie en prod.
+
+### Commits
+- `5f7d53c` v1.31+v1.32 · `dbf8227` v1.33 · `edc3020` v1.34
