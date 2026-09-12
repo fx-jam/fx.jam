@@ -511,7 +511,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     <!-- Zone embed SC / Spotify — iframes pré-créées pour persist garanti -->
     <div id="player-embed-zone" style="position:relative;width:100%;height:166px;display:none;">
       <iframe id="sc-embed" src="" allow="autoplay; encrypted-media" frameborder="no" scrolling="no" style="display:none;width:100%;height:166px;"></iframe>
-      <img id="sc-art-overlay" src="" alt="" style="display:none;position:absolute;top:8px;left:8px;width:72px;height:72px;border-radius:2px;object-fit:cover;z-index:2;pointer-events:none;" />
+      <img id="sc-art-overlay" src="" alt="" style="display:none;position:absolute;top:8px;left:8px;width:150px;height:150px;border-radius:2px;object-fit:cover;z-index:2;pointer-events:none;" />
       <div id="sp-embed" style="display:none;width:100%;height:166px;border-radius:12px;overflow:hidden;"></div>
     </div>
     <!-- Playlist SC (remplie dynamiquement par initSCWidget) -->
@@ -525,10 +525,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.30 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.32 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.30');
+  console.log('🐱 fx_jam_v1.32');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -807,6 +807,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
           navigator.mediaSession.setActionHandler('play',  () => { try { widget.play();  } catch (_) {} });
           navigator.mediaSession.setActionHandler('pause', () => { try { widget.pause(); } catch (_) {} });
           navigator.mediaSession.setActionHandler('stop',  () => { try { widget.pause(); } catch (_) {} });
+          // v1.32: prev/next depuis l'ecran de veille / la notification, comme pour Spotify (v1.29)
+          navigator.mediaSession.setActionHandler('previoustrack', () => { try { widget.prev(); } catch (_) {} });
+          navigator.mediaSession.setActionHandler('nexttrack',     () => { try { widget.next(); } catch (_) {} });
           navigator.mediaSession.playbackState = 'playing';
         }
         // Restore: skip vers le bon track puis seek + play
@@ -1101,13 +1104,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const btn = playerDiv.querySelector('#btn-spotify-connect') as HTMLButtonElement;
       const authed = !!spGetTokens();
       if (btn) btn.hidden = src !== 'spotify' || authed;
-      // v1.27: prev/next/like uniquement disponibles en full playback (Web Playback SDK)
+      // v1.27: like uniquement disponible en full playback Spotify (Web Playback SDK)
       const fullMode = src === 'spotify' && !!(w.__spWebPlayer && w.__spDeviceId);
+      // v1.32: prev/next disponibles en full playback Spotify ET en SoundCloud (widget pret) —
+      // le Widget JS API de SC expose next()/prev() nativement, pas besoin d'OAuth pour ca.
+      const navMode = fullMode || (src === 'soundcloud' && !!w.__scWidget);
       const prevBtn = playerDiv.querySelector('#btn-sp-prev') as HTMLButtonElement;
       const nextBtn = playerDiv.querySelector('#btn-sp-next') as HTMLButtonElement;
       const likeBtn = playerDiv.querySelector('#btn-sp-like') as HTMLButtonElement;
-      if (prevBtn) prevBtn.hidden = !fullMode;
-      if (nextBtn) nextBtn.hidden = !fullMode;
+      if (prevBtn) prevBtn.hidden = !navMode;
+      if (nextBtn) nextBtn.hidden = !navMode;
       if (likeBtn) likeBtn.hidden = !fullMode;
     }
 
@@ -1432,12 +1438,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       if (target.closest('#btn-sp-prev')) {
-        try { w.__spWebPlayer?.previousTrack(); } catch (_) {}
+        if (state.currentSource === 'soundcloud' && w.__scWidget) { try { w.__scWidget.prev(); } catch (_) {} }
+        else { try { w.__spWebPlayer?.previousTrack(); } catch (_) {} }
         return;
       }
 
       if (target.closest('#btn-sp-next')) {
-        try { w.__spWebPlayer?.nextTrack(); } catch (_) {}
+        if (state.currentSource === 'soundcloud' && w.__scWidget) { try { w.__scWidget.next(); } catch (_) {} }
+        else { try { w.__spWebPlayer?.nextTrack(); } catch (_) {} }
         return;
       }
 
@@ -1530,7 +1538,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.30';
+    _vt.textContent = 'fx_jam_v1.32';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
