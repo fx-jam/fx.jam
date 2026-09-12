@@ -511,10 +511,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.28 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.29 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.28');
+  console.log('🐱 fx_jam_v1.29');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1143,6 +1143,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
           player.addListener('ready', ({ device_id }: any) => {
             w.__spDeviceId = device_id;
             hmcLog('[HMC] Spotify Web Playback ready device_id=' + device_id);
+            // v1.29: pilotage depuis l'ecran de veille / la barre de notifications
+            if ('mediaSession' in navigator) {
+              navigator.mediaSession.setActionHandler('play',  () => { try { player.resume();       } catch (_) {} });
+              navigator.mediaSession.setActionHandler('pause', () => { try { player.pause();        } catch (_) {} });
+              navigator.mediaSession.setActionHandler('previoustrack', () => { try { player.previousTrack(); } catch (_) {} });
+              navigator.mediaSession.setActionHandler('nexttrack',     () => { try { player.nextTrack();     } catch (_) {} });
+            }
             resolve(device_id);
           });
           player.addListener('not_ready', () => { w.__spDeviceId = null; });
@@ -1504,7 +1511,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.28';
+    _vt.textContent = 'fx_jam_v1.29';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
