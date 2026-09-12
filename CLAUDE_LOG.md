@@ -393,3 +393,25 @@ Commits `fe8853c` (v1.26) puis `7ecdbe7` (v1.26b, fix), push -> Cloudflare Worke
 
 ### Commits
 - `24407d2` v1.24 · `ada99fd` v1.25 · `fe8853c` v1.26 · `7ecdbe7` v1.26b
+
+
+## v1.27 — Prev/next, like/add to library, titre-artiste cliquable (full playback SDK) — 2026-09-12
+
+### Contexte
+Fx confirme le full playback fonctionnel (mute inclus). Comme aucune interface de parcours de playlist n'existe encore en mode SDK (le toggle embed a ete retire en v1.26c faute d'iframe a montrer), Fx demande une integration Web Playback SDK aussi complete que possible en attendant une interface custom dediee : piste precedente/suivante, ajouter a la bibliotheque / aimer, et un lien titre-artiste vers la fiche Spotify du morceau en cours.
+
+### Implementation
+- Boutons `#btn-sp-prev` / `#btn-sp-next` de part et d'autre du bouton play, cables sur `player.previousTrack()` / `player.nextTrack()` (natifs au Web Playback SDK).
+- Bouton `#btn-sp-like` (♡/♥) — "aimer" et "ajouter a la bibliotheque" sont la meme action cote Spotify (`PUT/DELETE /v1/me/tracks`) : `spToggleLike()` + `spCheckLiked()` (verifie l'etat au changement de piste via `GET /v1/me/tracks/contains`).
+- Nouveaux scopes OAuth requis : `user-library-read user-library-modify`, ajoutes a `SP_SCOPES` — **les comptes deja connectes avant ce patch doivent se reconnecter** (`spDisconnect()` puis nouveau `spStartAuth()`) pour obtenir un token avec les scopes etendus.
+- `#player-title` : `<span>` -> `<a target="_blank">`, texte "Artiste — Titre", `href` vers `https://open.spotify.com/track/{id}` — mis a jour a chaque `player_state_changed`. Cliquable uniquement quand une info de piste est disponible (`removeAttribute('href')` sinon).
+- Ces trois elements (prev/next/like) restent `hidden` hors full playback SDK (meme logique que le bouton connexion, centralisee dans `updateSpotifyConnectBtn()` qui teste `w.__spWebPlayer && w.__spDeviceId`), et se re-cachent au clic sur fermer (`#btn-close`).
+
+### Verification live (hamcat.live/son)
+- `fx_jam_v1.27` confirme charge, `#btn-sp-prev` / `#btn-sp-next` / `#btn-sp-like` presents dans le DOM, `#player-title` bien un `<a>`.
+- Aucune erreur console apres l'init sur ce nouveau chargement.
+- Build `npx astro build` sans erreur avant deploiement.
+- Comportement reel des boutons (prev/next/like) avec un compte Premium connecte reste a valider par Fx (l'agent ne peut pas s'authentifier avec de vrais identifiants Spotify).
+
+### Deploiement
+Commit `74c2b60`, push -> Cloudflare Workers, deploye et verifie en prod.
