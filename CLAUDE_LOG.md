@@ -498,3 +498,37 @@ Commit `8425999`, push -> Cloudflare Workers, deploye et verifie en prod.
 
 ### Commits
 - `3579b14` v1.28 · `2155a1a` v1.29 · `8425999` v1.30
+
+
+## v1.31-v1.33 — Fix pochette SoundCloud filtree + prev/next SoundCloud — 2026-09-12
+
+### Contexte
+Fx confirme le titre/artiste en 2 lignes (v1.30), signale un bug visuel sur la pochette SoundCloud filtree sur mobile (petit artwork normal dans un grand artwork delave, capture a l'appui), et demande si les fonctionnalites manquantes de l'embed SoundCloud (previous/next, like...) peuvent etre ajoutees comme pour Spotify.
+
+### Root cause (pochette filtree, v1.31)
+L'iframe SoundCloud recoit un filtre CSS (`invert(0.88) hue-rotate(195deg) saturate(0.55)`) pour recolorer son UI blanche au theme sombre du site. Comme ce filtre delave aussi la pochette (photo), un `<img>` `#sc-art-overlay` sans filtre est superpose dessus pour la restaurer. Sa taille etait hardcodee a 72x72px — mesure en direct (captures + zoom), le widget SC natif affiche en realite sa pochette a ~148px de cote dans une iframe de 166px de haut. L'overlay ne couvrait donc que le coin superieur gauche, laissant le reste de la pochette visible avec le filtre delave tout autour.
+
+### Fix (v1.31)
+`#sc-art-overlay` porte a 150x150px (position `top:8px;left:8px` inchangee, deja bien alignee) — couvre desormais l'integralite de la pochette native.
+
+### Prev/next SoundCloud (v1.32 + fix v1.33)
+Le SC Widget JS API expose nativement `.prev()` / `.next()` sur une iframe playlist — pas besoin d'OAuth SoundCloud pour ca (contrairement a "like", voir plus bas). Boutons `#btn-sp-prev`/`#btn-sp-next` (deja crees pour Spotify) rendus generiques aux deux sources :
+- Visibles en SoundCloud (widget pret) en plus du mode full playback Spotify.
+- Handlers de clic : branche SoundCloud (`widget.prev()`/`widget.next()`) ajoutee a cote de la branche Spotify SDK existante.
+- Media Session (ecran de veille/notifications) : `setActionHandler('previoustrack'/'nexttrack', ...)` ajoutes cote SoundCloud, meme logique que le fix v1.29 pour Spotify.
+- **v1.33 (fix immediat)** : les boutons restaient caches en permanence apres le v1.32 — `playSC()` appelle `updateUI(..., 'soundcloud')` *avant* que le widget ne soit charge (`w.__scWidget` explicitement `null` a ce moment), donc la condition de visibilite etait toujours evaluee a false. Fix : `updateSpotifyConnectBtn('soundcloud')` rappele une fois le widget reellement pret (dans `initSCWidget`).
+
+### Limite (a communiquer a Fx) — "like" SoundCloud
+Le bouton like ne peut pas etre ajoute a l'embed SoundCloud sans une **vraie connexion OAuth SoundCloud** (un flow separe et distinct de celui de Spotify, nouvelle inscription app sur SC, nouveau bouton "Se connecter a SoundCloud", nouveaux appels a l'API SC `/likes/tracks/{id}`) — le SC Widget JS API n'expose aucune methode "like". C'est un projet a part entiere, pas juste un bouton en plus ; a valider avec Fx avant de s'y lancer.
+
+### Verification live (hamcat.live/son, viewport 375px)
+- `fx_jam_v1.33` confirme charge.
+- `#sc-art-overlay` : 150x150px, couvre la pochette native en entier (verifie via capture + zoom pixel).
+- Prev/next SoundCloud : boutons visibles, clic sur "suivant" change reellement de piste (titre verifie avant/apres : "Sky-Hop Beats..." -> "Psydub Mix @ Spiritus Silvam festival...").
+- Build `npx astro build` sans erreur avant chaque deploiement.
+
+### Deploiement
+Commits `5f7d53c` (v1.31+v1.32) puis `dbf8227` (v1.33, fix), push -> Cloudflare Workers, deployes et verifies en prod.
+
+### Commits
+- `8425999` v1.30 · `5f7d53c` v1.31+v1.32 · `dbf8227` v1.33
