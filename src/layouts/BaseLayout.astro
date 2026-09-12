@@ -354,6 +354,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       flex-shrink: 0;
     }
     .player-full button:hover { color: var(--text-primary); background: var(--bg-surface); }
+    #btn-sp-shuffle[data-active="1"],
+    #btn-sp-repeat[data-mode="1"],
+    #btn-sp-repeat[data-mode="2"] { color: var(--facet-son); }
 
     /* v1.28: sur mobile, priorite au titre — le reste se degage/retrecit */
     @media (max-width: 480px) {
@@ -363,6 +366,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       .player-meta { min-width: 64px; }
       .player-scrubber { min-width: 30px; }
       #player-time { display: none; }
+      #btn-sp-shuffle, #btn-sp-repeat { display: none; }
       .player-full button { padding: 0.2rem 0.3rem; font-size: 0.9rem; }
       .player-spotify-connect { font-size: 0.55rem !important; padding: 0.15rem 0.35rem !important; }
     }
@@ -489,9 +493,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
           <span id="player-source-badge" class="source-badge">SC</span>
         </div>
       </div>
+      <button id="btn-sp-shuffle" class="player-sp-extra" aria-label="Lecture aleatoire" hidden data-active="0">🔀</button>
       <button id="btn-sp-prev" class="player-sp-extra" aria-label="Piste precedente" hidden>⏮</button>
       <button id="btn-playpause" class="player-play-btn" aria-label="Play/Pause">▶</button>
       <button id="btn-sp-next" class="player-sp-extra" aria-label="Piste suivante" hidden>⏭</button>
+      <button id="btn-sp-repeat" class="player-sp-extra" aria-label="Repetition" hidden data-mode="0">🔁</button>
       <div class="player-scrubber" id="player-scrubber" role="progressbar">
         <div id="scrubber-fill"></div>
       </div>
@@ -525,10 +531,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.33 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.34 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.33');
+  console.log('🐱 fx_jam_v1.34');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1117,6 +1123,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (prevBtn) prevBtn.hidden = !navMode;
       if (nextBtn) nextBtn.hidden = !navMode;
       if (likeBtn) likeBtn.hidden = !fullMode;
+      // v1.34: shuffle/repeat — full playback Spotify uniquement (pas d'equivalent SC widget)
+      const shuffleBtn = playerDiv.querySelector('#btn-sp-shuffle') as HTMLButtonElement;
+      const repeatBtn = playerDiv.querySelector('#btn-sp-repeat') as HTMLButtonElement;
+      if (shuffleBtn) shuffleBtn.hidden = !fullMode;
+      if (repeatBtn) repeatBtn.hidden = !fullMode;
     }
 
     async function spCheckLiked(trackId: string) {
@@ -1148,6 +1159,35 @@ const facetHrefs = visibleFacets().map(f => f.href);
         });
         likeBtn.textContent = liked ? '♡' : '♥';
         likeBtn.dataset.liked = liked ? '0' : '1';
+      } catch (_) {}
+    }
+
+    // v1.34: shuffle/repeat — API Web Spotify (le SDK ne les pilote pas directement)
+    async function spSetShuffle() {
+      const token = await spGetValidToken();
+      const btn = playerDiv.querySelector('#btn-sp-shuffle') as HTMLButtonElement;
+      if (!token || !w.__spDeviceId || !btn) return;
+      const next = btn.dataset.active !== '1';
+      try {
+        await fetch(`https://api.spotify.com/v1/me/player/shuffle?state=${next}&device_id=${w.__spDeviceId}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (_) {}
+    }
+
+    const SP_REPEAT_CYCLE = ['off', 'context', 'track'];
+    async function spSetRepeat() {
+      const token = await spGetValidToken();
+      const btn = playerDiv.querySelector('#btn-sp-repeat') as HTMLButtonElement;
+      if (!token || !w.__spDeviceId || !btn) return;
+      const cur = parseInt(btn.dataset.mode || '0', 10);
+      const next = SP_REPEAT_CYCLE[(cur + 1) % 3];
+      try {
+        await fetch(`https://api.spotify.com/v1/me/player/repeat?state=${next}&device_id=${w.__spDeviceId}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } catch (_) {}
     }
 
@@ -1187,6 +1227,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
             const pbtn = playerDiv.querySelector('.player-play-btn') as HTMLButtonElement;
             if (pbtn) pbtn.textContent = playing ? '⏸' : '▶';
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+            // v1.34: reflete shuffle/repeat (fournis par le SDK a chaque changement d'etat)
+            const shuffleBtn = playerDiv.querySelector('#btn-sp-shuffle') as HTMLButtonElement;
+            if (shuffleBtn) shuffleBtn.dataset.active = st.shuffle ? '1' : '0';
+            const repeatBtn = playerDiv.querySelector('#btn-sp-repeat') as HTMLButtonElement;
+            if (repeatBtn) {
+              const rm = typeof st.repeat_mode === 'number' ? st.repeat_mode : 0;
+              repeatBtn.dataset.mode = String(rm);
+              repeatBtn.textContent = rm === 2 ? '🔂' : '🔁';
+            }
             const pos = st.position || 0;
             const dur = st.duration || 0;
             if (dur > 0) {
@@ -1456,6 +1505,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
 
+      if (target.closest('#btn-sp-shuffle')) {
+        spSetShuffle();
+        return;
+      }
+
+      if (target.closest('#btn-sp-repeat')) {
+        spSetRepeat();
+        return;
+      }
+
       if (target.closest('.player-embed-toggle')) {
         if (state.currentSource === 'spotify') {
           // v1.25: toggle show/hide reel (le panneau est masque par defaut depuis v1.24)
@@ -1540,7 +1599,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.33';
+    _vt.textContent = 'fx_jam_v1.34';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
