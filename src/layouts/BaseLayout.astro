@@ -343,6 +343,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
       flex-shrink: 0;
     }
     .player-full button:hover { color: var(--text-primary); background: var(--bg-surface); }
+
+    /* v1.28: sur mobile, priorite au titre — le reste se degage/retrecit */
+    @media (max-width: 480px) {
+      .player-full { gap: 0.35rem; padding: 0 0.5rem; }
+      #player-artwork { display: none; }
+      #player-source-badge { display: none; }
+      .player-meta { min-width: 64px; }
+      .player-scrubber { min-width: 30px; }
+      #player-time { display: none; }
+      .player-full button { padding: 0.2rem 0.3rem; font-size: 0.9rem; }
+      .player-spotify-connect { font-size: 0.55rem !important; padding: 0.15rem 0.35rem !important; }
+    }
     #btn-playpause { color: var(--facet-son); font-size: 1.15rem; }
     /* Barre de toggle embed — sous transport, indépendante */
     #embed-toggle-bar {
@@ -499,10 +511,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.27 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.28 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.27');
+  console.log('🐱 fx_jam_v1.28');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1492,7 +1504,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.27';
+    _vt.textContent = 'fx_jam_v1.28';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
