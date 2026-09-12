@@ -282,7 +282,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       font-size: 0.88rem;
       color: var(--text-primary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      text-decoration: none;
     }
+    #player-title[href]:hover { text-decoration: underline; }
     .source-badge {
       font-family: var(--font-mono);
       font-size: 0.65rem;
@@ -458,15 +460,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
     <div class="player-full">
       <img id="player-artwork" src="" alt="" width="40" height="40" />
       <div class="player-meta">
-        <span id="player-title" class="player-label">—</span>
+        <a id="player-title" class="player-label" target="_blank" rel="noopener noreferrer">—</a>
         <span id="player-source-badge" class="source-badge">SC</span>
       </div>
+      <button id="btn-sp-prev" class="player-sp-extra" aria-label="Piste precedente" hidden>⏮</button>
       <button id="btn-playpause" class="player-play-btn" aria-label="Play/Pause">▶</button>
+      <button id="btn-sp-next" class="player-sp-extra" aria-label="Piste suivante" hidden>⏭</button>
       <div class="player-scrubber" id="player-scrubber" role="progressbar">
         <div id="scrubber-fill"></div>
       </div>
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
+      <button id="btn-sp-like" class="player-sp-extra" aria-label="Ajouter a la bibliotheque Spotify" hidden data-liked="0">♡</button>
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
@@ -494,10 +499,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.26c ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.27 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.26c');
+  console.log('🐱 fx_jam_v1.27');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -957,7 +962,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     // ===== v1.26: Spotify OAuth (PKCE) + Web Playback SDK — full playback pour comptes Premium connectes =====
     const SP_CLIENT_ID    = 'f10100812b4146f199243927da29d982';
     const SP_REDIRECT_URI = 'https://hamcat.live';
-    const SP_SCOPES       = 'streaming user-read-email user-read-private user-modify-playback-state';
+    const SP_SCOPES       = 'streaming user-read-email user-read-private user-modify-playback-state user-library-read user-library-modify';
 
     function spRandomString(len: number): string {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -1066,9 +1071,48 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     function updateSpotifyConnectBtn(src?: string | null) {
       const btn = playerDiv.querySelector('#btn-spotify-connect') as HTMLButtonElement;
-      if (!btn) return;
       const authed = !!spGetTokens();
-      btn.hidden = src !== 'spotify' || authed;
+      if (btn) btn.hidden = src !== 'spotify' || authed;
+      // v1.27: prev/next/like uniquement disponibles en full playback (Web Playback SDK)
+      const fullMode = src === 'spotify' && !!(w.__spWebPlayer && w.__spDeviceId);
+      const prevBtn = playerDiv.querySelector('#btn-sp-prev') as HTMLButtonElement;
+      const nextBtn = playerDiv.querySelector('#btn-sp-next') as HTMLButtonElement;
+      const likeBtn = playerDiv.querySelector('#btn-sp-like') as HTMLButtonElement;
+      if (prevBtn) prevBtn.hidden = !fullMode;
+      if (nextBtn) nextBtn.hidden = !fullMode;
+      if (likeBtn) likeBtn.hidden = !fullMode;
+    }
+
+    async function spCheckLiked(trackId: string) {
+      const token = await spGetValidToken();
+      const likeBtn = playerDiv.querySelector('#btn-sp-like') as HTMLButtonElement;
+      if (!token || !trackId || !likeBtn) return;
+      try {
+        const res = await fetch(`https://api.spotify.com/v1/me/tracks/contains?ids=${trackId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const liked = !!data[0];
+        likeBtn.textContent = liked ? '♥' : '♡';
+        likeBtn.dataset.liked = liked ? '1' : '0';
+      } catch (_) {}
+    }
+
+    async function spToggleLike() {
+      const trackId = w.__spCurrentTrackId;
+      const token = await spGetValidToken();
+      const likeBtn = playerDiv.querySelector('#btn-sp-like') as HTMLButtonElement;
+      if (!trackId || !token || !likeBtn) return;
+      const liked = likeBtn.dataset.liked === '1';
+      try {
+        await fetch(`https://api.spotify.com/v1/me/tracks?ids=${trackId}`, {
+          method: liked ? 'DELETE' : 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        });
+        likeBtn.textContent = liked ? '♡' : '♥';
+        likeBtn.dataset.liked = liked ? '0' : '1';
+      } catch (_) {}
     }
 
     // Web Playback SDK — singleton, cree un vrai device Spotify Connect pilotable
@@ -1112,13 +1156,23 @@ const facetHrefs = visibleFacets().map(f => f.href);
               const title  = tr.name || state.currentLbl || 'Spotify';
               const artist = (tr.artists || []).map((a: any) => a.name).join(', ');
               const artwork = tr.album?.images?.[0]?.url || '';
-              const titleEl = playerDiv.querySelector('#player-title') as HTMLElement;
-              if (titleEl) titleEl.textContent = title;
+              const titleEl = playerDiv.querySelector('#player-title') as HTMLAnchorElement;
+              if (titleEl) {
+                titleEl.textContent = artist ? `${artist} — ${title}` : title;
+                // v1.27: lien vers la fiche du titre sur Spotify (savoir ce qui joue)
+                if (tr.id) titleEl.href = `https://open.spotify.com/track/${tr.id}`;
+                else titleEl.removeAttribute('href');
+              }
               state.currentLbl = title;
               const artEl = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
               if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; artEl.style.filter = 'none'; }
               if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({ title, artist, album: 'hamcat.live', artwork: artwork ? [{ src: artwork, sizes: '300x300', type: 'image/jpeg' }] : [] });
+              }
+              // v1.27: verifie l'etat "aime" seulement au changement effectif de piste
+              if (tr.id && tr.id !== w.__spCurrentTrackId) {
+                w.__spCurrentTrackId = tr.id;
+                spCheckLiked(tr.id);
               }
             }
             updateUI(playing ? 'playing' : 'paused', state.currentLbl, 'spotify');
@@ -1339,6 +1393,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
 
+      if (target.closest('#btn-sp-prev')) {
+        try { w.__spWebPlayer?.previousTrack(); } catch (_) {}
+        return;
+      }
+
+      if (target.closest('#btn-sp-next')) {
+        try { w.__spWebPlayer?.nextTrack(); } catch (_) {}
+        return;
+      }
+
+      if (target.closest('#btn-sp-like')) {
+        spToggleLike();
+        return;
+      }
+
       if (target.closest('.player-embed-toggle')) {
         if (state.currentSource === 'spotify') {
           // v1.25: toggle show/hide reel (le panneau est masque par defaut depuis v1.24)
@@ -1380,6 +1449,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         playerDiv.dataset.active   = 'false';
         playerDiv.dataset.expanded = 'false';
         playerDiv.classList.remove('playing');
+        updateSpotifyConnectBtn(null); // v1.27: cache prev/next/like/connexion aussi
         try { localStorage.removeItem('hamcat-player'); } catch (_) {}
       }
     }, { signal });
@@ -1422,7 +1492,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.26c';
+    _vt.textContent = 'fx_jam_v1.27';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
