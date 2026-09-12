@@ -415,3 +415,32 @@ Fx confirme le full playback fonctionnel (mute inclus). Comme aucune interface d
 
 ### Deploiement
 Commit `74c2b60`, push -> Cloudflare Workers, deploye et verifie en prod.
+
+
+## v1.28 — Fix titre invisible dans le player sur mobile — 2026-09-12
+
+### Contexte
+Fx confirme que prev/next/play/pause/scrubber/mute fonctionnent bien apres le v1.27, mais signale que le nom du titre/artiste n'apparait pas dans le player sur mobile.
+
+### Root cause
+Diagnostic via inspection live du DOM en viewport mobile (375px) : `#player-title` avait bien le bon `textContent`, mais une largeur rendue de **0px**. `.player-full` est une rangee flex avec beaucoup d'elements a largeur fixe (pochette, badge source, boutons prev/next/play/next/mute/like, temps, bouton connexion Spotify). Sur mobile, la somme de ces largeurs fixes depasse la largeur du viewport. `.player-scrubber` a un `min-width: 80px` qui l'empeche de retrecir sous ce seuil — resultat : toute la pression de retrecissement retombe sur `.player-meta` (le conteneur du titre, `min-width: 0`), qui se fait ecraser a 0px. Le titre existait, il n'avait simplement plus aucune place pour s'afficher.
+
+### Fix
+Media query mobile (`max-width: 480px`) qui degage de la place plutot que de laisser le titre payer tout le prix :
+- Masque la pochette (`#player-artwork`) et le badge source (`#player-source-badge`, redondant avec l'icone ▶ / le contexte).
+- Masque le texte du temps (`#player-time`).
+- Boutons transport plus compacts (padding/`font-size` reduits).
+- Bouton "Connexion Spotify" plus compact (police/padding reduits).
+- `.player-meta` recoit un `min-width: 64px` explicite (au lieu de 0) et `.player-scrubber` un `min-width: 30px` (au lieu de 80px) — le titre garde toujours un minimum de place garanti.
+
+### Verification live (hamcat.live/son, viewport 375px)
+- `fx_jam_v1.28` confirme charge.
+- `#player-title` : largeur rendue 64px (etait 0px avant fix), texte visible.
+- Pochette / badge / temps bien masques en dessous de 480px ; scrubber toujours fonctionnel (~63px).
+- Build `npx astro build` sans erreur avant deploiement.
+
+### Deploiement
+Commit `3579b14`, push -> Cloudflare Workers, deploye et verifie en prod.
+
+### Commits
+- `74c2b60` v1.27 · `3579b14` v1.28
