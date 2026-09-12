@@ -444,3 +444,29 @@ Commit `3579b14`, push -> Cloudflare Workers, deploye et verifie en prod.
 
 ### Commits
 - `74c2b60` v1.27 · `3579b14` v1.28
+
+
+## v1.29 — Prev/next fonctionnels sur ecran de veille / notifications — 2026-09-12
+
+### Contexte
+Fx confirme le titre visible sur mobile (v1.28), puis signale que les boutons precedent/suivant (et like) du player Spotify ne font rien depuis l'ecran de veille / la barre de notifications du telephone (les controles OS, pas ceux du player dans la page).
+
+### Root cause
+Ces controles systeme passent par la Media Session API du navigateur (`navigator.mediaSession`), qui n'agit que si on lui fournit des `setActionHandler`. Le code Spotify SDK ne renseignait que `metadata` et `playbackState` — jamais de handler `play` / `pause` / `previoustrack` / `nexttrack`. Les seuls handlers poses dans tout le fichier l'etaient par le widget SoundCloud (`play`/`pause`/`stop`), donc en mode Spotify l'OS n'avait tout simplement aucune action a declencher pour precedent/suivant.
+
+### Fix
+`setActionHandler('play'|'pause'|'previoustrack'|'nexttrack', ...)` ajoutes des la creation du device Spotify Connect (`spEnsureWebPlayer()`, listener `ready`), branches sur les methodes natives du SDK (`player.resume()`, `player.pause()`, `player.previousTrack()`, `player.nextTrack()`).
+
+### Limite (a communiquer a Fx)
+Le "like" ne peut pas etre expose sur l'ecran de veille / la notification : la Media Session API ne definit tout simplement aucune action "like" / "favorite" (liste fermee : play, pause, seekbackward, seekforward, seekto, previoustrack, nexttrack, skipad, stop, togglemicrophone, togglecamera, hangup) — ce n'est pas une limitation hamcat.live mais du standard web lui-meme, sur toutes les plateformes. Le like reste disponible dans le player sur la page (bouton ♡/♥).
+
+### Verification live (hamcat.live/son)
+- `fx_jam_v1.29` confirme charge.
+- Build `npx astro build` sans erreur avant deploiement.
+- Fonctionnement reel des boutons prev/next depuis l'ecran de veille / la notification (avec un compte Premium connecte) reste a confirmer par Fx sur son telephone.
+
+### Deploiement
+Commit `2155a1a`, push -> Cloudflare Workers, deploye et verifie en prod.
+
+### Commits
+- `3579b14` v1.28 · `2764f4d` docs · `2155a1a` v1.29
