@@ -470,3 +470,31 @@ Commit `2155a1a`, push -> Cloudflare Workers, deploye et verifie en prod.
 
 ### Commits
 - `3579b14` v1.28 · `2764f4d` docs · `2155a1a` v1.29
+
+
+## v1.30 — Titre et artiste sur 2 lignes distinctes dans le player — 2026-09-12
+
+### Contexte
+Fx confirme le prev/next fonctionnel sur ecran de veille/notifications (v1.29), puis signale que le player n'affiche que le nom du morceau, pas l'artiste.
+
+### Root cause
+En mode Spotify full playback, `#player-title` affichait "Artiste — Titre" concatene dans **une seule ligne** avec troncature (`text-overflow: ellipsis; white-space: nowrap`). Selon la largeur disponible (surtout apres la compaction mobile du v1.28) et la longueur relative des deux chaines, l'un des deux elements pouvait dominer visuellement ou etre coupe. Cote SoundCloud, c'etait pire : le nom de l'artiste (`sound.user.username`) n'etait meme jamais pose sur le player — seulement transmis a la Media Session (lock screen), jamais affiche a l'ecran.
+
+### Fix
+Titre et artiste separes en deux lignes independantes dans `.player-meta`, chacune avec sa propre troncature (comme l'app Spotify officielle) :
+- Nouvelle ligne `.player-meta-sub` sous `#player-title`, contenant `#player-artist` (nouveau) + le badge source existant (`#player-source-badge`).
+- Spotify SDK (`player_state_changed`) : `#player-title` ne recoit plus que le titre, `#player-artist` recoit l'artiste separement.
+- SoundCloud (`updateSCInfo`) : `#player-artist` est desormais renseigne sur le player (avant : uniquement dans `MediaMetadata`, invisible a l'ecran).
+- Les deux lignes restent toujours lisibles independamment de la longueur de l'autre, y compris sur mobile (media query v1.28 inchangee, l'artiste garde sa place).
+
+### Verification live (hamcat.live/son)
+- `fx_jam_v1.30` confirme charge.
+- Test SoundCloud (sans authentification requise) : `#player-title` = "Sky-Hop Beats (Open Mic Chill Session @ Marliave 02/09/21)", `#player-artist` = "Hamcat" — les deux visibles simultanement, chacun sur sa ligne.
+- Build `npx astro build` sans erreur avant deploiement.
+- Rendu reel cote Spotify (compte Premium connecte) reste a confirmer par Fx.
+
+### Deploiement
+Commit `8425999`, push -> Cloudflare Workers, deploye et verifie en prod.
+
+### Commits
+- `3579b14` v1.28 · `2155a1a` v1.29 · `8425999` v1.30
