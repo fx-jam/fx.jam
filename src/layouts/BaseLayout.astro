@@ -285,6 +285,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       text-decoration: none;
     }
     #player-title[href]:hover { text-decoration: underline; }
+    .player-meta-sub {
+      display: flex; align-items: center; gap: 0.35rem;
+      min-width: 0;
+    }
+    #player-artist {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      min-width: 0;
+    }
     .source-badge {
       font-family: var(--font-mono);
       font-size: 0.65rem;
@@ -473,7 +484,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <img id="player-artwork" src="" alt="" width="40" height="40" />
       <div class="player-meta">
         <a id="player-title" class="player-label" target="_blank" rel="noopener noreferrer">—</a>
-        <span id="player-source-badge" class="source-badge">SC</span>
+        <div class="player-meta-sub">
+          <span id="player-artist"></span>
+          <span id="player-source-badge" class="source-badge">SC</span>
+        </div>
       </div>
       <button id="btn-sp-prev" class="player-sp-extra" aria-label="Piste precedente" hidden>⏮</button>
       <button id="btn-playpause" class="player-play-btn" aria-label="Play/Pause">▶</button>
@@ -511,10 +525,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.29 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.30 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.29');
+  console.log('🐱 fx_jam_v1.30');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -663,9 +677,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const title   = sound.title || state.currentLbl || 'SoundCloud';
       const artist  = sound.user?.username || '';
       const artwork = (sound.artwork_url || '').replace('-large', '-t300x300');
-      const titleEl = playerDiv.querySelector('#player-title')   as HTMLElement;
-      const artEl   = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
+      const titleEl  = playerDiv.querySelector('#player-title')  as HTMLElement;
+      const artistEl = playerDiv.querySelector('#player-artist') as HTMLElement;
+      const artEl    = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
       if (titleEl) titleEl.textContent = title;
+      if (artistEl) artistEl.textContent = artist;
       if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; artEl.style.filter = 'none'; }
       const overlayEl = document.getElementById('sc-art-overlay') as HTMLImageElement;
       if (artwork && overlayEl) { overlayEl.src = artwork; overlayEl.style.display = 'block'; overlayEl.style.filter = 'none'; }
@@ -1175,13 +1191,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
               const title  = tr.name || state.currentLbl || 'Spotify';
               const artist = (tr.artists || []).map((a: any) => a.name).join(', ');
               const artwork = tr.album?.images?.[0]?.url || '';
-              const titleEl = playerDiv.querySelector('#player-title') as HTMLAnchorElement;
+              const titleEl  = playerDiv.querySelector('#player-title')  as HTMLAnchorElement;
+              const artistEl = playerDiv.querySelector('#player-artist') as HTMLElement;
               if (titleEl) {
-                titleEl.textContent = artist ? `${artist} — ${title}` : title;
+                // v1.30: titre et artiste sur 2 lignes distinctes (au lieu d'1 chaine concatenee tronquee)
+                titleEl.textContent = title;
                 // v1.27: lien vers la fiche du titre sur Spotify (savoir ce qui joue)
                 if (tr.id) titleEl.href = `https://open.spotify.com/track/${tr.id}`;
                 else titleEl.removeAttribute('href');
               }
+              if (artistEl) artistEl.textContent = artist;
               state.currentLbl = title;
               const artEl = playerDiv.querySelector('#player-artwork') as HTMLImageElement;
               if (artwork && artEl) { artEl.src = artwork; artEl.style.display = 'block'; artEl.style.filter = 'none'; }
@@ -1511,7 +1530,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.29';
+    _vt.textContent = 'fx_jam_v1.30';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
