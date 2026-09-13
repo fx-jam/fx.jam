@@ -505,6 +505,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
       <button id="btn-sp-like" class="player-sp-extra" aria-label="Ajouter a la bibliotheque Spotify" hidden data-liked="0">♡</button>
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
+      <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
+      <button id="btn-sc-connect" class="player-spotify-connect" aria-label="Se connecter a SoundCloud" hidden>Connexion SC</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
@@ -531,10 +533,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.34 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.35 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.34');
+  console.log('🐱 fx_jam_v1.35');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -700,6 +702,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
           album: 'hamcat.live',
           artwork: artwork ? [{ src: artwork, sizes: '300x300', type: 'image/jpeg' }] : []
         });
+      }
+      // v1.35: ID de la piste pour le like SC — check uniquement au changement effectif
+      if (sound.id && sound.id !== (w as any).__scCurrentTrackId) {
+        (w as any).__scCurrentTrackId = sound.id;
+        scCheckLiked(sound.id);
       }
     }
 
@@ -1108,6 +1115,130 @@ const facetHrefs = visibleFacets().map(f => f.href);
       updateSpotifyConnectBtn(state.currentSource);
     }
 
+    // ===== v1.35: SoundCloud OAuth (Authorization Code) + like/unlike =====
+    // SC ne supporte pas PKCE : le client_secret reste côté Worker (/api/sc/token, /api/sc/refresh)
+    const SC_CLIENT_ID    = 'REPLACE_WITH_YOUR_SC_CLIENT_ID'; // même valeur que vars.SC_CLIENT_ID dans wrangler.jsonc
+    const SC_REDIRECT_URI = 'https://hamcat.live';
+    const SC_AUTH_URL     = 'https://soundcloud.com/connect';
+
+    function scRandomStr(len: number): string {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const rnd = crypto.getRandomValues(new Uint8Array(len));
+      let s = '';
+      for (let i = 0; i < len; i++) s += chars[rnd[i] % chars.length];
+      return s;
+    }
+
+    async function scStartAuth() {
+      const state2 = 'sc_' + scRandomStr(16);
+      try { sessionStorage.setItem('sc_oauth_state', state2); } catch (_) {}
+      const params = new URLSearchParams({
+        client_id:     SC_CLIENT_ID,
+        redirect_uri:  SC_REDIRECT_URI,
+        response_type: 'code',
+        scope:         'non-expiring',
+        state:         state2,
+      });
+      location.href = SC_AUTH_URL + '?' + params.toString();
+    }
+
+    function scGetTokens(): any {
+      try { return JSON.parse(localStorage.getItem('hamcat-sc-auth') || 'null'); } catch (_) { return null; }
+    }
+
+    function scSaveTokens(tok: any): any {
+      const prev = scGetTokens();
+      const data = {
+        access_token:  tok.access_token,
+        refresh_token: tok.refresh_token || prev?.refresh_token,
+        // SC avec scope=non-expiring : pas d'expires_in, on met 1 an par défaut
+        expires_at: Date.now() + ((tok.expires_in || 31536000) * 1000) - 30000,
+      };
+      try { localStorage.setItem('hamcat-sc-auth', JSON.stringify(data)); } catch (_) {}
+      return data;
+    }
+
+    async function scExchangeCode(code: string): Promise<any> {
+      try {
+        const res = await fetch('/api/sc/token', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ code, redirect_uri: SC_REDIRECT_URI }),
+        });
+        if (!res.ok) return null;
+        return scSaveTokens(await res.json());
+      } catch (_) { return null; }
+    }
+
+    async function scRefreshToken(): Promise<any> {
+      const cur = scGetTokens();
+      if (!cur?.refresh_token) return null;
+      try {
+        const res = await fetch('/api/sc/refresh', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ refresh_token: cur.refresh_token }),
+        });
+        if (!res.ok) return null;
+        return scSaveTokens(await res.json());
+      } catch (_) { return null; }
+    }
+
+    async function scGetValidToken(): Promise<string | null> {
+      let t = scGetTokens();
+      if (!t) return null;
+      if (Date.now() >= t.expires_at) t = await scRefreshToken();
+      return t?.access_token || null;
+    }
+
+    function scDisconnect() {
+      try { localStorage.removeItem('hamcat-sc-auth'); } catch (_) {}
+      updateSCConnectBtn(state.currentSource);
+    }
+
+    function updateSCConnectBtn(src?: string | null) {
+      const connectBtn = playerDiv.querySelector('#btn-sc-connect') as HTMLButtonElement;
+      const likeBtn    = playerDiv.querySelector('#btn-sc-like')    as HTMLButtonElement;
+      const authed = !!scGetTokens();
+      const isSC   = src === 'soundcloud';
+      if (connectBtn) connectBtn.hidden = !isSC || authed;
+      if (likeBtn)    likeBtn.hidden    = !isSC || !authed;
+    }
+
+    async function scCheckLiked(trackId: string | number) {
+      const token  = await scGetValidToken();
+      const likeBtn = playerDiv.querySelector('#btn-sc-like') as HTMLButtonElement;
+      if (!token || !trackId || !likeBtn) return;
+      try {
+        const res = await fetch(`/api/sc/liked-ids?ids=${trackId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const liked = (data.liked || []).includes(String(trackId));
+        likeBtn.textContent = liked ? '♥' : '♡';
+        likeBtn.dataset.liked = liked ? '1' : '0';
+      } catch (_) {}
+    }
+
+    async function scToggleLike() {
+      const trackId = (w as any).__scCurrentTrackId;
+      const token   = await scGetValidToken();
+      const likeBtn = playerDiv.querySelector('#btn-sc-like') as HTMLButtonElement;
+      if (!trackId || !token || !likeBtn) return;
+      const liked = likeBtn.dataset.liked === '1';
+      try {
+        await fetch('/api/sc/like', {
+          method:  'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ track_id: trackId, liked: !liked }),
+        });
+        likeBtn.textContent   = liked ? '♡' : '♥';
+        likeBtn.dataset.liked = liked ? '0' : '1';
+      } catch (_) {}
+    }
+    // ===== fin v1.35 SC OAuth =====
+
     function updateSpotifyConnectBtn(src?: string | null) {
       const btn = playerDiv.querySelector('#btn-spotify-connect') as HTMLButtonElement;
       const authed = !!spGetTokens();
@@ -1128,6 +1259,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const repeatBtn = playerDiv.querySelector('#btn-sp-repeat') as HTMLButtonElement;
       if (shuffleBtn) shuffleBtn.hidden = !fullMode;
       if (repeatBtn) repeatBtn.hidden = !fullMode;
+      // v1.35: met a jour les boutons SC en meme temps
+      updateSCConnectBtn(src);
     }
 
     async function spCheckLiked(trackId: string) {
@@ -1505,6 +1638,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
 
+      if (target.closest('#btn-sc-connect')) {
+        scStartAuth(); // v1.35: lance le flow OAuth SoundCloud
+        return;
+      }
+
+      if (target.closest('#btn-sc-like')) {
+        scToggleLike(); // v1.35: like/unlike la piste SC courante
+        return;
+      }
+
       if (target.closest('#btn-sp-shuffle')) {
         spSetShuffle();
         return;
@@ -1561,16 +1704,35 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
     }, { signal });
 
-    // v1.26: retour du redirect OAuth Spotify (?code=...) — echange le code, puis upgrade
-    // en full playback si une lecture Spotify etait deja en cours (localStorage hamcat-player)
+    // v1.26/v1.35: retour du redirect OAuth (?code=...) — Spotify ou SoundCloud selon state=sc_*
     (async () => {
       const qp = new URLSearchParams(location.search);
-      const code = qp.get('code');
-      const err  = qp.get('error');
+      const code       = qp.get('code');
+      const err        = qp.get('error');
+      const stateParam = qp.get('state') || '';
       if (!code && !err) { updateSpotifyConnectBtn(state.currentSource); return; }
       history.replaceState({}, '', location.pathname); // nettoie l'URL immediatement
+
+      if (stateParam.startsWith('sc_')) {
+        // ── Callback SoundCloud OAuth (v1.35) ──────────────────────────────
+        const saved2 = sessionStorage.getItem('sc_oauth_state') || '';
+        try { sessionStorage.removeItem('sc_oauth_state'); } catch (_) {}
+        if (err) { hmcLog('[HMC] SoundCloud OAuth refuse/erreur: ' + err); updateSCConnectBtn(state.currentSource); return; }
+        if (stateParam !== saved2) { hmcLog('[HMC] SoundCloud OAuth: state mismatch'); updateSCConnectBtn(state.currentSource); return; }
+        const scTok = await scExchangeCode(code!);
+        if (!scTok) { hmcLog('[HMC] SoundCloud OAuth: echange du code echoue'); updateSCConnectBtn(state.currentSource); return; }
+        hmcLog('[HMC] SoundCloud OAuth OK — connecte');
+        updateSCConnectBtn(state.currentSource);
+        // Re-check like pour la piste SC deja en lecture
+        if (state.currentSource === 'soundcloud' && (w as any).__scCurrentTrackId) {
+          scCheckLiked((w as any).__scCurrentTrackId);
+        }
+        return;
+      }
+
+      // ── Callback Spotify OAuth (v1.26) ─────────────────────────────────
       if (err) { hmcLog('[HMC] Spotify OAuth refuse/erreur: ' + err); updateSpotifyConnectBtn(state.currentSource); return; }
-      const tok = await spExchangeCode(code);
+      const tok = await spExchangeCode(code!);
       if (!tok) { hmcLog('[HMC] Spotify OAuth: echange du code echoue'); updateSpotifyConnectBtn(state.currentSource); return; }
       hmcLog('[HMC] Spotify OAuth OK — connecte');
       try {
@@ -1599,7 +1761,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.34';
+    _vt.textContent = 'fx_jam_v1.35';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

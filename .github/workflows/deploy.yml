@@ -23,4 +23,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: "."   # deploie uniquement le Worker racine (fx-jam), pas workers/
+          secrets: |
+            SC_CLIENT_SECRET
+        env:
+          SC_CLIENT_SECRET: ${{ secrets.SC_CLIENT_SECRET }}
 

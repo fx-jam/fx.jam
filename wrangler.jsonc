@@ -1,11 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fx-jam",
+  "main": "workers/site/index.js",
   "compatibility_date": "2026-05-28",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS"
   },
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    // Client ID de l'app SoundCloud (non secret — visible dans le dashboard SC Developer)
+    "SC_CLIENT_ID": "REPLACE_WITH_YOUR_SC_CLIENT_ID"
   }
 }
