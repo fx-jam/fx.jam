@@ -1,3 +1,45 @@
+## v1.35 — Relais OAuth SoundCloud (Worker CF) — 2026-09-13
+
+### Contexte
+Fx demande d'implémenter le like SoundCloud, bloqué depuis v1.33 par l'absence d'OAuth SC. La SC Widget JS API n'expose pas de méthode "like" ; un vrai flow OAuth SC + une app SC enregistrée sont nécessaires. Comme SC ne supporte pas PKCE, un Worker Cloudflare relais garde le client_secret server-side.
+
+### Implémentation
+
+**workers/site/index.js** (nouveau) : Worker CF racine — 4 routes API :
+- `POST /api/sc/token` : échange code → tokens via SC API + `SC_CLIENT_SECRET` (env secret)
+- `POST /api/sc/refresh` : rafraîchit l'access_token via `refresh_token` + secret
+- `POST /api/sc/like` : like (`PUT`) ou unlike (`DELETE`) une piste SC (proxy avec `Authorization: OAuth`)
+- `GET /api/sc/liked-ids?ids=123,456` : vérifie si les pistes sont likées, retourne `{liked: [ids]}`
+- Toute autre route → `env.ASSETS.fetch(request)` (assets statiques Astro)
+
+**wrangler.jsonc** : ajout `"main": "workers/site/index.js"` + `"assets": {"binding": "ASSETS"}` + `"vars": {"SC_CLIENT_ID": "REPLACE_WITH_YOUR_SC_CLIENT_ID"}` (placeholder à remplacer dans wrangler.jsonc ET dans BaseLayout.astro)
+
+**.github/workflows/deploy.yml** : ajout `secrets: SC_CLIENT_SECRET` + `env: SC_CLIENT_SECRET: ${{secrets.SC_CLIENT_SECRET}}` sur la step wrangler-action — sync automatique du secret à chaque deploy.
+
+**BaseLayout.astro v1.35** : SC OAuth flow complet :
+- `scStartAuth()` : redirect vers `soundcloud.com/connect` avec `state=sc_<nonce>` (stocké en sessionStorage pour validation)
+- `scExchangeCode(code)` : POST vers `/api/sc/token` (Worker), sauvegarde tokens dans `hamcat-sc-auth` localStorage
+- `scRefreshToken()` : POST vers `/api/sc/refresh`
+- `scGetValidToken()` : lit + refresh si expiré
+- `scDisconnect()` : supprime `hamcat-sc-auth`
+- `updateSCConnectBtn(src)` : `#btn-sc-connect` visible si src=soundcloud && non-auth ; `#btn-sc-like` visible si src=soundcloud && auth
+- `scCheckLiked(trackId)` : GET `/api/sc/liked-ids?ids=<id>`, met à jour `♡`/`♥` sur `#btn-sc-like`
+- `scToggleLike()` : POST `/api/sc/like` avec `{track_id, liked}`, optimistic UI toggle
+- `updateSCInfo()` : sauvegarde `w.__scCurrentTrackId = sound.id` + appelle `scCheckLiked` au changement de piste
+- `updateSpotifyConnectBtn()` : appelle `updateSCConnectBtn(src)` en fin (piggybacking)
+- Callback OAuth : `state=sc_*` → flow SC (validation state, scExchangeCode) ; sinon → flow Spotify existant
+- Boutons HTML : `#btn-sc-like` + `#btn-sc-connect` ajoutés dans la transport bar (après `#btn-spotify-connect`)
+
+### Prérequis non automatisés
+- **Remplacer `REPLACE_WITH_YOUR_SC_CLIENT_ID`** dans `wrangler.jsonc` (var) ET dans `BaseLayout.astro` (`const SC_CLIENT_ID = '...'`)
+- **`SC_CLIENT_SECRET`** déjà dans GitHub Actions secrets (non versionné)
+- **`SC_CLIENT_ID`** aussi à ajouter dans les secrets GitHub si on ne veut pas le versionner (sinon la var wrangler.jsonc suffit)
+
+### Commit
+`3398266` feat(v1.35)
+
+---
+
 ### 2026-09-09 — Spotify sync system + corrections physique disque + multi-panneaux son
 
 **Spotify playlist sync**
