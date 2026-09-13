@@ -12,6 +12,6 @@
   },
   "vars": {
     // Client ID de l'app SoundCloud (non secret — visible dans le dashboard SC Developer)
-    "SC_CLIENT_ID": "REPLACE_WITH_YOUR_SC_CLIENT_ID"
+    "SC_CLIENT_ID": "X1d2YEhZ7BzT6ybpYARvrEHHWYpAD7FL"
   }
 }
