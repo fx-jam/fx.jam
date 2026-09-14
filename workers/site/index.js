@@ -1,10 +1,11 @@
-// fx-jam Worker — relais OAuth SoundCloud + proxy API
+// fx-jam Worker — relais OAuth SoundCloud + proxy API + proxy VPS agent
 // SC_CLIENT_ID  : var wrangler (vars.SC_CLIENT_ID dans wrangler.jsonc)
 // SC_CLIENT_SECRET : secret Cloudflare (synced par wrangler-action, jamais versionné)
 
 const SC_API       = 'https://api.soundcloud.com';
 const SC_TOKEN_URL = `${SC_API}/oauth2/token`;
 const SC_REDIRECT  = 'https://hamcat.live';
+const VPS_AGENT    = 'https://api-vps.hamcat.live';
 
 export default {
   async fetch(request, env) {
@@ -17,8 +18,28 @@ export default {
         status: 204,
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    // /api/vps/* — proxy transparent vers vps-agent via Cloudflare Tunnel
+    // Auth gérée par vps-agent : Bearer VPS_API_TOKEN dans l'en-tête Authorization
+    if (path.startsWith('/api/vps/')) {
+      const vpsPath = path.slice('/api/vps'.length);
+      const vpsUrl  = `${VPS_AGENT}${vpsPath}${url.search}`;
+      const proxyReq = new Request(vpsUrl, {
+        method:  request.method,
+        headers: request.headers,
+        body:    ['GET', 'HEAD'].includes(request.method) ? null : request.body,
+      });
+      const vpsRes = await fetch(proxyReq);
+      return new Response(vpsRes.body, {
+        status:  vpsRes.status,
+        headers: {
+          'Content-Type':                vpsRes.headers.get('Content-Type') || 'application/json',
+          'Access-Control-Allow-Origin': '*',
         },
       });
     }
@@ -80,7 +101,6 @@ export default {
         method,
         headers: { Authorization: `OAuth ${token}` },
       });
-      // SC retourne 200/201 pour PUT, 200 pour DELETE, 404 si piste inexistante (on ignore)
       if (!scRes.ok && scRes.status !== 404) return errJson('sc_like_error', scRes.status);
       return okJson({ ok: true });
     }
