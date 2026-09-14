@@ -1,3 +1,44 @@
+## v1.37 — Fix auto-collapse au clic + metadonnees/scrubber stale + embed Spotify fantome — 2026-09-14
+
+### Contexte
+Fx signale 3 bugs sur le switch de source Spotify -> SoundCloud (pas l'inverse) : (a) pochette + artiste Spotify restent affiches alors que le label affiche deja "SoundCloud", (b) le scrubber custom se desynchronise de la waveform native de l'embed SC, (c) l'embed preview Spotify apparait parfois par-dessus l'embed SC. Egalement greenlight pour fixer le bug d'auto-collapse du player (se reduisait en mini-pill au moindre clic sur l'interface) et commencer a decorreler le player de la playlist de l'embed SC.
+
+### Implementation (BaseLayout.astro)
+
+**updateUI()** : `data-expanded` n'est plus recalcule a partir de l'URL a CHAQUE appel (play/pause, changement de piste, restore...) mais uniquement a la toute premiere activation du player (`!wasActive`). Corrige l'auto-collapse.
+
+**pauseAll()** : point de passage systematique de tout changement de source, devient l'endroit unique garantissant :
+- `display:none` force sur les DEUX embeds (SC et Spotify), pas seulement celui qu'on quitte
+- reset de la pochette (`#player-artwork`), de l'artiste (`#player-artist`) et du lien du titre (`#player-title` href, pertinent seulement pour Spotify)
+- reset du scrubber (`#scrubber-fill` a 0%) et des temps affiches (`#player-time`, `#mini-time`)
+
+**playSC() / playSpotifyPreview()** : hide defensif miroir de l'autre embed (redondant avec pauseAll(), garde-fou si ces fonctions sont un jour appelees hors du chemin standard).
+
+**initSCWidget()** : extraction du rendu de la playlist dans `renderSCPlaylist(sounds, onSelect)` — fonction decouplee du widget SC (ne prend qu'un tableau de sons + un callback de selection). Premier pas vers un "browse" independant du player, alimentable plus tard par l'API publique SoundCloud (deja relayee par le Worker pour l'OAuth, v1.35) plutot que par le widget embarque — chantier a poursuivre.
+
+### Commit
+`9d11f13` sur `main` (branche `feat/player-fixes`, mergee et pushee). Diff + build montres a Fx avant merge (regle projet), confirmation explicite recue.
+
+---
+
+## v1.36 — Volume (3 sources) + selecteur de sortie audio — 2026-09-14
+
+### Contexte
+Suite a la discussion d'architecture sur l'unification du player (un seul player pour toutes les sources, states hidden/compact/full, browse decorrele du player, gigs separes de la bibliotheque), Fx valide un "Phase A" : commencer par le controle de volume et un selecteur de sortie, avant le refactor plus lourd (adapter interface).
+
+### Implementation (BaseLayout.astro)
+
+- Slider de volume (`#player-volume`, 0-100) persiste en localStorage (`hamcat-player-volume`), applique aux 3 sources : `audioEl.volume` (audio brut), `w.__scWidget.setVolume()` (SoundCloud), `w.__spWebPlayer.setVolume()` (Spotify Web Playback SDK, full playback uniquement — l'IFrame API Spotify n'expose pas de controle de volume, bouton mute + slider desactives en mode preview).
+- Selecteur de sortie audio (`#player-output`) — peuple via `navigator.mediaDevices.enumerateDevices()`, pilote `audioEl.setSinkId()`. Limitation technique actee : `setSinkId()` ne fonctionne QUE sur un `<audio>`/`<video>` local, jamais sur de l'audio joue dans une iframe cross-origin (SC widget, Spotify SDK/embed) — le selecteur n'est donc visible que pour la source "audio" (fichiers bruts). Meme limitation pour un futur Chromecast : seule la source "audio" pourra etre castee gratuitement (URL publique directe), pas SC (extraction fragile/risque ToS) ni Spotify (DRM, seules les apps officielles Spotify peuvent utiliser Spotify Connect).
+
+### Commit
+`b1e5c80` sur `main`. Implemente et deploye directement via l'API VPS (voir ci-dessous), sans passer par Claude Code — diff + build montres a Fx avant merge, confirmation recue.
+
+### Nouveaute : API VPS pour pilotage direct par le chat web
+Fx a mis en place une API HTTPS custom (`https://hamcat.live/api/vps`, cf. `claude/vps-api.md` dans le projet Claude) permettant au chat web (l'"architecte") d'agir directement sur le repo VPS sans dependre de SSH (bloque au niveau sandbox Anthropic, independamment de la config VPS). Endpoints : `/status`, `/read`, `/ls`, `/logs`, `/write`, `/exec` (whitelist git/npm/wrangler/etc.), `/deploy`, `/deploy-worker`. Workflow etabli : branche -> edits locaux -> `/write` -> `npm run build` via `/exec` -> diff + confirmation Fx -> merge -> push -> verification prod. Le push direct depuis le sandbox cloud du chat web reste bloque (meme restriction proxy que pour les secrets GitHub Actions) — l'API VPS est donc la voie normale pour tout deploiement initie depuis le chat web.
+
+---
+
 ## v1.35 — Relais OAuth SoundCloud (Worker CF) — 2026-09-13
 
 ### Contexte
