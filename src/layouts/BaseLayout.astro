@@ -358,6 +358,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #btn-sp-repeat[data-mode="1"],
     #btn-sp-repeat[data-mode="2"] { color: var(--facet-son); }
 
+    /* v1.36: slider de volume + selecteur de sortie audio */
+    .player-volume-slider {
+      width: 64px; flex-shrink: 0; accent-color: var(--facet-son);
+      cursor: pointer; height: 20px;
+    }
+    .player-output-select {
+      flex-shrink: 0; max-width: 90px;
+      background: var(--bg-surface); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: 4px;
+      font-family: var(--font-mono); font-size: 0.62rem;
+      padding: 0.15rem 0.25rem; cursor: pointer;
+    }
+
     /* v1.28: sur mobile, priorite au titre — le reste se degage/retrecit */
     @media (max-width: 480px) {
       .player-full { gap: 0.35rem; padding: 0 0.5rem; }
@@ -367,6 +380,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       .player-scrubber { min-width: 30px; }
       #player-time { display: none; }
       #btn-sp-shuffle, #btn-sp-repeat { display: none; }
+      .player-volume-slider, .player-output-select { display: none; } /* v1.36: pas de place sur mobile, mute suffit */
       .player-full button { padding: 0.2rem 0.3rem; font-size: 0.9rem; }
       .player-spotify-connect { font-size: 0.55rem !important; padding: 0.15rem 0.35rem !important; }
     }
@@ -502,7 +516,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
         <div id="scrubber-fill"></div>
       </div>
       <span id="player-time">0:00 / 0:00</span>
-      <button id="btn-volume" class="player-mute-btn" aria-label="Volume">🔊</button>
+      <button id="btn-volume" class="player-mute-btn" aria-label="Muet">🔊</button>
+      <input id="player-volume" class="player-volume-slider" type="range" min="0" max="100" value="100" aria-label="Volume" />
+      <select id="player-output" class="player-output-select" aria-label="Sortie audio" hidden></select>
       <button id="btn-sp-like" class="player-sp-extra" aria-label="Ajouter a la bibliotheque Spotify" hidden data-liked="0">♡</button>
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
@@ -533,10 +549,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.35 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.36 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.35');
+  console.log('🐱 fx_jam_v1.36');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -680,6 +696,74 @@ const facetHrefs = visibleFacets().map(f => f.href);
       return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
     }
 
+    // ===== v1.36: volume (3 sources) + selecteur de sortie audio (source "audio" uniquement) =====
+    const VOL_KEY = 'hamcat-player-volume';
+    const volumeSlider = document.getElementById('player-volume') as HTMLInputElement | null;
+    const outputSelect = document.getElementById('player-output') as HTMLSelectElement | null;
+
+    function getSavedVolume(): number {
+      try {
+        const v = parseInt(localStorage.getItem(VOL_KEY) || '100', 10);
+        return isNaN(v) ? 100 : Math.max(0, Math.min(100, v));
+      } catch (_) { return 100; }
+    }
+
+    // Applique le volume (0-100) a la source actuellement active. N'ecrit PAS dans localStorage
+    // (fait par le listener 'input' du slider) — permet de reappliquer au (re)demarrage d'une source
+    // sans re-declencher une sauvegarde inutile.
+    function applyVolume(vol: number) {
+      const v = Math.max(0, Math.min(100, vol));
+      if (state.currentSource === 'audio' && audioEl) {
+        audioEl.volume = v / 100;
+      } else if (state.currentSource === 'soundcloud' && w.__scWidget) {
+        try { w.__scWidget.setVolume(v); } catch (_) {}
+      } else if (state.currentSource === 'spotify' && w.__spWebPlayer && w.__spDeviceId) {
+        try { w.__spWebPlayer.setVolume(v / 100); } catch (_) {}
+      }
+      // Spotify en mode preview (IFrameAPI/__spController) n'expose pas de controle de volume —
+      // meme limitation que le bouton mute existant (cf. updateUI spotifyMuteUnavailable).
+      if (volumeSlider && volumeSlider.value !== String(v)) volumeSlider.value = String(v);
+      const muteBtnEl = playerDiv.querySelector('.player-mute-btn') as HTMLButtonElement;
+      if (muteBtnEl && !muteBtnEl.disabled) muteBtnEl.textContent = v === 0 ? '🔇' : '🔊';
+    }
+
+    if (volumeSlider) {
+      volumeSlider.addEventListener('input', () => {
+        const v = parseInt(volumeSlider.value, 10) || 0;
+        try { localStorage.setItem(VOL_KEY, String(v)); } catch (_) {}
+        applyVolume(v);
+      }, { signal });
+    }
+
+    // setSinkId ne fonctionne que sur notre propre <audio> — l'audio SC/Spotify joue dans des
+    // iframes cross-origin qu'on ne peut pas rerouter. On ne montre donc le selecteur que pour
+    // la source "audio" brute, et seulement si l'API est supportee (absente sur Safari/iOS).
+    const _sinkIdSupported = typeof (audioEl as any)?.setSinkId === 'function' && !!navigator.mediaDevices;
+
+    async function populateOutputSelect() {
+      if (!outputSelect || !_sinkIdSupported) return;
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const outputs = devices.filter(d => d.kind === 'audiooutput');
+        outputSelect.innerHTML = '';
+        outputs.forEach((d, i) => {
+          const opt = document.createElement('option');
+          opt.value = d.deviceId;
+          opt.textContent = d.label || `Sortie ${i + 1}`;
+          outputSelect.appendChild(opt);
+        });
+      } catch (_) {}
+    }
+
+    if (_sinkIdSupported && outputSelect) {
+      populateOutputSelect();
+      try { navigator.mediaDevices.addEventListener('devicechange', populateOutputSelect, { signal }); } catch (_) {}
+      outputSelect.addEventListener('change', () => {
+        try { (audioEl as any).setSinkId(outputSelect.value); } catch (_) {}
+      }, { signal });
+    }
+    // ===== fin v1.36 =====
+
     function updateSCInfo(sound: any) {
       if (!sound) return;
       const title   = sound.title || state.currentLbl || 'SoundCloud';
@@ -813,6 +897,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
             });
           }, 400);
         });
+        // v1.36: applique le volume sauvegarde (echelle 0-100 pour le Widget SC)
+        try { widget.setVolume(w.__scMuted ? 0 : getSavedVolume()); } catch (_) {}
         // Titre + pochette du track courant
         widget.getCurrentSound((sound: any) => updateSCInfo(sound));
         // v1.33: le widget est maintenant pret -- reevalue prev/next (caches jusque-la, cf. playSC())
@@ -874,13 +960,23 @@ const facetHrefs = visibleFacets().map(f => f.href);
       // v1.24: mute non supporte par l'API embed Spotify (pas de setVolume expose) -> bouton desactive
       // v1.26: sauf en full playback (Web Playback SDK), ou le mute redevient possible
       const muteBtnEl = playerDiv.querySelector('.player-mute-btn') as HTMLButtonElement;
+      const spotifyVolUnavailable = src === 'spotify' && !(w.__spWebPlayer && w.__spDeviceId);
       if (muteBtnEl) {
-        const spotifyMuteUnavailable = src === 'spotify' && !(w.__spWebPlayer && w.__spDeviceId);
-        muteBtnEl.disabled = spotifyMuteUnavailable;
-        muteBtnEl.title = spotifyMuteUnavailable ? 'Spotify ne permet pas de couper le son via son player embarque' : '';
-        muteBtnEl.style.opacity = spotifyMuteUnavailable ? '0.35' : '';
-        muteBtnEl.style.cursor = spotifyMuteUnavailable ? 'not-allowed' : '';
+        muteBtnEl.disabled = spotifyVolUnavailable;
+        muteBtnEl.title = spotifyVolUnavailable ? 'Spotify ne permet pas de couper le son via son player embarque' : '';
+        muteBtnEl.style.opacity = spotifyVolUnavailable ? '0.35' : '';
+        muteBtnEl.style.cursor = spotifyVolUnavailable ? 'not-allowed' : '';
       }
+      // v1.36: le slider suit la meme disponibilite que le mute (aucun controle volume expose
+      // par Spotify hors full playback SDK)
+      if (volumeSlider) {
+        volumeSlider.disabled = spotifyVolUnavailable;
+        volumeSlider.style.opacity = spotifyVolUnavailable ? '0.35' : '';
+        if (!spotifyVolUnavailable) applyVolume(getSavedVolume());
+      }
+      // v1.36: selecteur de sortie — uniquement pertinent pour la source "audio" (fichier brut),
+      // setSinkId n'ayant aucune prise sur l'audio joue dans les iframes SC/Spotify
+      if (outputSelect) outputSelect.hidden = !_sinkIdSupported || src !== 'audio';
       updateSpotifyConnectBtn(src); // v1.26
       // Toggle embed visible seulement pour SC/Spotify — pas en full playback SDK (aucun iframe a montrer)
       const spFullMode = src === 'spotify' && !!(w.__spWebPlayer && w.__spDeviceId);
@@ -928,6 +1024,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       pauseAll();
       if (audioEl.src !== url) audioEl.src = url;
       audioEl.currentTime = startAt;
+      audioEl.volume = getSavedVolume() / 100; // v1.36
       audioEl.play().catch(console.error);
       state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
@@ -1347,6 +1444,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
               navigator.mediaSession.setActionHandler('previoustrack', () => { try { player.previousTrack(); } catch (_) {} });
               navigator.mediaSession.setActionHandler('nexttrack',     () => { try { player.nextTrack();     } catch (_) {} });
             }
+            // v1.36: applique le volume sauvegarde (echelle 0-1 pour le Web Playback SDK)
+            try { player.setVolume(getSavedVolume() / 100); } catch (_) {}
             resolve(device_id);
           });
           player.addListener('not_ready', () => { w.__spDeviceId = null; });
@@ -1761,7 +1860,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.35';
+    _vt.textContent = 'fx_jam_v1.36';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
