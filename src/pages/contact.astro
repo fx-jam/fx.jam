@@ -18,7 +18,8 @@ const SOCIAL_LABELS: Record<string, string> = {
 
 const socialLinks = Object.entries(contactData.social || {}).filter(([, v]) => v);
 
-const hasContent = contactData.booking_email || socialLinks.length > 0 || contactData.press_kit_url;
+const hasContent = contactData.booking_email || contactData.email
+  || socialLinks.length > 0 || contactData.press_kit_url;
 ---
 
 <BaseLayout
@@ -44,6 +45,15 @@ const hasContent = contactData.booking_email || socialLinks.length > 0 || contac
         <h2 class="section-title">Booking</h2>
         <a href={`mailto:${contactData.booking_email}`} class="booking-btn">
           {contactData.booking_email}
+        </a>
+      </section>
+    )}
+
+    {contactData.email && (
+      <section class="section booking">
+        <h2 class="section-title">Régie, cours & autres demandes</h2>
+        <a href={`mailto:${contactData.email}`} class="booking-btn">
+          {contactData.email}
         </a>
       </section>
     )}
