@@ -21,7 +21,10 @@ const socialLinks = Object.entries(contactData.social || {}).filter(([, v]) => v
 const hasContent = contactData.booking_email || socialLinks.length > 0 || contactData.press_kit_url;
 ---
 
-<BaseLayout title="Contact — hamcat.live" description={f?.teaser}>
+<BaseLayout
+  title="Contact & booking | Hamcat"
+  description="Booking DJ, prestation de régie son, demande de cours MAO : contacter Fx Jam / Hamcat, basé à Grenoble."
+>
   <main class="contact">
 
     {contactData.cover_image && (

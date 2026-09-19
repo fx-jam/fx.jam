@@ -14,8 +14,18 @@ const seo = {
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
+  /** Donnees structurees schema.org injectees dans un <script type="application/ld+json">. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
-const { title = seo.title, description = seo.description } = Astro.props;
+// v1.38 — SEO par page. Avant : les props title/description etaient deconstruites
+// mais jamais utilisees, le <head> lisait toujours l'objet seo global. Resultat :
+// les 8 pages sortaient le meme titre, la meme description et le meme canonical.
+const { title, description, image, jsonLd } = Astro.props;
+const pageTitle       = title       ?? seo.title;
+const pageDescription = description ?? seo.description;
+const pageImage       = image       ?? seo.image;
+const canonicalUrl    = new URL(Astro.url.pathname, seo.url).href;
 const facetHrefs = visibleFacets().map(f => f.href);
 ---
 <!DOCTYPE html>
@@ -23,21 +33,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{seo.title}</title>
-  <meta name="description" content={seo.description} />
-  <link rel="canonical" href={seo.url} />
+  <title>{pageTitle}</title>
+  <meta name="description" content={pageDescription} />
+  <link rel="canonical" href={canonicalUrl} />
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         content={seo.url} />
-  <meta property="og:title"       content={seo.title} />
-  <meta property="og:description" content={seo.description} />
-  <meta property="og:image"       content={seo.image} />
+  <meta property="og:url"         content={canonicalUrl} />
+  <meta property="og:title"       content={pageTitle} />
+  <meta property="og:description" content={pageDescription} />
+  <meta property="og:image"       content={pageImage} />
   <meta property="og:site_name"   content={siteData.displayName} />
+  <meta property="og:locale"      content="fr_FR" />
   <!-- Twitter Card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content={seo.title} />
-  <meta name="twitter:description" content={seo.description} />
-  <meta name="twitter:image"       content={seo.image} />
+  <meta name="twitter:site"        content={seo.twitter} />
+  <meta name="twitter:title"       content={pageTitle} />
+  <meta name="twitter:description" content={pageDescription} />
+  <meta name="twitter:image"       content={pageImage} />
+  {jsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
+  )}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -549,10 +564,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.37 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.38 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.37');
+  console.log('🐱 fx_jam_v1.38');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1902,7 +1917,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.37';
+    _vt.textContent = 'fx_jam_v1.38';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

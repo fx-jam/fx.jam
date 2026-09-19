@@ -30,6 +30,43 @@ const fmtShort = (d: Date) =>
 const visiblePlaylists = (sonData.spotify_playlists ?? [])
   .filter(p => p.visible && p.id);
 
+// v1.38 — donnees structurees : l'artiste + ses dates a venir en MusicEvent.
+// C'est ce qui permet aux dates de remonter dans Google Events / la recherche locale.
+const sonSameAs = Object.values(sonData.links || {}).filter(
+  (u): u is string => typeof u === 'string' && u.startsWith('http')
+);
+
+const artistLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MusicGroup',
+  name: 'Hamcat',
+  url: 'https://hamcat.live/son',
+  genre: sonData.genres?.length ? sonData.genres : ['psytrance', 'hi-tech', 'goa'],
+  ...(sonSameAs.length ? { sameAs: sonSameAs } : {}),
+};
+
+const eventsLd = upcoming.map(g => ({
+  '@context': 'https://schema.org',
+  '@type': 'MusicEvent',
+  name: g.data.title,
+  startDate: g.data.date.toISOString(),
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  location: {
+    '@type': 'Place',
+    name: g.data.venue,
+    address: {
+      '@type': 'PostalAddress',
+      ...(g.data.city ? { addressLocality: g.data.city } : {}),
+      addressCountry: g.data.country || 'France',
+    },
+  },
+  performer: { '@type': 'MusicGroup', name: 'Hamcat' },
+  ...(g.data.eventUrl ? { url: g.data.eventUrl } : {}),
+}));
+
+const sonJsonLd = [artistLd, ...eventsLd];
+
 const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   const cat = p.category || 'Playlists';
   if (!acc[cat]) acc[cat] = [];
@@ -38,7 +75,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 }, {} as Record<string, typeof visiblePlaylists>);
 ---
 
-<BaseLayout title="Son — hamcat.live" description={f?.teaser}>
+<BaseLayout
+  title="Son — DJ sets, dates & playlists | Hamcat"
+  description="Les dates, les sets DJ et les playlists de Hamcat — psytrance, hi-tech, goa. Agenda à venir et historique des gigs."
+  jsonLd={sonJsonLd}
+>
   <main class="son">
 
     <!-- ── HEADER ─────────────────────────────────────────────────── -->

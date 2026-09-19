@@ -18,7 +18,10 @@ for (const eq of regieData.equipment) {
 const equipCats = Object.keys(equipByCat);
 ---
 
-<BaseLayout title="Régie — hamcat.live" description={f?.teaser}>
+<BaseLayout
+  title="Régie son — FOH, monitoring & prestation technique | Hamcat"
+  description={regieData.teaser || "Régie son FOH et retours sur consoles X32/M32/WING — festivals, salles et événements en Isère et Auvergne-Rhône-Alpes."}
+>
   <main class="regie">
 
     <!-- ── COVER HERO ──────────────────────────────────────────────── -->

@@ -8,7 +8,10 @@ const coursData = coursJson as unknown as CoursData;
 const f = getFacet('cours');
 ---
 
-<BaseLayout title="Cours MAO — hamcat.live" description={f?.teaser}>
+<BaseLayout
+  title="Cours MAO & techniques du son — Ableton, DJing, prod | Hamcat"
+  description={coursData.teaser || "Cours de MAO et de techniques du son à Grenoble : Ableton Live, production, DJing, sonorisation et enregistrement."}
+>
   <main class="cours">
 
     <!-- ── COVER HERO ──────────────────────────────────────────────── -->

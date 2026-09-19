@@ -1,8 +1,31 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Turntable from '../components/Turntable.astro';
+import siteData from '../data/site.json';
+
+// v1.38 — donnees structurees : identite de l'artiste + liens officiels.
+// sameAs alimente le "knowledge panel" et relie le site aux profils streaming.
+const sameAs = Object.values(siteData.links || {}).filter(
+  (u): u is string => typeof u === 'string' && u.startsWith('http')
+);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteData.displayName,
+  alternateName: 'Fx Jam',
+  url: 'https://hamcat.live',
+  image: siteData.logo_url,
+  jobTitle: siteData.tagline,
+  address: { '@type': 'PostalAddress', addressRegion: siteData.location, addressCountry: 'FR' },
+  ...(sameAs.length ? { sameAs } : {}),
+};
 ---
 
-<BaseLayout title="hamcat.live" description="DJ, ingénieur son & prof MAO — Fx / Hamcat">
+<BaseLayout
+  title="hamcat.live — Hamcat · DJ, ingénieur son & prof MAO"
+  description="Fx Jam alias Hamcat : DJ psytrance/hi-tech/goa, ingénieur son FOH, formateur MAO Ableton, co-organisateur ADN Festival. Basé à Grenoble."
+  jsonLd={jsonLd}
+>
   <Turntable />
 </BaseLayout>
