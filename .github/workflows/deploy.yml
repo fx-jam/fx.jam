@@ -23,10 +23,12 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: "."   # Worker racine (fx-jam) : site + /api/*
-          secrets: |
-            SC_CLIENT_SECRET
-        env:
-          SC_CLIENT_SECRET: ${{ secrets.SC_CLIENT_SECRET }}
+      # Note : on ne re-pousse plus SC_CLIENT_SECRET a chaque deploiement.
+      # Les secrets Cloudflare persistent d'un deploiement a l'autre, et cet upload
+      # echouait systematiquement ("Failed to upload secrets"), ce qui faisait tomber
+      # le job APRES la mise en ligne du site — donc en silence — et empechait toute
+      # etape suivante de s'executer. Pour changer le secret : wrangler secret put
+      # SC_CLIENT_SECRET, ou le tableau de bord Cloudflare.
 
       # Worker media (media.hamcat.live, bucket R2) — deploye apres le site pour qu'un
       # echec ici ne bloque jamais la mise en ligne de hamcat.live.
