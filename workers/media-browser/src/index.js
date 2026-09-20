@@ -10,27 +10,66 @@ export default {
       return await renderListing(env, prefix, url);
     }
 
-    return await serveFile(env, path);
+    return await serveFile(env, path, request);
   }
 };
 
-async function serveFile(env, key) {
-  const object = await env.MEDIA.get(key);
+const INLINE_EXT = [
+  'jpg', 'jpeg', 'png', 'webp', 'gif', 'svg',
+  'mp3', 'wav', 'flac', 'aac', 'ogg', 'opus', 'm4a',
+  'mp4', 'webm', 'mov',
+];
+
+// Parse un en-tete Range simple ("bytes=START-END", "bytes=START-", "bytes=-SUFFIX").
+// Retourne l'objet attendu par R2 .get({ range }), ou null si non exploitable.
+function parseRange(header) {
+  const m = /^bytes=(\d*)-(\d*)$/.exec((header || '').trim());
+  if (!m) return null;
+  const start = m[1] === '' ? null : parseInt(m[1], 10);
+  const end = m[2] === '' ? null : parseInt(m[2], 10);
+  if (start === null && end === null) return null;
+  if (start === null) return { suffix: end };
+  if (end === null) return { offset: start };
+  if (end < start) return null;
+  return { offset: start, length: end - start + 1 };
+}
+
+async function serveFile(env, key, request) {
+  // Les sets font plusieurs centaines de Mo : sans support du Range, le navigateur
+  // ne peut pas se deplacer dans la piste (chaque seek relancerait le telechargement
+  // depuis le debut, et iOS refuse purement et simplement de lire).
+  const wanted = parseRange(request && request.headers.get('range'));
+
+  let object = null;
+  if (wanted) {
+    object = await env.MEDIA.get(key, { range: wanted });
+  }
+  if (!object) {
+    object = await env.MEDIA.get(key);
+  }
   if (!object) return new Response('Not found', { status: 404 });
 
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('etag', object.httpEtag);
+  headers.set('accept-ranges', 'bytes');
+  headers.set('cache-control', 'public, max-age=31536000, immutable');
 
   const filename = key.split('/').pop();
   const ext = filename.split('.').pop().toLowerCase();
+  const disposition = INLINE_EXT.includes(ext) ? 'inline' : 'attachment';
+  headers.set('Content-Disposition', `${disposition}; filename="${filename}"`);
 
-  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
-    headers.set('Content-Disposition', `inline; filename="${filename}"`);
-  } else {
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  const r = object.range;
+  if (wanted && r && typeof r.offset === 'number' && typeof r.length === 'number') {
+    const start = r.offset;
+    const end = start + r.length - 1;
+    headers.set('content-range', `bytes ${start}-${end}/${object.size}`);
+    headers.set('content-length', String(r.length));
+    return new Response(object.body, { status: 206, headers });
   }
 
+  headers.set('content-length', String(object.size));
   return new Response(object.body, { headers });
 }
 

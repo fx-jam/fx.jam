@@ -22,9 +22,17 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: "."   # deploie uniquement le Worker racine (fx-jam), pas workers/
+          workingDirectory: "."   # Worker racine (fx-jam) : site + /api/*
           secrets: |
             SC_CLIENT_SECRET
         env:
           SC_CLIENT_SECRET: ${{ secrets.SC_CLIENT_SECRET }}
+
+      # Worker media (media.hamcat.live, bucket R2) — deploye apres le site pour qu'un
+      # echec ici ne bloque jamais la mise en ligne de hamcat.live.
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "workers/media-browser"
 
