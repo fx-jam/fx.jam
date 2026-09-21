@@ -566,10 +566,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.41 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.42 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.41');
+  console.log('🐱 fx_jam_v1.42');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1082,12 +1082,48 @@ const facetHrefs = visibleFacets().map(f => f.href);
       artEl.style.display = '';
     }
 
-    function playAudio(url: string, lbl: string, startAt = 0, art = '') {
+    /** Rampe de volume — sert aux fondus entre deux sets. Resout quand la cible est atteinte. */
+    function rampVolume(el: HTMLAudioElement, to: number, ms: number): Promise<void> {
+      return new Promise(resolve => {
+        const from = el.volume;
+        const t0 = performance.now();
+        if (Math.abs(to - from) < 0.01 || ms <= 0) { el.volume = to; return resolve(); }
+        const tick = (t: number) => {
+          const k = Math.min(1, (t - t0) / ms);
+          el.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+          if (k < 1) requestAnimationFrame(tick); else resolve();
+        };
+        requestAnimationFrame(tick);
+      });
+    }
+
+    const FADE_OUT_MS = 280;
+    const FADE_IN_MS  = 420;
+
+    async function playAudio(url: string, lbl: string, startAt = 0, art = '') {
+      const vol = getSavedVolume() / 100; // v1.36
+      const sameTrack = state.currentSource === 'audio'
+        && !!audioEl.currentSrc && audioEl.currentSrc === url;
+
+      // Deplacement dans le set en cours : simple seek, surtout pas un rechargement.
+      if (sameTrack) {
+        audioEl.currentTime = startAt;
+        if (audioEl.paused) { audioEl.play().catch(console.error); updateUI('playing', lbl, 'audio'); }
+        saveState({ type: 'audio', url, lbl, art, position: startAt, playing: true });
+        return;
+      }
+
+      // Fondu de sortie avant de couper : un changement de set sec est desagreable.
+      if (state.currentSource === 'audio' && !audioEl.paused) {
+        await rampVolume(audioEl, 0, FADE_OUT_MS);
+      }
+
       pauseAll();
       if (audioEl.src !== url) audioEl.src = url;
       audioEl.currentTime = startAt;
-      audioEl.volume = getSavedVolume() / 100; // v1.36
+      audioEl.volume = 0;
       audioEl.play().catch(console.error);
+      rampVolume(audioEl, vol, FADE_IN_MS);
       state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
       setAudioArtwork(art); // pauseAll() vide la pochette : on la repose apres updateUI
@@ -1762,8 +1798,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
       if (target.closest('.player-play-btn')) {
         if (state.currentSource === 'audio') {
-          if (audioEl.paused) { audioEl.play();  updateUI('playing', state.currentLbl, 'audio'); }
-          else                { audioEl.pause();  updateUI('paused',  state.currentLbl, 'audio'); }
+          if (audioEl.paused) {
+            audioEl.volume = 0;
+            audioEl.play();
+            rampVolume(audioEl, getSavedVolume() / 100, FADE_IN_MS);
+            updateUI('playing', state.currentLbl, 'audio');
+          } else {
+            const v = audioEl.volume;
+            rampVolume(audioEl, 0, FADE_OUT_MS).then(() => { audioEl.pause(); audioEl.volume = v; });
+            updateUI('paused', state.currentLbl, 'audio');
+          }
         } else if (state.currentSource === 'soundcloud' && w.__scWidget) {
           w.__scWidget.isPaused((paused: boolean) => {
             if (paused) w.__scWidget.play();
@@ -1945,7 +1989,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.41';
+    _vt.textContent = 'fx_jam_v1.42';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

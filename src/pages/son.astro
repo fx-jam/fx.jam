@@ -178,33 +178,39 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
             <p class="empty">Aucun gig enregistré.</p>
           ) : (
             <ul class="gig-list">
-              {past.map(g => {
+              {past.flatMap(g => {
                 const recs = recordingsOf(g.data);
-                return (
-                <li class:list={['gig-row', recs.length && 'has-rec']}>
-                  <div class="gig-line">
-                    <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
-                    <span class="c-title">{g.data.title}</span>
-                    {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
-                    <span class="c-format">{g.data.format}</span>
-                  </div>
-                  {recs.map(r => (
-                    <div class="rec">
-                      <button
-                        class="btn-ecouter rec-play"
-                        data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
-                        data-url={r.url}
-                        data-lbl={r.label ? `${g.data.title} — ${r.label}` : g.data.title}
-                      >▶</button>
-                      {r.label && <span class="rec-label">{r.label}</span>}
-                      {waveformUrl(r.url)
-                        ? <div class="wave" data-wave={waveformUrl(r.url)} data-url={r.url}
-                               data-lbl={r.label ? `${g.data.title} — ${r.label}` : g.data.title}></div>
-                        : <a href={r.url} target="_blank" rel="noopener" class="link-btn link-btn--sm">Écouter</a>}
-                    </div>
-                  ))}
-                </li>
-              );})}
+                const tags = (g.data.genre ?? []).join(' · ');
+                // Un enregistrement par ligne : un evenement a deux scenes donne deux
+                // lignes de meme hauteur plutot qu'une ligne deux fois plus haute.
+                const rows = recs.length ? recs : [null];
+                return rows.map((r, i) => {
+                  const wave = r ? waveformUrl(r.url) : null;
+                  const lbl  = r?.label ? `${g.data.title} — ${r.label}` : g.data.title;
+                  return (
+                  <li class="gig-row">
+                    {i === 0
+                      ? <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
+                      : <span class="c-date c-date--cont"></span>}
+                    <span class="c-title">{i === 0 ? g.data.title : `↳ ${r?.label ?? ''}`}</span>
+                    <span class="c-tags">{i === 0 ? tags : (r?.label ? '' : tags)}</span>
+                    <span class="c-rec">
+                      {r && (
+                        <button
+                          class="btn-ecouter rec-play"
+                          data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
+                          data-url={r.url}
+                          data-lbl={lbl}
+                        >▶</button>
+                      )}
+                      {wave && r && (
+                        <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}></div>
+                      )}
+                      {wave && r && <span class="wave-time" data-time-for={r.url}></span>}
+                    </span>
+                  </li>
+                );});
+              })}
             </ul>
           )}
         </details>
@@ -497,24 +503,37 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
   /* ── Lignes gig — 4 colonnes compactes : date | titre | venue | format ── */
   .gig-list { list-style: none; padding: 0; margin: 0; }
+  /* Une rangee unique, meme hauteur avec ou sans enregistrement : les colonnes
+     du bloc lecture restent en place et simplement vides quand il n'y a rien. */
   .gig-row {
-    display: flex;
-    flex-direction: column;
-    padding: 0.45rem 0;
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) minmax(0, 0.8fr) minmax(190px, 1.1fr);
+    align-items: center;
+    column-gap: 0.7rem;
+    padding: 0.22rem 0;
     border-top: 1px solid var(--border);
+    min-height: 30px;
   }
-  .gig-line {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    min-width: 0;
+  .gig-row .c-title,
+  .gig-row .c-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-date--cont { visibility: hidden; }
+  .c-tags {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
   }
-  .gig-line .c-date  { flex: 0 0 auto; }
-  .gig-line .c-title { flex: 0 1 auto; min-width: 0; overflow: hidden;
-                       text-overflow: ellipsis; white-space: nowrap; }
-  .gig-line .c-venue { flex: 1 1 auto; min-width: 0; overflow: hidden;
-                       text-overflow: ellipsis; white-space: nowrap; }
-  .gig-line .c-format { flex: 0 0 auto; margin-left: auto; }
+  .c-rec { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+  .wave-time {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    flex: 0 0 auto;
+    min-width: 5.2em;
+    text-align: right;
+  }
+  .gig-line { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; }
   .gig-row:last-child { border-bottom: 1px solid var(--border); }
 
   .gig-upcoming {
@@ -715,7 +734,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   .wave {
     flex: 1 1 auto;
     min-width: 0;
-    height: 28px;
+    height: 22px;
     cursor: pointer;
     touch-action: manipulation;
   }
@@ -786,6 +805,17 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   // ligne entre dans le champ de vision.
   const WAVE_BARS = 160;
 
+  const fmtTime = (sec: number) => {
+    const s = Math.max(0, Math.floor(sec));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    return h ? `${h}:${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`
+             : `${m}:${String(r).padStart(2,'0')}`;
+  };
+
+  /** Le libelle de duree vit a cote de sa waveform : on le retrouve par l'URL du set. */
+  const timeElFor = (url?: string) =>
+    url ? document.querySelector<HTMLElement>(`.wave-time[data-time-for="${CSS.escape(url)}"]`) : null;
+
   function drawWave(el: HTMLElement, peaks: number[]) {
     const step = Math.max(1, Math.floor(peaks.length / WAVE_BARS));
     const bars: string[] = [];
@@ -824,6 +854,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         .then(d => {
           el.dataset.duration = String(d.duration || 0);
           drawWave(el, d.peaks || []);
+          const t = timeElFor(el.dataset.url);
+          if (t && d.duration) t.textContent = fmtTime(d.duration);
         })
         .catch(() => { el.remove(); }); // pas de waveform generee : on n'affiche rien
     };
@@ -854,9 +886,15 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     const { url, position, duration } = e.detail;
     if (!duration) return;
     document.querySelectorAll<HTMLElement>('.wave[data-wave-ready]').forEach(el => {
-      const mine = url && el.dataset.url && url.indexOf(el.dataset.url) === 0;
+      const mine = !!(url && el.dataset.url && url.indexOf(el.dataset.url) === 0);
       setWaveProgress(el, mine ? position / duration : 0);
-      el.classList.toggle('is-playing', !!mine);
+      el.classList.toggle('is-playing', mine);
+      const t = timeElFor(el.dataset.url);
+      if (!t) return;
+      const total = parseFloat(el.dataset.duration || '0') || duration;
+      // Pendant la lecture on affiche position / total, comme la barre du player ;
+      // au repos, la duree seule.
+      t.textContent = mine ? `${fmtTime(position)} / ${fmtTime(total)}` : fmtTime(total);
     });
   });
 
