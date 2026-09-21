@@ -24,8 +24,9 @@ const past = all
 const fmtLong  = (d: Date) =>
   d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
+const p2 = (n: number) => String(n).padStart(2, '0');
 const fmtShort = (d: Date) =>
-  d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  `${p2(d.getFullYear() % 100)}/${p2(d.getMonth() + 1)}/${p2(d.getDate())}`;
 
 const visiblePlaylists = (sonData.spotify_playlists ?? [])
   .filter(p => p.visible && p.id);
@@ -189,11 +190,12 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                   const lbl  = r?.label ? `${g.data.title} — ${r.label}` : g.data.title;
                   return (
                   <li class="gig-row">
-                    {i === 0
-                      ? <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
-                      : <span class="c-date c-date--cont"></span>}
-                    <span class="c-title">{i === 0 ? g.data.title : `↳ ${r?.label ?? ''}`}</span>
-                    <span class="c-tags">{i === 0 ? tags : (r?.label ? '' : tags)}</span>
+                    <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
+                    <span class="c-title">
+                      {g.data.title}
+                      {(r?.label || g.data.role) && <span class="c-sub"> · {r?.label ?? g.data.role}</span>}
+                    </span>
+                    <span class="c-tags">{tags}</span>
                     <span class="c-rec">
                       {r && (
                         <button
@@ -507,7 +509,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      du bloc lecture restent en place et simplement vides quand il n'y a rien. */
   .gig-row {
     display: grid;
-    grid-template-columns: 74px minmax(0, 1fr) minmax(0, 0.8fr) minmax(190px, 1.1fr);
+    grid-template-columns: 62px minmax(0, 1fr) minmax(0, 0.5fr) minmax(260px, 1.9fr);
     align-items: center;
     column-gap: 0.7rem;
     padding: 0.22rem 0;
@@ -516,7 +518,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .gig-row .c-title,
   .gig-row .c-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .c-date--cont { visibility: hidden; }
+  .c-sub { color: var(--text-tertiary); font-weight: 400; }
   .c-tags {
     font-family: var(--font-mono);
     font-size: 0.6rem;
@@ -739,10 +741,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     touch-action: manipulation;
   }
   .wave svg { width: 100%; height: 100%; display: block; }
-  .wave .wave-bg { fill: color-mix(in srgb, var(--facet-son) 28%, transparent); }
+  .wave .wave-bg { fill: color-mix(in srgb, var(--text-tertiary) 60%, transparent); }
   .wave .wave-fg { fill: var(--facet-son); }
-  .wave:hover .wave-bg { fill: color-mix(in srgb, var(--facet-son) 45%, transparent); }
-  .wave.is-playing .wave-bg { fill: color-mix(in srgb, var(--facet-son) 35%, transparent); }
+  .wave:hover .wave-bg { fill: color-mix(in srgb, var(--text-secondary) 75%, transparent); }
 
   /* ── Bibliotheque : filtrage par tags ── */
   .tag-bar {
@@ -790,7 +791,14 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         if (type === 'audio' || type === 'soundcloud') {
           const url = btn.dataset.url ?? '';
           const art = btn.dataset.art ?? '';
-          if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl, art } }));
+          if (!url) return;
+          // Recliquer le set deja charge met en pause / reprend, au lieu de le relancer a zero.
+          const cur = (window as any).__hamcatCurrent?.();
+          if (cur && cur.source === 'audio' && cur.url === url) {
+            document.dispatchEvent(new CustomEvent('hamcat:toggle'));
+            return;
+          }
+          document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl, art } }));
         } else if (type === 'spotify') {
           const playlistId = btn.dataset.playlistId ?? '';
           if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));
