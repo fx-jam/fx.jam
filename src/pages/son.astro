@@ -204,8 +204,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       {g.data.title}
                       {(r?.label || g.data.role) && <span class="c-sub"> · {r?.label ?? g.data.role}</span>}
                     </span>
-                    <span class="c-tags">{tags}</span>
                     <span class="c-rec">
+                      <span class="c-tags">{tags}</span>
                       {r ? (
                         <>
                           <button
@@ -231,6 +231,18 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                         </span>
                       )}
                     </span>
+                    {i === 0 && (g.data.city || g.data.duration || (g.data.lineup ?? []).length || g.data.eventUrl) && (
+                      <span class="gig-det">
+                        {g.data.city && <span class="det">{g.data.city}</span>}
+                        {g.data.duration && <span class="det">{g.data.duration}</span>}
+                        {(g.data.lineup ?? []).length > 0 && (
+                          <span class="det">avec {(g.data.lineup ?? []).join(', ')}</span>
+                        )}
+                        {g.data.eventUrl && (
+                          <a class="det det--link" href={g.data.eventUrl} target="_blank" rel="noopener">événement ↗</a>
+                        )}
+                      </span>
+                    )}
                   </li>
                 );});
               })}
@@ -535,15 +547,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      du bloc lecture restent en place et simplement vides quand il n'y a rien. */
   .gig-row {
     display: grid;
-    grid-template-columns: 82px minmax(0, 1fr) minmax(0, 0.5fr) minmax(260px, 1.9fr);
+    grid-template-columns: 82px minmax(0, 1fr) minmax(300px, 1.8fr);
     align-items: center;
     column-gap: 0.7rem;
     padding: 0.22rem 0;
     border-top: 1px solid var(--border);
     min-height: 30px;
   }
-  .gig-row .c-title,
-  .gig-row .c-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gig-row .c-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-tags { flex: 0 1 auto; min-width: 0; max-width: 11em;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .c-sub { color: var(--text-tertiary); font-weight: 400; }
   .c-tags {
     font-family: var(--font-mono);
@@ -552,6 +565,19 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     color: var(--text-tertiary);
   }
   .c-rec { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+  /* Details complementaires : n'apparaissent que si le CMS les renseigne. */
+  .gig-det {
+    grid-column: 2 / -1;
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-top: 0.1rem;
+  }
+  .det {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .det--link { color: var(--facet-son); text-decoration: none; opacity: 0.8; }
+  .det--link:hover { opacity: 1; text-decoration: underline; }
+
   .rec-note {
     font-family: var(--font-mono);
     font-size: 0.58rem;
@@ -728,6 +754,14 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       padding: 1rem;
     }
     .bio { display: none; }
+    .gig-row {
+      grid-template-columns: 78px minmax(0, 1fr);
+      row-gap: 0.15rem;
+    }
+    .c-rec { grid-column: 1 / -1; flex-wrap: wrap; }
+    .c-tags { max-width: none; flex: 1 1 100%; }
+    .gig-det { grid-column: 1 / -1; }
+    .wave-time { flex: 0 0 auto; width: auto; }
     .panels { overflow: visible; }
     .panel { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
     .facet-tabs { flex-wrap: wrap; padding: 0 1rem 0.6rem; }
