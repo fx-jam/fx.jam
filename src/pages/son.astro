@@ -208,6 +208,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                           data-type={mix.audio_url ? 'audio' : 'soundcloud'}
                           data-url={mix.audio_url || mix.soundcloud_url}
                           data-lbl={mix.title}
+                          data-art={mix.image || ''}
                         >▶</button>
                       )}
                     </span>
@@ -599,7 +600,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         const lbl  = btn.dataset.lbl  ?? '';
         if (type === 'audio' || type === 'soundcloud') {
           const url = btn.dataset.url ?? '';
-          if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl } }));
+          const art = btn.dataset.art ?? '';
+          if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl, art } }));
         } else if (type === 'spotify') {
           const playlistId = btn.dataset.playlistId ?? '';
           if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));

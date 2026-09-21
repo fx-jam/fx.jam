@@ -514,7 +514,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     <!-- État 2 : transport bar (pleine largeur) -->
     <div class="player-full">
-      <img id="player-artwork" src="" alt="" width="40" height="40" />
+      <!-- data-fallback : pochette par defaut (logo du site) pour les sets joues en direct depuis R2,
+           qui n'ont pas d'artwork fourni par une plateforme. -->
+      <img id="player-artwork" src="" alt="" width="40" height="40" data-fallback={siteData.logo_url} />
       <div class="player-meta">
         <a id="player-title" class="player-label" target="_blank" rel="noopener noreferrer">—</a>
         <div class="player-meta-sub">
@@ -564,10 +566,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.38 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.39 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.38');
+  console.log('🐱 fx_jam_v1.39');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1070,7 +1072,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (miniTimeEl)   miniTimeEl.textContent = '—';
     }
 
-    function playAudio(url: string, lbl: string, startAt = 0) {
+    /** Pochette de la source "audio" : celle du set si fournie, sinon le logo du site. */
+    function setAudioArtwork(art = '') {
+      const artEl = document.getElementById('player-artwork') as HTMLImageElement;
+      if (!artEl) return;
+      const src = art || artEl.dataset.fallback || '';
+      if (!src) return;
+      artEl.src = src;
+      artEl.style.display = '';
+    }
+
+    function playAudio(url: string, lbl: string, startAt = 0, art = '') {
       pauseAll();
       if (audioEl.src !== url) audioEl.src = url;
       audioEl.currentTime = startAt;
@@ -1078,7 +1090,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       audioEl.play().catch(console.error);
       state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
-      saveState({ type: 'audio', url, lbl, position: startAt, playing: true });
+      setAudioArtwork(art); // pauseAll() vide la pochette : on la repose apres updateUI
+      saveState({ type: 'audio', url, lbl, art, position: startAt, playing: true });
     }
 
     function playSC(url: string, lbl: string, startAtMs = 0, trackIndex = 0, shouldPlay = true, isRestore = false) {
@@ -1624,9 +1637,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
     }
 
-    // Sauvegarde position audio toutes les 5 s
+    // Scrubber + compteurs de la source "audio".
+    // Les sources SC/Spotify ont leurs propres evenements de progression ; l'element <audio>
+    // n'en avait aucun, d'ou une barre figee a 0 pendant toute la lecture d'un set.
     audioEl.addEventListener('timeupdate', () => {
       if (state.currentSource !== 'audio') return;
+      const dur = audioEl.duration;
+      if (isFinite(dur) && dur > 0) {
+        if (scrubFill)    scrubFill.style.width = ((audioEl.currentTime / dur) * 100) + '%';
+        if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(audioEl.currentTime * 1000)} / ${fmtMs(dur * 1000)}`;
+        if (miniTimeEl)   miniTimeEl.textContent = fmtMs(audioEl.currentTime * 1000);
+      }
+      // Sauvegarde position toutes les 5 s
       if (Math.round(audioEl.currentTime) % 5 !== 0) return;
       try {
         const saved = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
@@ -1675,6 +1697,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
             }
           } else if (saved.type === 'audio') {
             updateUI(!audioEl.paused ? 'playing' : 'paused', saved.lbl, 'audio');
+            setAudioArtwork(saved.art || '');
           } else if (saved.type === 'spotify') {
             if ((w as any).__spController || ((w as any).__spWebPlayer && (w as any).__spDeviceId)) {
               updateUI('playing', saved.lbl, 'spotify');
@@ -1691,6 +1714,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           state.currentSource = 'audio';
           if (audioEl.src && !audioEl.paused) updateUI('playing', saved.lbl, 'audio');
           else if (audioEl.src)               updateUI('paused',  saved.lbl, 'audio');
+          if (audioEl.src) setAudioArtwork(saved.art || '');
         } else if (saved.type === 'soundcloud') {
           // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
           if (state.scIframe?.src?.startsWith('https://w.soundcloud.com')) {
@@ -1722,8 +1746,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     // hamcat:play — depuis les boutons du site
     document.addEventListener('hamcat:play', (e: any) => {
-      const { type, url, playlistId, lbl, startAt } = e.detail;
-      if      (type === 'audio')      playAudio(url, lbl, startAt || 0);
+      const { type, url, playlistId, lbl, startAt, art } = e.detail;
+      if      (type === 'audio')      playAudio(url, lbl, startAt || 0, art || '');
       else if (type === 'soundcloud') playSC(url, lbl);
       else if (type === 'spotify')    playSpotify(playlistId, lbl);
     }, { signal });
@@ -1917,7 +1941,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.38';
+    _vt.textContent = 'fx_jam_v1.39';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
