@@ -15,6 +15,8 @@ export interface FacetMix {
   duration_min: number;
   mixcloud_url: string;
   soundcloud_url: string;
+  /** Fichier audio servi directement (bucket R2, media.hamcat.live) — lu par la source `audio` du player. */
+  audio_url?: string;
   image: string;
 }
 

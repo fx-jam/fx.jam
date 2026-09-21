@@ -193,7 +193,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                   {mix.date && <time class="mix-date">{mix.date.slice(0, 7)}</time>}
                   <span class="mix-title">{mix.title}</span>
                   {mix.duration_min > 0 && <span class="mix-dur">{mix.duration_min}min</span>}
-                  {(mix.mixcloud_url || mix.soundcloud_url) && (
+                  {(mix.mixcloud_url || mix.soundcloud_url || mix.audio_url) && (
                     <span class="mix-links">
                       {mix.mixcloud_url && (
                         <a href={mix.mixcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">Mixcloud</a>
@@ -201,11 +201,12 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       {mix.soundcloud_url && (
                         <a href={mix.soundcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">SC</a>
                       )}
-                      {mix.soundcloud_url && (
+                      {/* Le fichier direct (R2) prime sur l'embed SoundCloud : lecture continue, seek fiable. */}
+                      {(mix.audio_url || mix.soundcloud_url) && (
                         <button
                           class="btn-ecouter link-btn link-btn--sm"
-                          data-type="soundcloud"
-                          data-url={mix.soundcloud_url}
+                          data-type={mix.audio_url ? 'audio' : 'soundcloud'}
+                          data-url={mix.audio_url || mix.soundcloud_url}
                           data-lbl={mix.title}
                         >▶</button>
                       )}

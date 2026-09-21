@@ -6,7 +6,218 @@
   "cover_image": "",
   "bio": "",
   "genres": [],
-  "mixes": [],
+  "mixes": [
+    {
+      "title": "Loto Tekno",
+      "date": "2026-02-14",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2026-02-14-loto-tekno.mp3",
+      "image": ""
+    },
+    {
+      "title": "Bal des Glingués",
+      "date": "2025-01-23",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-23-bal-des-glingues.mp3",
+      "image": ""
+    },
+    {
+      "title": "Boom Boom Coconut",
+      "date": "2025-12-20",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-12-20-boom-boom-coconut.mp3",
+      "image": ""
+    },
+    {
+      "title": "Hadra — Nuits Parallèles",
+      "date": "2025-12-11",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-12-11-hadra-nuits-paralleles.mp3",
+      "image": ""
+    },
+    {
+      "title": "ADN Open Air",
+      "date": "2025-10-01",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-10-open-air-adn.mp3",
+      "image": ""
+    },
+    {
+      "title": "Senoï",
+      "date": "2025-10-01",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-10-senoi.mp3",
+      "image": ""
+    },
+    {
+      "title": "Aya Atma — Out of the Void",
+      "date": "2025-09-20",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/25-aya-atma-ootv.mp3",
+      "image": ""
+    },
+    {
+      "title": "Hadra Trance Festival — Main Stage",
+      "date": "2025-08-31",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/hadra-25-main.mp3",
+      "image": ""
+    },
+    {
+      "title": "Hadra Trance Festival — La Bulle",
+      "date": "2025-08-31",
+      "genre": "chill",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-08-hadra-25-bulle.mp3",
+      "image": ""
+    },
+    {
+      "title": "ADN Music Festival — closing",
+      "date": "2025-07-13",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2025-07-13-adn-closing-new.mp3",
+      "image": ""
+    },
+    {
+      "title": "Nexen Festival",
+      "date": "2025-06-08",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/nexen.mp3",
+      "image": ""
+    },
+    {
+      "title": "Festi Rentrée",
+      "date": "2024-09-26",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2024-09-festirentree.mp3",
+      "image": ""
+    },
+    {
+      "title": "EIT Bakop",
+      "date": "2024-09-19",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2024-09-eitbakop.mp3",
+      "image": ""
+    },
+    {
+      "title": "Psybagar",
+      "date": "2024-08-01",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2024-08-psybagar2.mp3",
+      "image": ""
+    },
+    {
+      "title": "EVE",
+      "date": "2024-06-01",
+      "genre": "psytrance",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2024-06-eve.mp3",
+      "image": ""
+    },
+    {
+      "title": "Hi-Tech vs Acidcore",
+      "date": "2024-03-01",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/2024-03-hitech-vs-acidcore.mp3",
+      "image": ""
+    },
+    {
+      "title": "EDC 2024 — Stage 3",
+      "date": "2024-01-01",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/edc-2024-stg3-20-hamcat.flac",
+      "image": ""
+    },
+    {
+      "title": "Howling Nebula — Hadra (raw)",
+      "date": "2023-11-20",
+      "genre": "darkpsy",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/howling-nebula-set-hadra-raw-20231120.mp3",
+      "image": ""
+    },
+    {
+      "title": "Équipe B",
+      "date": "",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/ekipb.mp3",
+      "image": ""
+    },
+    {
+      "title": "ODG",
+      "date": "",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/hamcat-odg.mp3",
+      "image": ""
+    },
+    {
+      "title": "Rescue Hi-Tech",
+      "date": "",
+      "genre": "hi-tech",
+      "duration_min": 0,
+      "mixcloud_url": "",
+      "soundcloud_url": "",
+      "audio_url": "https://media.hamcat.live/sets/rescue-hitech.mp3",
+      "image": ""
+    }
+  ],
   "spotify_user_id": "1198265241",
   "spotify_playlists": [
     {
