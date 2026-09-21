@@ -127,7 +127,23 @@ collections:
               - { name: mixcloud_url,  label: "URL Mixcloud",  widget: string,   required: false }
               - { name: soundcloud_url, label: "URL SoundCloud", widget: string, required: false }
               - { name: audio_url,     label: "Fichier audio (URL directe)", widget: string, required: false, hint: "Ex: https://media.hamcat.live/sets/2025-10-senoi.mp3 — lecture dans le player du site" }
-              - { name: tags,          label: "Tags (style, ambiance)", widget: list, required: false, hint: "Ex: hi-tech, darkpsy, chill, warm-up, peak-time" }
+              - name: tags
+                label: "Styles"
+                widget: select
+                multiple: true
+                required: false
+                hint: "Sert au filtrage de la bibliotheque sur /son"
+                options:
+                  - psychill
+                  - chillgressive
+                  - psydub
+                  - psyprog
+                  - psytrance
+                  - full-on
+                  - hi-tech
+                  - darkpsy
+                  - mentalcore
+                  - electrad
               - { name: image,         label: Image,           widget: image,    required: false }
           - { label: "Spotify User ID", name: spotify_user_id, widget: string, required: false, hint: "Identifiant URL de ton profil Spotify" }
           - name: spotify_playlists

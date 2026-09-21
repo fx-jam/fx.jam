@@ -54,6 +54,10 @@ async function serveFile(env, key, request) {
   headers.set('etag', object.httpEtag);
   headers.set('accept-ranges', 'bytes');
   headers.set('cache-control', 'public, max-age=31536000, immutable');
+  // hamcat.live et media.hamcat.live sont deux origines distinctes : sans cet en-tete,
+  // un fetch() depuis le site (les waveforms JSON, par exemple) est rejete par le navigateur.
+  headers.set('access-control-allow-origin', '*');
+  headers.set('access-control-expose-headers', 'content-length, content-range, accept-ranges');
 
   const filename = key.split('/').pop();
   const ext = filename.split('.').pop().toLowerCase();

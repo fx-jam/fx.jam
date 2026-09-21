@@ -131,11 +131,21 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
          onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
     </header>
 
-    <!-- ── COLONNES ───────────────────────────────────────────────── -->
-    <div class="panels">
+    <!-- ── SECTIONS ───────────────────────────────────────────────── -->
+    <!-- L'agenda et la bibliotheque ne cohabitent plus en colonnes : a trois
+         colonnes dans une fenetre, chacune tombait sous 250 px et les titres
+         d'evenements etaient tronques a deux caracteres. Une section a la fois,
+         sur toute la largeur. -->
+    <nav class="facet-tabs" id="facet-tabs">
+      <button class="facet-tab is-on" data-panel="agenda">Agenda</button>
+      <button class="facet-tab" data-panel="sets">Bibliothèque</button>
+      <button class="facet-tab" data-panel="playlists">Playlists</button>
+    </nav>
+
+    <div class="panels" id="panels">
 
       <!-- ── Agenda ── -->
-      <div class="panel panel-agenda">
+      <div class="panel panel-agenda" data-panel="agenda">
         <h2 class="col-title">Agenda</h2>
 
         <div class="gig-group">
@@ -146,10 +156,12 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
             <ul class="gig-list">
               {upcoming.map(g => (
                 <li class="gig-row gig-upcoming">
-                  <time datetime={g.data.date.toISOString()} class="c-date">{fmtLong(g.data.date)}</time>
-                  <span class="c-title">{g.data.title}</span>
-                  {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
-                  <span class="c-format">{g.data.format}</span>
+                  <div class="gig-line">
+                    <time datetime={g.data.date.toISOString()} class="c-date">{fmtLong(g.data.date)}</time>
+                    <span class="c-title">{g.data.title}</span>
+                    {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
+                    <span class="c-format">{g.data.format}</span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -199,7 +211,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       </div>
 
       <!-- ── Sets ── -->
-      <div class="panel panel-sets">
+      <div class="panel panel-sets" data-panel="sets">
         <h2 class="col-title">Sets</h2>
 
         {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify ||
@@ -289,7 +301,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       </div>
 
       <!-- ── Playlists ── -->
-      <div class="panel panel-playlists">
+      <div class="panel panel-playlists" data-panel="playlists">
         <h2 class="col-title">Playlists</h2>
 
         {Object.keys(playlistsByCategory).length === 0 ? (
@@ -411,19 +423,42 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   .home:hover { background: color-mix(in srgb, var(--facet-son) 15%, transparent); }
 
   /* ── Grille 3 colonnes ── */
-  .panels {
-    flex: 1;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+  .panels { flex: 1; overflow: hidden; display: block; }
+  .panels > .panel { display: none; }
+  .panels > .panel.is-on { display: block; }
+
+  /* ── Onglets de section ── */
+  .facet-tabs {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0 1.25rem 0.6rem;
+    flex: 0 0 auto;
+  }
+  .facet-tab {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .facet-tab:hover { border-color: var(--facet-son); color: var(--text-secondary); }
+  .facet-tab.is-on {
+    border-color: var(--facet-son);
+    color: var(--facet-son);
+    background: color-mix(in srgb, var(--facet-son) 14%, transparent);
   }
 
   .panel {
+    height: 100%;
     overflow-y: auto;
     padding: 1rem 1.25rem;
-    border-right: 1px solid var(--border);
   }
-  .panel:last-child { border-right: none; }
 
   /* ── Titres de colonnes ── */
   .col-title {
@@ -463,13 +498,23 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   /* ── Lignes gig — 4 colonnes compactes : date | titre | venue | format ── */
   .gig-list { list-style: none; padding: 0; margin: 0; }
   .gig-row {
-    display: grid;
-    grid-template-columns: 68px 1fr 36px;
-    column-gap: 0.5rem;
-    padding: 0.4rem 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0.45rem 0;
     border-top: 1px solid var(--border);
-    align-items: center;
   }
+  .gig-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+  .gig-line .c-date  { flex: 0 0 auto; }
+  .gig-line .c-title { flex: 0 1 auto; min-width: 0; overflow: hidden;
+                       text-overflow: ellipsis; white-space: nowrap; }
+  .gig-line .c-venue { flex: 1 1 auto; min-width: 0; overflow: hidden;
+                       text-overflow: ellipsis; white-space: nowrap; }
+  .gig-line .c-format { flex: 0 0 auto; margin-left: auto; }
   .gig-row:last-child { border-bottom: 1px solid var(--border); }
 
   .gig-upcoming {
@@ -614,18 +659,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       padding: 1rem;
     }
     .bio { display: none; }
-    .panels {
-      grid-template-columns: 1fr;
-      overflow: visible;
-    }
-    .panel {
-      overflow-y: visible;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-      padding: 1.25rem 1rem;
-    }
-    .panel:last-child { border-bottom: none; }
-    .gig-row { grid-template-columns: 64px 1fr 36px; }
+    .panels { overflow: visible; }
+    .panel { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
+    .facet-tabs { flex-wrap: wrap; padding: 0 1rem 0.6rem; }
     .c-venue { display: none; }
   }
 
@@ -658,7 +694,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   .btn-ecouter--sm { padding: 0.25rem 0.55rem; font-size: 0.66rem; }
 
   /* ── Enregistrements rattaches a une date ── */
-  .gig-line, .mix-line { display: flex; align-items: baseline; gap: 0.5rem; width: 100%; }
+  .mix-line { display: flex; align-items: baseline; gap: 0.5rem; width: 100%; }
   .rec {
     display: flex;
     align-items: center;
@@ -848,7 +884,28 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  function initSon() { attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
+  function attachTabs() {
+    const tabs = document.getElementById('facet-tabs');
+    const panels = document.getElementById('panels');
+    if (!tabs || !panels || tabs.dataset.ready) return;
+    tabs.dataset.ready = '1';
+    const show = (key: string) => {
+      tabs.querySelectorAll<HTMLElement>('.facet-tab')
+          .forEach(t => t.classList.toggle('is-on', t.dataset.panel === key));
+      panels.querySelectorAll<HTMLElement>('.panel')
+            .forEach(p => p.classList.toggle('is-on', p.dataset.panel === key));
+      // Les waveforms de la section qui vient d'apparaitre n'ont jamais croise
+      // l'observateur tant qu'elles etaient masquees.
+      attachWaveforms();
+    };
+    tabs.addEventListener('click', e => {
+      const t = (e.target as HTMLElement).closest<HTMLElement>('.facet-tab');
+      if (t?.dataset.panel) show(t.dataset.panel);
+    });
+    show('agenda');
+  }
+
+  function initSon() { attachTabs(); attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>
