@@ -777,9 +777,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     touch-action: manipulation;
   }
   .wave :global(svg) { width: 100%; height: 100%; display: block; }
-  .wave :global(.wave-bg) { fill: var(--wave-rest); }
+  .wave :global(.wave-bg) { fill: color-mix(in srgb, var(--wave-played, var(--style-default)) 30%, transparent); }
   .wave :global(.wave-fg) { fill: var(--wave-played, var(--style-default)); }
-  .wave:hover :global(.wave-bg) { fill: rgba(240, 240, 245, 0.48); }
+  .wave:hover :global(.wave-bg) { fill: color-mix(in srgb, var(--wave-played, var(--style-default)) 50%, transparent); }
 
   /* ── Bibliotheque : filtrage par tags ── */
   .tag-bar {

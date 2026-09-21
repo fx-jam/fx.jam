@@ -292,15 +292,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
       padding: 0 1rem 0.5rem;
       flex: 0 0 auto;
     }
-    :global(.lib-chip) {
+    .lib-chip {
       font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em;
       padding: 0.24rem 0.55rem; border-radius: 999px;
       border: 1px solid var(--border); background: transparent;
       color: var(--text-tertiary); cursor: pointer;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
-    :global(.lib-chip):hover { border-color: var(--facet-son); color: var(--text-secondary); }
-    :global(.lib-chip).is-on {
+    .lib-chip:hover { border-color: var(--facet-son); color: var(--text-secondary); }
+    .lib-chip.is-on {
       border-color: var(--facet-son); color: var(--facet-son);
       background: color-mix(in srgb, var(--facet-son) 14%, transparent);
     }
@@ -322,7 +322,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
     .lib-legend span:last-child { text-align: right; }
 
-    :global(.lib-row) {
+    .lib-row {
       display: grid;
       grid-template-columns: 26px 90px minmax(0, 1fr) minmax(0, 0.5fr) 30px;
       align-items: center; column-gap: 0.55rem;
@@ -330,32 +330,32 @@ const facetHrefs = visibleFacets().map(f => f.href);
       border-top: 1px solid var(--border);
       cursor: pointer;
     }
-    :global(.lib-row:hover) { background: color-mix(in srgb, var(--facet-son) 7%, transparent); }
-    :global(.lib-row.is-current) { background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
-    :global(.lib-play) {
+    .lib-row:hover { background: color-mix(in srgb, var(--facet-son) 7%, transparent); }
+    .lib-row.is-current { background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
+    .lib-play {
       background: none; border: 1px solid var(--border); border-radius: 5px;
       color: var(--text-secondary); cursor: pointer;
       font-size: 0.6rem; line-height: 1; padding: 0.24rem 0;
     }
-    :global(.lib-row:hover .lib-play) { border-color: var(--facet-son); color: var(--facet-son); }
-    :global(.lib-date), .lib-styles, .lib-src {
+    .lib-row:hover .lib-play { border-color: var(--facet-son); color: var(--facet-son); }
+    .lib-date, .lib-styles, .lib-src {
       font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-tertiary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    :global(.lib-src) { text-align: right; }
-    :global(.lib-title) {
+    .lib-src { text-align: right; }
+    .lib-title {
       font-family: var(--font-display); font-weight: 600; font-size: 0.82rem;
       color: var(--text-primary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    :global(.lib-title) .lib-sub { color: var(--text-tertiary); font-weight: 400; font-size: 0.72rem; }
+    .lib-title .lib-sub { color: var(--text-tertiary); font-weight: 400; font-size: 0.72rem; }
     /* La waveform n'apparait que sur la ligne en cours de lecture : la liste
        reste compacte et on ne telecharge qu'un seul fichier de pics. */
-    :global(.lib-wave) { grid-column: 2 / -1; height: 20px; cursor: pointer; margin: 0.15rem 0 0.1rem; }
-    :global(.lib-wave--none) { cursor: default; }
-    :global(.lib-wave svg) { width: 100%; height: 100%; display: block; }
-    :global(.lib-wave .wave-bg) { fill: var(--wave-rest); }
-    :global(.lib-wave .wave-fg) { fill: var(--wave-played, var(--facet-son)); }
+    .lib-wave { grid-column: 2 / -1; height: 20px; cursor: pointer; margin: 0.15rem 0 0.1rem; }
+    .lib-wave--none { cursor: default; }
+    .lib-wave svg { width: 100%; height: 100%; display: block; }
+    .lib-wave .wave-bg { fill: color-mix(in srgb, var(--wave-played, var(--style-default)) 30%, transparent); }
+    .lib-wave .wave-fg { fill: var(--wave-played, var(--style-default)); }
 
     .player-lib-btn {
       background: none; border: 1px solid var(--border); border-radius: 6px;
@@ -370,8 +370,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     @media (max-width: 720px) {
       #library-panel { max-height: 62vh; }
-      :global(.lib-row) { grid-template-columns: 26px 72px minmax(0, 1fr) 26px; }
-      :global(.lib-styles) { display: none; }
+      .lib-row { grid-template-columns: 26px 72px minmax(0, 1fr) 26px; }
+      .lib-styles { display: none; }
     }
 
     /* Pill — centré, toujours par-dessus */
@@ -750,10 +750,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.51 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.52 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.51');
+  console.log('🐱 fx_jam_v1.52');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2407,7 +2407,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.51';
+    _vt.textContent = 'fx_jam_v1.52';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
