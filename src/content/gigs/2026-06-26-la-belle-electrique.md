@@ -1,10 +1,21 @@
 ---
-title: 'LA BELLE ELECTRIQUE'
-date: '2026-06-26'
-format: 'dj'
-venue: 'La Belle Électrique'
-city: 'Grenoble'
-country: 'France'
-genre: ["hi-tech"]
+title: LA BELLE ELECTRIQUE
+date: 2026-06-26
+format: dj
+role: ''
+venue: La Belle Électrique
+city: Grenoble
+country: France
+genre:
+  - hi-tech
+duration: ''
+lineup: []
+image: ''
+recordState: soon
+recording: ''
+recordings: []
+eventUrl: ''
+featured: false
 draft: false
+notes: ''
 ---
