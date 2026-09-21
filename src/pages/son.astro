@@ -850,7 +850,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   // quelques kilo-octets : decoder un MP3 de 300 Mo dans le navigateur juste
   // pour dessiner un trace serait absurde. On ne charge le JSON que lorsque la
   // ligne entre dans le champ de vision.
-  const WAVE_BARS = 160;
+  /** Une barre toutes les ~2,2 px de large reelle — meme densite partout. */
+  const barCount = (el: HTMLElement, peaks: number) =>
+    Math.max(40, Math.min(peaks, Math.round((el.clientWidth || 300) / 2.2)));
 
   const fmtTime = (sec: number) => {
     const s = Math.max(0, Math.floor(sec));
@@ -864,7 +866,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     url ? document.querySelector<HTMLElement>(`.wave-time[data-time-for="${CSS.escape(url)}"]`) : null;
 
   function drawWave(el: HTMLElement, peaks: number[]) {
-    const step = Math.max(1, Math.floor(peaks.length / WAVE_BARS));
+    const step = Math.max(1, Math.floor(peaks.length / barCount(el, peaks.length)));
     const bars: string[] = [];
     for (let i = 0, x = 0; i < peaks.length; i += step, x++) {
       const v = Math.max(...peaks.slice(i, i + step)) / 255;
