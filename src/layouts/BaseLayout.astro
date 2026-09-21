@@ -526,7 +526,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     /* v1.28: sur mobile, priorite au titre — le reste se degage/retrecit */
     @media (max-width: 480px) {
+      /* Trois commandes atteignables au pouce, bien separees : menu a gauche,
+         lecture au centre, muet a droite. Le reste se range entre les deux. */
       .player-full { gap: 0.35rem; padding: 0 0.5rem; }
+      .player-full > * { order: 5; }
+      #btn-library { order: 0; margin-right: auto; }
+      #btn-playpause { order: 1; margin: 0 auto; }
+      #btn-volume { order: 9; margin-left: auto; }
+      .player-meta { order: 2; }
+      .player-scrubber { order: 3; }
+      #btn-close { order: 10; }
+      .player-full button { min-width: 44px; min-height: 44px; font-size: 1rem; padding: 0; }
       #player-artwork { display: none; }
       #player-source-badge { display: none; }
       .player-meta { min-width: 64px; }
@@ -694,7 +704,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
       <button id="btn-sc-connect" class="player-spotify-connect" aria-label="Se connecter a SoundCloud" hidden>Connexion SC</button>
       <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
-      <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
 
@@ -720,10 +729,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.48 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.49 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.48');
+  console.log('🐱 fx_jam_v1.49');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2044,6 +2053,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       libCount.textContent = `${rows.length} / ${libData.length}`;
       libList.innerHTML = rows.map(e => {
         const styles = (e.tags.style || []).join(' · ');
+        const hue = (e.tags.style || [])[0];
+        const wave = e.waveform
+          ? `<div class="lib-wave" data-wave="${e.waveform}" data-url="${e.url}"`
+            + ` style="--wave-played: var(--style-${hue || 'default'})"></div>`
+          : '';
         return `<div class="lib-row" role="listitem" data-id="${e.id}" data-url="${e.url}"`
              + ` data-src="${e.source}"${e.playlistId ? ` data-pl="${e.playlistId}"` : ''}`
              + `${e.waveform ? ` data-wave="${e.waveform}"` : ''}>`
@@ -2053,9 +2067,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
              + (e.sub ? ` <span class="lib-sub">· ${e.sub}</span>` : '') + `</span>`
              + `<span class="lib-styles">${styles}</span>`
              + `<span class="lib-src">${SRC_LABEL[e.source] || ''}</span>`
+             + wave
              + `</div>`;
       }).join('');
       markLibCurrent();
+      observeLibWaves();
+    }
+
+    let libIO: IntersectionObserver | null = null;
+    function observeLibWaves() {
+      if (!libIO) {
+        libIO = new IntersectionObserver((ents, obs) => {
+          ents.forEach(en => {
+            if (!en.isIntersecting) return;
+            obs.unobserve(en.target);
+            loadLibWave(en.target as HTMLElement);
+          });
+        }, { root: libList, rootMargin: '250px' });
+      }
+      libList.querySelectorAll<HTMLElement>('.lib-wave:not([data-seen])')
+             .forEach(w => { w.dataset.seen = '1'; libIO!.observe(w); });
     }
 
     /** Surligne la ligne en cours et lui greffe sa waveform. */
@@ -2064,16 +2095,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       libList.querySelectorAll<HTMLElement>('.lib-row').forEach(row => {
         const mine = !!cur && !!row.dataset.url && cur.indexOf(row.dataset.url) === 0;
         row.classList.toggle('is-current', mine);
-        const has = row.querySelector('.lib-wave');
-        if (mine && !has && row.dataset.wave) {
-          const d = document.createElement('div');
-          d.className = 'lib-wave';
-          d.dataset.wave = row.dataset.wave;
-          d.dataset.url  = row.dataset.url!;
-          row.appendChild(d);
-          loadLibWave(d);
-        } else if (!mine && has) {
-          has.remove();
+        // Remise a zero du remplissage des lignes qui ne jouent plus.
+        if (!mine) {
+          const r = row.querySelector('clipPath rect') as SVGRectElement | null;
+          if (r) r.setAttribute('width', '0');
         }
       });
     }
@@ -2106,6 +2131,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
     function openLibrary(open: boolean) {
       libPanel.hidden = !open;
       playerDiv.dataset.library = String(open);
+      // Un seul geste : ouvrir la bibliotheque deplie le player, la fermer le replie.
+      playerDiv.dataset.expanded = String(open);
       const b = document.getElementById('btn-library');
       if (b) b.setAttribute('aria-expanded', String(open));
       if (!open) return;
@@ -2283,7 +2310,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
 
       if (target.closest('#btn-expand'))   { playerDiv.dataset.expanded = 'true';  return; }
-      if (target.closest('#btn-collapse')) { playerDiv.dataset.expanded = 'false'; return; }
 
       if (target.closest('#btn-close')) {
         pauseAll();
@@ -2358,7 +2384,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.48';
+    _vt.textContent = 'fx_jam_v1.49';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
