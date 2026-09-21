@@ -246,6 +246,117 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #hamcat-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; pointer-events: none; }
     #hamcat-player[data-active="true"] { pointer-events: auto; }
 
+    /* ── Bibliotheque ── mi-hauteur, au-dessus du player, repliable */
+    #library-panel {
+      position: absolute;
+      left: 0; right: 0; bottom: 100%;
+      max-height: 50vh;
+      display: flex;
+      flex-direction: column;
+      background: color-mix(in srgb, var(--bg-app) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      pointer-events: auto;
+    }
+    #library-panel[hidden] { display: none; }
+
+    .lib-head {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 1rem 0.5rem;
+      flex: 0 0 auto;
+    }
+    #lib-search {
+      flex: 1 1 auto; min-width: 0;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.4rem 0.7rem;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+    #lib-search:focus { outline: none; border-color: var(--facet-son); }
+    .lib-count {
+      font-family: var(--font-mono); font-size: 0.62rem;
+      color: var(--text-tertiary); white-space: nowrap;
+    }
+    #btn-lib-close {
+      background: none; border: none; color: var(--text-tertiary);
+      cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem;
+    }
+    #btn-lib-close:hover { color: var(--text-primary); }
+
+    .lib-filters {
+      display: flex; flex-wrap: wrap; gap: 0.3rem;
+      padding: 0 1rem 0.5rem;
+      flex: 0 0 auto;
+    }
+    .lib-chip {
+      font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em;
+      padding: 0.24rem 0.55rem; border-radius: 999px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text-tertiary); cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .lib-chip:hover { border-color: var(--facet-son); color: var(--text-secondary); }
+    .lib-chip.is-on {
+      border-color: var(--facet-son); color: var(--facet-son);
+      background: color-mix(in srgb, var(--facet-son) 14%, transparent);
+    }
+
+    .lib-list { flex: 1 1 auto; overflow-y: auto; padding: 0 0.6rem 0.6rem; }
+    .lib-row {
+      display: grid;
+      grid-template-columns: 26px 90px minmax(0, 1fr) minmax(0, 0.5fr) 30px;
+      align-items: center; column-gap: 0.55rem;
+      padding: 0.2rem 0.4rem;
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .lib-row:hover { background: color-mix(in srgb, var(--facet-son) 7%, transparent); }
+    .lib-row.is-current { background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
+    .lib-play {
+      background: none; border: 1px solid var(--border); border-radius: 5px;
+      color: var(--text-secondary); cursor: pointer;
+      font-size: 0.6rem; line-height: 1; padding: 0.24rem 0;
+    }
+    .lib-row:hover .lib-play { border-color: var(--facet-son); color: var(--facet-son); }
+    .lib-date, .lib-styles, .lib-src {
+      font-family: var(--font-mono); font-size: 0.6rem; color: var(--text-tertiary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lib-src { text-align: right; }
+    .lib-title {
+      font-family: var(--font-display); font-weight: 600; font-size: 0.82rem;
+      color: var(--text-primary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .lib-title .lib-sub { color: var(--text-tertiary); font-weight: 400; font-size: 0.72rem; }
+    /* La waveform n'apparait que sur la ligne en cours de lecture : la liste
+       reste compacte et on ne telecharge qu'un seul fichier de pics. */
+    .lib-wave { grid-column: 2 / -1; height: 20px; cursor: pointer; margin: 0.15rem 0 0.1rem; }
+    .lib-wave :global(svg) { width: 100%; height: 100%; display: block; }
+    .lib-wave :global(.wave-bg) { fill: var(--wave-rest); }
+    .lib-wave :global(.wave-fg) { fill: var(--wave-played, var(--facet-son)); }
+
+    .player-lib-btn {
+      background: none; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text-secondary); cursor: pointer;
+      font-size: 0.8rem; line-height: 1; padding: 0.3rem 0.5rem;
+    }
+    .player-lib-btn:hover { border-color: var(--facet-son); color: var(--facet-son); }
+    #hamcat-player[data-library="true"] .player-lib-btn {
+      border-color: var(--facet-son); color: var(--facet-son);
+      background: color-mix(in srgb, var(--facet-son) 14%, transparent);
+    }
+
+    @media (max-width: 720px) {
+      #library-panel { max-height: 62vh; }
+      .lib-row { grid-template-columns: 26px 72px minmax(0, 1fr) 26px; }
+      .lib-styles { display: none; }
+    }
+
     /* Pill — centré, toujours par-dessus */
     .player-mini {
       display: none;
@@ -276,6 +387,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       transition: background 0.15s;
     }
     .player-mini button:hover { background: var(--bg-surface); }
+    #btn-mini-library { min-height: 44px; border-radius: 50%; width: 44px; }
     #btn-mini-play {
       width: 44px; min-height: 44px;
       justify-content: center;
@@ -526,11 +638,25 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <slot />
 
   <!-- Player UI — 2 états -->
-  <div id="hamcat-player" data-active="false" data-expanded="false" transition:persist>
+  <div id="hamcat-player" data-active="false" data-expanded="false" data-library="false" transition:persist>
+
+    <!-- Bibliotheque — accessible depuis n'importe quelle page parce qu'elle vit
+         dans le player, seul element qui survit aux navigations. Son contenu
+         vient de /library.json, telecharge a la premiere ouverture. -->
+    <div id="library-panel" hidden>
+      <div class="lib-head">
+        <input id="lib-search" type="search" placeholder="Chercher un set…" aria-label="Chercher un set" />
+        <span id="lib-count" class="lib-count"></span>
+        <button id="btn-lib-close" aria-label="Fermer la bibliothèque">✕</button>
+      </div>
+      <div id="lib-filters" class="lib-filters"></div>
+      <div id="lib-list" class="lib-list" role="list"></div>
+    </div>
 
     <!-- État 1 : pill discret (centré bas) -->
     <div class="player-mini">
       <button id="btn-mini-play" class="player-play-btn" aria-label="Lecture / pause">▶</button>
+      <button id="btn-mini-library" class="player-lib-btn" aria-label="Bibliothèque">≡</button>
       <button id="btn-expand" aria-label="Ouvrir le lecteur">
         <span class="play-dot"></span>
         <span id="mini-time">—</span>
@@ -567,6 +693,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
       <button id="btn-sc-connect" class="player-spotify-connect" aria-label="Se connecter a SoundCloud" hidden>Connexion SC</button>
+      <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
       <button id="btn-collapse" aria-label="Réduire">⌄</button>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
@@ -593,10 +720,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.46 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.47 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.46');
+  console.log('🐱 fx_jam_v1.47');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1868,6 +1995,181 @@ const facetHrefs = visibleFacets().map(f => f.href);
     /** Les listes de la page demandent la bascule quand on reclique le set en cours. */
     document.addEventListener('hamcat:toggle', () => togglePlayback(), { signal });
 
+    // ═══ Bibliotheque ════════════════════════════════════════════════════════
+    // Le catalogue est genere au build dans /library.json et telecharge a la
+    // premiere ouverture seulement. Comme le player survit aux navigations, la
+    // liste n'est construite qu'une fois par session.
+    const libPanel  = document.getElementById('library-panel') as HTMLElement;
+    const libList   = document.getElementById('lib-list') as HTMLElement;
+    const libFilters= document.getElementById('lib-filters') as HTMLElement;
+    const libSearch = document.getElementById('lib-search') as HTMLInputElement;
+    const libCount  = document.getElementById('lib-count') as HTMLElement;
+
+    type LibEntry = {
+      id: string; title: string; sub: string; date: string; source: string;
+      url: string; playlistId?: string; waveform: string | null;
+      download: boolean; tags: Record<string, string[]>;
+    };
+
+    let libData: LibEntry[] | null = null;
+    let libStyle = '';
+
+    const SRC_LABEL: Record<string, string> = {
+      audio: '♪', soundcloud: 'SC', mixcloud: 'MC', spotify: 'SP',
+    };
+
+    const libDate = (iso: string) => {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())}`;
+    };
+
+    function renderLibFilters() {
+      if (!libData) return;
+      const styles = [...new Set(libData.flatMap(e => e.tags.style || []))].sort();
+      libFilters.innerHTML =
+        `<button class="lib-chip${libStyle ? '' : ' is-on'}" data-style="">Tout</button>` +
+        styles.map(t => `<button class="lib-chip${libStyle === t ? ' is-on' : ''}" data-style="${t}">${t}</button>`).join('');
+    }
+
+    function renderLibList() {
+      if (!libData) return;
+      const q = libSearch.value.trim().toLowerCase();
+      const rows = libData.filter(e => {
+        if (libStyle && !(e.tags.style || []).includes(libStyle)) return false;
+        if (q && !(`${e.title} ${e.sub}`.toLowerCase().includes(q))) return false;
+        return true;
+      });
+      libCount.textContent = `${rows.length} / ${libData.length}`;
+      libList.innerHTML = rows.map(e => {
+        const styles = (e.tags.style || []).join(' · ');
+        return `<div class="lib-row" role="listitem" data-id="${e.id}" data-url="${e.url}"`
+             + ` data-src="${e.source}"${e.playlistId ? ` data-pl="${e.playlistId}"` : ''}`
+             + `${e.waveform ? ` data-wave="${e.waveform}"` : ''}>`
+             + `<button class="lib-play" aria-label="Lire">▶</button>`
+             + `<span class="lib-date">${libDate(e.date)}</span>`
+             + `<span class="lib-title">${e.title}`
+             + (e.sub ? ` <span class="lib-sub">· ${e.sub}</span>` : '') + `</span>`
+             + `<span class="lib-styles">${styles}</span>`
+             + `<span class="lib-src">${SRC_LABEL[e.source] || ''}</span>`
+             + `</div>`;
+      }).join('');
+      markLibCurrent();
+    }
+
+    /** Surligne la ligne en cours et lui greffe sa waveform. */
+    function markLibCurrent() {
+      const cur = state.currentSource === 'audio' ? audioEl.currentSrc : '';
+      libList.querySelectorAll<HTMLElement>('.lib-row').forEach(row => {
+        const mine = !!cur && !!row.dataset.url && cur.indexOf(row.dataset.url) === 0;
+        row.classList.toggle('is-current', mine);
+        const has = row.querySelector('.lib-wave');
+        if (mine && !has && row.dataset.wave) {
+          const d = document.createElement('div');
+          d.className = 'lib-wave';
+          d.dataset.wave = row.dataset.wave;
+          d.dataset.url  = row.dataset.url!;
+          row.appendChild(d);
+          loadLibWave(d);
+        } else if (!mine && has) {
+          has.remove();
+        }
+      });
+    }
+
+    function loadLibWave(el: HTMLElement) {
+      fetch(el.dataset.wave!)
+        .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then(d => {
+          const peaks: number[] = d.peaks || [];
+          const step = Math.max(1, Math.floor(peaks.length / 200));
+          const bars: string[] = [];
+          for (let i = 0, x = 0; i < peaks.length; i += step, x++) {
+            const v = Math.max(...peaks.slice(i, i + step)) / 255;
+            const h = Math.max(2, Math.round(v * 100));
+            bars.push(`<rect x="${x * 2}" y="${(100 - h) / 2}" width="1.1" height="${h}" rx="0.5"/>`);
+          }
+          const id = 'libclip' + Math.random().toString(36).slice(2, 8);
+          el.dataset.clip = id;
+          el.dataset.duration = String(d.duration || 0);
+          el.innerHTML =
+            `<svg viewBox="0 0 ${bars.length * 2} 100" preserveAspectRatio="none"`
+            + ` style="width:100%;height:100%;display:block">`
+            + `<g class="wave-bg">${bars.join('')}</g>`
+            + `<g class="wave-fg" clip-path="url(#${id})">${bars.join('')}</g>`
+            + `<clipPath id="${id}"><rect x="0" y="0" width="0" height="100"/></clipPath></svg>`;
+        })
+        .catch(() => el.remove());
+    }
+
+    function openLibrary(open: boolean) {
+      libPanel.hidden = !open;
+      playerDiv.dataset.library = String(open);
+      const b = document.getElementById('btn-library');
+      if (b) b.setAttribute('aria-expanded', String(open));
+      if (!open) return;
+      playerDiv.dataset.active = 'true';
+      if (libData) { renderLibFilters(); renderLibList(); return; }
+      libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Chargement…</p>';
+      fetch('/library.json')
+        .then(r => r.json())
+        .then(d => { libData = d.entries || []; renderLibFilters(); renderLibList(); })
+        .catch(() => { libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Bibliothèque indisponible.</p>'; });
+    }
+
+    libFilters.addEventListener('click', e => {
+      const c = (e.target as HTMLElement).closest<HTMLElement>('.lib-chip');
+      if (!c) return;
+      libStyle = c.dataset.style || '';
+      renderLibFilters(); renderLibList();
+    }, { signal });
+
+    libSearch.addEventListener('input', () => renderLibList(), { signal });
+
+    libList.addEventListener('click', e => {
+      const t = e.target as HTMLElement;
+      const wave = t.closest<HTMLElement>('.lib-wave');
+      if (wave) {
+        const rect = wave.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, ((e as MouseEvent).clientX - rect.left) / rect.width));
+        const dur = parseFloat(wave.dataset.duration || '0');
+        if (dur) playAudio(wave.dataset.url!, state.currentLbl, ratio * dur);
+        return;
+      }
+      const row = t.closest<HTMLElement>('.lib-row');
+      if (!row) return;
+      const lbl = (row.querySelector('.lib-title') as HTMLElement)?.textContent?.trim() || '';
+      if (row.dataset.src === 'spotify') playSpotify(row.dataset.pl!, lbl);
+      else if (row.dataset.src === 'audio') playAudio(row.dataset.url!, lbl, 0, '', true);
+      else playSC(row.dataset.url!, lbl);
+    }, { signal });
+
+    ['btn-library', 'btn-mini-library'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click',
+        () => openLibrary(libPanel.hidden), { signal });
+    });
+    document.getElementById('btn-lib-close')?.addEventListener('click',
+      () => openLibrary(false), { signal });
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !libPanel.hidden) openLibrary(false);
+    }, { signal });
+
+    // La progression repeint la waveform de la ligne en cours.
+    document.addEventListener('hamcat:progress', (e: any) => {
+      if (libPanel.hidden) return;
+      const { url, position, duration } = e.detail;
+      if (!duration) return;
+      const cur = libList.querySelector<HTMLElement>('.lib-row.is-current');
+      if (!cur || !cur.dataset.url || url.indexOf(cur.dataset.url) !== 0) markLibCurrent();
+      libList.querySelectorAll<HTMLElement>('.lib-wave').forEach(w => {
+        if (!w.dataset.url || url.indexOf(w.dataset.url) !== 0) return;
+        const r = w.querySelector('clipPath rect') as SVGRectElement | null;
+        const svg = w.querySelector('svg') as SVGSVGElement | null;
+        if (r && svg) r.setAttribute('width', String((position / duration) * svg.viewBox.baseVal.width));
+      });
+    }, { signal });
+
     // Barre espace = lecture/pause partout sur le site. On laisse la main des que
     // le focus est dans un champ ou sur un bouton, ou il a deja un sens.
     document.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -2056,7 +2358,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.46';
+    _vt.textContent = 'fx_jam_v1.47';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
