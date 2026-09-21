@@ -30,6 +30,38 @@ const fmtShort = (d: Date) =>
 const visiblePlaylists = (sonData.spotify_playlists ?? [])
   .filter(p => p.visible && p.id);
 
+// ── Agenda et bibliotheque ──────────────────────────────────────────────────
+// Une seule liste chronologique : l'agenda. Chaque gig porte ses enregistrements
+// quand ils existent. Les sets qui ne correspondent a aucune date (mixes studio,
+// podcasts) forment la bibliotheque, qui se parcourt par tags et non par date —
+// c'est ce qui evite deux listes de dates concurrentes dans la meme rubrique.
+
+type Rec = { url: string; label?: string };
+
+const recordingsOf = (d: { recording?: string; recordings?: Rec[] }): Rec[] => [
+  ...(d.recording ? [{ url: d.recording }] : []),
+  ...(d.recordings ?? []),
+];
+
+/** L'URL de la waveform se deduit de celle du set : sets/x.mp3 → waveforms/x.json */
+const waveformUrl = (url: string): string | null => {
+  const m = url.match(/^(https:\/\/media\.hamcat\.live)\/sets\/(.+)\.[a-z0-9]+$/i);
+  return m ? `${m[1]}/waveforms/${m[2]}.json` : null;
+};
+
+const isDirectAudio = (url: string) => url.startsWith('https://media.hamcat.live/');
+
+/** Sets deja rattaches a une date : ils s'affichent dans l'agenda, pas dans la bibliotheque. */
+const gigRecordingUrls = new Set(all.flatMap(g => recordingsOf(g.data).map(r => r.url)));
+
+const library = (sonData.mixes ?? []).filter(
+  m => !(m.audio_url && gigRecordingUrls.has(m.audio_url))
+);
+
+const libraryTags = [...new Set(library.flatMap(m => m.tags ?? []))].sort((a, b) =>
+  a.localeCompare(b, 'fr')
+);
+
 // v1.38 — donnees structurees : l'artiste + ses dates a venir en MusicEvent.
 // C'est ce qui permet aux dates de remonter dans Google Events / la recherche locale.
 const sonSameAs = Object.values(sonData.links || {}).filter(
@@ -134,14 +166,33 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
             <p class="empty">Aucun gig enregistré.</p>
           ) : (
             <ul class="gig-list">
-              {past.map(g => (
-                <li class="gig-row">
-                  <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
-                  <span class="c-title">{g.data.title}</span>
-                  {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
-                  <span class="c-format">{g.data.format}</span>
+              {past.map(g => {
+                const recs = recordingsOf(g.data);
+                return (
+                <li class:list={['gig-row', recs.length && 'has-rec']}>
+                  <div class="gig-line">
+                    <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
+                    <span class="c-title">{g.data.title}</span>
+                    {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
+                    <span class="c-format">{g.data.format}</span>
+                  </div>
+                  {recs.map(r => (
+                    <div class="rec">
+                      <button
+                        class="btn-ecouter rec-play"
+                        data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
+                        data-url={r.url}
+                        data-lbl={r.label ? `${g.data.title} — ${r.label}` : g.data.title}
+                      >▶</button>
+                      {r.label && <span class="rec-label">{r.label}</span>}
+                      {waveformUrl(r.url)
+                        ? <div class="wave" data-wave={waveformUrl(r.url)} data-url={r.url}
+                               data-lbl={r.label ? `${g.data.title} — ${r.label}` : g.data.title}></div>
+                        : <a href={r.url} target="_blank" rel="noopener" class="link-btn link-btn--sm">Écouter</a>}
+                    </div>
+                  ))}
                 </li>
-              ))}
+              );})}
             </ul>
           )}
         </details>
@@ -184,16 +235,25 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           >▶ Écouter</button>
         )}
 
-        {sonData.mixes && sonData.mixes.length > 0 && (
+        {library.length > 0 && (
           <div class="mixes-section">
-            <h3 class="sets-subtitle">DJ Sets</h3>
-            <ul class="mix-list">
-              {sonData.mixes.map(mix => (
-                <li class="mix-row">
-                  {mix.date && <time class="mix-date">{mix.date.slice(0, 7)}</time>}
-                  <span class="mix-title">{mix.title}</span>
-                  {mix.duration_min > 0 && <span class="mix-dur">{mix.duration_min}min</span>}
-                  {(mix.mixcloud_url || mix.soundcloud_url || mix.audio_url) && (
+            <h3 class="sets-subtitle">Bibliothèque</h3>
+            {/* La bibliotheque se parcourt par tags, pas par date : l'agenda est
+                la seule liste chronologique de la page. */}
+            {libraryTags.length > 0 && (
+              <div class="tag-bar" id="tag-bar">
+                <button class="tag-chip is-on" data-tag="">Tout</button>
+                {libraryTags.map(t => (
+                  <button class="tag-chip" data-tag={t}>{t}</button>
+                ))}
+              </div>
+            )}
+            <ul class="mix-list" id="library-list">
+              {library.map(mix => (
+                <li class="mix-row" data-tags={(mix.tags ?? []).join('|')}>
+                  <div class="mix-line">
+                    <span class="mix-title">{mix.title}</span>
+                    {mix.duration_min > 0 && <span class="mix-dur">{mix.duration_min}min</span>}
                     <span class="mix-links">
                       {mix.mixcloud_url && (
                         <a href={mix.mixcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">Mixcloud</a>
@@ -212,10 +272,18 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                         >▶</button>
                       )}
                     </span>
+                  </div>
+                  {(mix.tags ?? []).length > 0 && (
+                    <div class="mix-tags">{(mix.tags ?? []).map(t => <span class="mix-tag">{t}</span>)}</div>
+                  )}
+                  {mix.audio_url && waveformUrl(mix.audio_url) && (
+                    <div class="wave" data-wave={waveformUrl(mix.audio_url)}
+                         data-url={mix.audio_url} data-lbl={mix.title}></div>
                   )}
                 </li>
               ))}
             </ul>
+            <p class="empty" id="library-empty" hidden>Aucun set avec ce tag.</p>
           </div>
         )}
       </div>
@@ -588,6 +656,72 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .btn-ecouter:hover { background: color-mix(in srgb, var(--facet-son) 22%, transparent); }
   .btn-ecouter--sm { padding: 0.25rem 0.55rem; font-size: 0.66rem; }
+
+  /* ── Enregistrements rattaches a une date ── */
+  .gig-line, .mix-line { display: flex; align-items: baseline; gap: 0.5rem; width: 100%; }
+  .rec {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    margin-top: 0.35rem;
+    padding-left: 0.2rem;
+  }
+  .rec-play { flex: 0 0 auto; }
+  .rec-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  /* ── Waveform cliquable ── */
+  .wave {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 28px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .wave svg { width: 100%; height: 100%; display: block; }
+  .wave .wave-bg { fill: color-mix(in srgb, var(--facet-son) 28%, transparent); }
+  .wave .wave-fg { fill: var(--facet-son); }
+  .wave:hover .wave-bg { fill: color-mix(in srgb, var(--facet-son) 45%, transparent); }
+  .wave.is-playing .wave-bg { fill: color-mix(in srgb, var(--facet-son) 35%, transparent); }
+
+  /* ── Bibliotheque : filtrage par tags ── */
+  .tag-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+  .tag-chip {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.08em;
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .tag-chip:hover { border-color: var(--facet-son); color: var(--text-secondary); }
+  .tag-chip.is-on {
+    border-color: var(--facet-son);
+    color: var(--facet-son);
+    background: color-mix(in srgb, var(--facet-son) 14%, transparent);
+  }
+  .mix-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.25rem; }
+  .mix-tag {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+  .mix-row { flex-wrap: wrap; }
 </style>
 
 <script>
@@ -609,6 +743,112 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       });
     });
   }
-  attachPlayerButtons();
-  document.addEventListener('astro:page-load', attachPlayerButtons);
+  // ── Waveforms ─────────────────────────────────────────────────────────────
+  // Les pics sont calcules une fois a l'upload (ffmpeg) et servis en JSON de
+  // quelques kilo-octets : decoder un MP3 de 300 Mo dans le navigateur juste
+  // pour dessiner un trace serait absurde. On ne charge le JSON que lorsque la
+  // ligne entre dans le champ de vision.
+  const WAVE_BARS = 160;
+
+  function drawWave(el: HTMLElement, peaks: number[]) {
+    const step = Math.max(1, Math.floor(peaks.length / WAVE_BARS));
+    const bars: string[] = [];
+    for (let i = 0, x = 0; i < peaks.length; i += step, x++) {
+      const v = Math.max(...peaks.slice(i, i + step)) / 255;
+      const h = Math.max(2, Math.round(v * 100));
+      bars.push(`<rect x="${x * 2}" y="${(100 - h) / 2}" width="1.1" height="${h}" rx="0.5"/>`);
+    }
+    el.innerHTML =
+      `<svg viewBox="0 0 ${bars.length * 2} 100" preserveAspectRatio="none" aria-hidden="true">` +
+      `<g class="wave-bg">${bars.join('')}</g>` +
+      `<g class="wave-fg" clip-path="url(#clip-${el.dataset.waveId})">${bars.join('')}</g>` +
+      `<clipPath id="clip-${el.dataset.waveId}"><rect x="0" y="0" width="0" height="100"/></clipPath>` +
+      `</svg>`;
+  }
+
+  function setWaveProgress(el: HTMLElement, ratio: number) {
+    const r = el.querySelector('clipPath rect') as SVGRectElement | null;
+    const svg = el.querySelector('svg') as SVGSVGElement | null;
+    if (!r || !svg) return;
+    const w = svg.viewBox.baseVal.width;
+    r.setAttribute('width', String(Math.max(0, Math.min(1, ratio)) * w));
+  }
+
+  let waveSeq = 0;
+
+  function attachWaveforms() {
+    const els = document.querySelectorAll<HTMLElement>('.wave:not([data-wave-ready])');
+    if (!els.length) return;
+
+    const load = (el: HTMLElement) => {
+      el.dataset.waveReady = '1';
+      el.dataset.waveId = String(++waveSeq);
+      fetch(el.dataset.wave!)
+        .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then(d => {
+          el.dataset.duration = String(d.duration || 0);
+          drawWave(el, d.peaks || []);
+        })
+        .catch(() => { el.remove(); }); // pas de waveform generee : on n'affiche rien
+    };
+
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { obs.unobserve(e.target); load(e.target as HTMLElement); }
+      });
+    }, { rootMargin: '200px' });
+
+    els.forEach(el => {
+      io.observe(el);
+      el.addEventListener('click', ev => {
+        const rect  = el.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+        const dur   = parseFloat(el.dataset.duration || '0');
+        setWaveProgress(el, ratio);
+        document.dispatchEvent(new CustomEvent('hamcat:play', {
+          detail: { type: 'audio', url: el.dataset.url, lbl: el.dataset.lbl,
+                    startAt: dur ? ratio * dur : 0 },
+        }));
+      });
+    });
+  }
+
+  // Le player emet sa position : on ne met a jour que la waveform du set en cours.
+  document.addEventListener('hamcat:progress', (e: any) => {
+    const { url, position, duration } = e.detail;
+    if (!duration) return;
+    document.querySelectorAll<HTMLElement>('.wave[data-wave-ready]').forEach(el => {
+      const mine = url && el.dataset.url && url.indexOf(el.dataset.url) === 0;
+      setWaveProgress(el, mine ? position / duration : 0);
+      el.classList.toggle('is-playing', !!mine);
+    });
+  });
+
+  // ── Filtrage de la bibliotheque par tags ──────────────────────────────────
+  function attachTagFilter() {
+    const bar = document.getElementById('tag-bar');
+    const list = document.getElementById('library-list');
+    const empty = document.getElementById('library-empty');
+    if (!bar || !list || bar.dataset.ready) return;
+    bar.dataset.ready = '1';
+
+    bar.addEventListener('click', e => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('.tag-chip');
+      if (!chip) return;
+      const tag = chip.dataset.tag || '';
+      bar.querySelectorAll('.tag-chip').forEach(c => c.classList.toggle('is-on', c === chip));
+      let shown = 0;
+      list.querySelectorAll<HTMLElement>('.mix-row').forEach(row => {
+        const tags = (row.dataset.tags || '').split('|').filter(Boolean);
+        const ok = !tag || tags.includes(tag);
+        row.hidden = !ok;
+        if (ok) shown++;
+      });
+      if (empty) empty.hidden = shown > 0;
+    });
+  }
+
+  function initSon() { attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
+  initSon();
+  document.addEventListener('astro:page-load', initSon);
 </script>

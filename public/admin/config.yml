@@ -41,7 +41,15 @@ collections:
       - { label: "Durée", name: "duration", widget: "string", required: false, hint: "Ex: 2h, 1h30" }
       - { label: "Line-up (autres artistes)", name: "lineup", widget: "list", required: false }
       - { label: "Image", name: "image", widget: "image", required: false }
-      - { label: "Enregistrement (URL)", name: "recording", widget: "string", required: false, hint: "SoundCloud, Mixcloud..." }
+      - { label: "Enregistrement (URL)", name: "recording", widget: "string", required: false, hint: "Fichier direct media.hamcat.live, SoundCloud ou Mixcloud" }
+      - label: "Enregistrements supplémentaires"
+        name: "recordings"
+        widget: list
+        required: false
+        hint: "Quand un même événement a plusieurs sets (deux scènes, deux soirs)"
+        fields:
+          - { label: "URL", name: "url", widget: "string" }
+          - { label: "Libellé", name: "label", widget: "string", required: false, hint: "Ex: Main stage, Cocon" }
       - { label: "Lien événement (URL)", name: "eventUrl", widget: "string", required: false }
       - { label: "Mettre en avant", name: "featured", widget: "boolean", default: false }
       - { label: "Brouillon (caché du site)", name: "draft", widget: "boolean", default: false }
@@ -119,6 +127,7 @@ collections:
               - { name: mixcloud_url,  label: "URL Mixcloud",  widget: string,   required: false }
               - { name: soundcloud_url, label: "URL SoundCloud", widget: string, required: false }
               - { name: audio_url,     label: "Fichier audio (URL directe)", widget: string, required: false, hint: "Ex: https://media.hamcat.live/sets/2025-10-senoi.mp3 — lecture dans le player du site" }
+              - { name: tags,          label: "Tags (style, ambiance)", widget: list, required: false, hint: "Ex: hi-tech, darkpsy, chill, warm-up, peak-time" }
               - { name: image,         label: Image,           widget: image,    required: false }
           - { label: "Spotify User ID", name: spotify_user_id, widget: string, required: false, hint: "Identifiant URL de ton profil Spotify" }
           - name: spotify_playlists

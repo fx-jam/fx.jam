@@ -5,6 +5,7 @@ format: 'dj'
 venue: 'OUT OF THE VOID FESTIVAL'
 country: 'France'
 genre: ["hi-tech"]
+recording: 'https://media.hamcat.live/sets/25-aya-atma-ootv.mp3'
 draft: false
 notes: '2025/09/20 - OUT OF THE VOID FESTIVAL (???)'
 ---

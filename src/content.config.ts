@@ -32,7 +32,13 @@ const gigs = defineCollection({
     lineup: z.array(z.string()).default([]),     // Autres artistes au line-up
     // Médias & liens
     image: z.string().optional(),
-    recording: z.string().url().optional(),      // Lien SoundCloud / Mixcloud
+    recording: z.string().url().optional(),      // Enregistrement principal (fichier direct R2, SoundCloud, Mixcloud)
+    // Un gig peut avoir plusieurs enregistrements (deux scenes le meme week-end, par exemple).
+    // `recording` reste l'entree simple ; `recordings` sert des qu'il y en a plus d'un.
+    recordings: z.array(z.object({
+      url:   z.string().url(),
+      label: z.string().optional(),              // Ex: "Main stage", "Cocon"
+    })).default([]),
     eventUrl: z.string().url().optional(),       // Lien de l'événement
     // Méta
     featured: z.boolean().default(false),        // Mettre en avant

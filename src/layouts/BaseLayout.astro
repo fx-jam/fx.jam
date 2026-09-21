@@ -566,10 +566,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.39 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.40 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.39');
+  console.log('🐱 fx_jam_v1.40');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1647,6 +1647,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (scrubFill)    scrubFill.style.width = ((audioEl.currentTime / dur) * 100) + '%';
         if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(audioEl.currentTime * 1000)} / ${fmtMs(dur * 1000)}`;
         if (miniTimeEl)   miniTimeEl.textContent = fmtMs(audioEl.currentTime * 1000);
+        // Les waveforms affichees dans les pages ecoutent cet evenement pour suivre la lecture.
+        document.dispatchEvent(new CustomEvent('hamcat:progress', {
+          detail: { url: audioEl.currentSrc, position: audioEl.currentTime, duration: dur },
+        }));
       }
       // Sauvegarde position toutes les 5 s
       if (Math.round(audioEl.currentTime) % 5 !== 0) return;
@@ -1941,7 +1945,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.39';
+    _vt.textContent = 'fx_jam_v1.40';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

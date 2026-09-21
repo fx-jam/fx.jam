@@ -17,6 +17,8 @@ export interface FacetMix {
   soundcloud_url: string;
   /** Fichier audio servi directement (bucket R2, media.hamcat.live) — lu par la source `audio` du player. */
   audio_url?: string;
+  /** Style et ambiance — axe de navigation de la bibliotheque, la ou l'agenda se parcourt par date. */
+  tags?: string[];
   image: string;
 }
 
