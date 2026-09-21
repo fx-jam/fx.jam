@@ -26,7 +26,7 @@ const fmtLong  = (d: Date) =>
 
 const p2 = (n: number) => String(n).padStart(2, '0');
 const fmtShort = (d: Date) =>
-  `${p2(d.getFullYear() % 100)}/${p2(d.getMonth() + 1)}/${p2(d.getDate())}`;
+  `${d.getFullYear()}/${p2(d.getMonth() + 1)}/${p2(d.getDate())}`;
 
 const visiblePlaylists = (sonData.spotify_playlists ?? [])
   .filter(p => p.visible && p.id);
@@ -206,19 +206,30 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                     </span>
                     <span class="c-tags">{tags}</span>
                     <span class="c-rec">
-                      {r && (
-                        <button
-                          class="btn-ecouter rec-play"
-                          data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
-                          data-url={r.url}
-                          data-lbl={lbl}
-                        >▶</button>
+                      {r ? (
+                        <>
+                          <button
+                            class="btn-ecouter rec-play"
+                            data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
+                            data-url={r.url}
+                            data-lbl={lbl}
+                          >▶</button>
+                          {wave
+                            ? <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}
+                                   style={waveColor(g.data.genre ?? [])}></div>
+                            : <span class="rec-note rec-note--link">écoute externe</span>}
+                          {wave && <span class="wave-time" data-time-for={r.url}></span>}
+                          {isDirectAudio(r.url)
+                            ? <a class="dl" href={r.url} download title="Télécharger le set"
+                                 aria-label="Télécharger le set">↓</a>
+                            : <a class="dl" href={r.url} target="_blank" rel="noopener"
+                                 title="Ouvrir la page du set" aria-label="Ouvrir la page du set">↗</a>}
+                        </>
+                      ) : (
+                        <span class:list={['rec-note', g.data.recordState === 'soon' && 'rec-note--soon']}>
+                          {g.data.recordState === 'soon' ? 'enregistré · bientôt en ligne' : 'set non enregistré'}
+                        </span>
                       )}
-                      {wave && r && (
-                        <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}
-                             style={waveColor(g.data.genre ?? [])}></div>
-                      )}
-                      {wave && r && <span class="wave-time" data-time-for={r.url}></span>}
                     </span>
                   </li>
                 );});
@@ -304,7 +315,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                     </span>
                   </div>
                   {(mix.tags ?? []).length > 0 && (
-                    <div class="mix-tags">{(mix.tags ?? []).map(t => <span class="mix-tag">{t}</span>)}</div>
+                    <div class="mix-tags">
+                      {(mix.tags ?? []).map(t => (
+                        <button class="mix-tag" data-jump-tag={t}>{t}</button>
+                      ))}
+                    </div>
                   )}
                   {mix.audio_url && waveformUrl(mix.audio_url) && (
                     <div class="wave" data-wave={waveformUrl(mix.audio_url)}
@@ -520,7 +535,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      du bloc lecture restent en place et simplement vides quand il n'y a rien. */
   .gig-row {
     display: grid;
-    grid-template-columns: 62px minmax(0, 1fr) minmax(0, 0.5fr) minmax(260px, 1.9fr);
+    grid-template-columns: 82px minmax(0, 1fr) minmax(0, 0.5fr) minmax(260px, 1.9fr);
     align-items: center;
     column-gap: 0.7rem;
     padding: 0.22rem 0;
@@ -537,13 +552,35 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     color: var(--text-tertiary);
   }
   .c-rec { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+  .rec-note {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    opacity: 0.75;
+  }
+  .rec-note--soon { color: var(--facet-son); opacity: 0.85; }
+  .rec-note--link { flex: 1 1 auto; }
+  .dl {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.2rem 0.35rem;
+    border-radius: 5px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .dl:hover { color: var(--facet-son); background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
   .wave-time {
     font-family: var(--font-mono);
     font-size: 0.58rem;
     color: var(--text-tertiary);
     white-space: nowrap;
-    flex: 0 0 auto;
-    min-width: 5.2em;
+    flex: 0 0 9.2em;
+    width: 9.2em;
     text-align: right;
   }
   .gig-line { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; }
@@ -787,7 +824,13 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     font-size: 0.58rem;
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
+    background: none;
+    border: none;
+    padding: 0 0.15rem;
+    cursor: pointer;
+    transition: color 0.15s ease;
   }
+  .mix-tag:hover { color: var(--facet-son); text-decoration: underline; }
   .mix-row { flex-wrap: wrap; }
 </style>
 
@@ -923,11 +966,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     if (!bar || !list || bar.dataset.ready) return;
     bar.dataset.ready = '1';
 
-    bar.addEventListener('click', e => {
-      const chip = (e.target as HTMLElement).closest<HTMLElement>('.tag-chip');
-      if (!chip) return;
-      const tag = chip.dataset.tag || '';
-      bar.querySelectorAll('.tag-chip').forEach(c => c.classList.toggle('is-on', c === chip));
+    const applyTag = (tag: string) => {
+      bar.querySelectorAll<HTMLElement>('.tag-chip')
+         .forEach(c => c.classList.toggle('is-on', (c.dataset.tag || '') === tag));
       let shown = 0;
       list.querySelectorAll<HTMLElement>('.mix-row').forEach(row => {
         const tags = (row.dataset.tags || '').split('|').filter(Boolean);
@@ -936,6 +977,17 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         if (ok) shown++;
       });
       if (empty) empty.hidden = shown > 0;
+    };
+
+    bar.addEventListener('click', e => {
+      const chip = (e.target as HTMLElement).closest<HTMLElement>('.tag-chip');
+      if (chip) applyTag(chip.dataset.tag || '');
+    });
+
+    // Cliquer un style sur une ligne revient a activer la pastille correspondante.
+    list.addEventListener('click', e => {
+      const t = (e.target as HTMLElement).closest<HTMLElement>('.mix-tag');
+      if (t?.dataset.jumpTag) applyTag(t.dataset.jumpTag);
     });
   }
 

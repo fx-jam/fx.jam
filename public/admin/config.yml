@@ -41,6 +41,14 @@ collections:
       - { label: "Durée", name: "duration", widget: "string", required: false, hint: "Ex: 2h, 1h30" }
       - { label: "Line-up (autres artistes)", name: "lineup", widget: "list", required: false }
       - { label: "Image", name: "image", widget: "image", required: false }
+      - label: "État de l'enregistrement"
+        name: "recordState"
+        widget: "select"
+        default: "none"
+        hint: "Ignoré dès qu'une URL d'enregistrement est renseignée ci-dessous"
+        options:
+          - { label: "Set non enregistré", value: "none" }
+          - { label: "Enregistré — bientôt disponible", value: "soon" }
       - { label: "Enregistrement (URL)", name: "recording", widget: "string", required: false, hint: "Fichier direct media.hamcat.live, SoundCloud ou Mixcloud" }
       - label: "Enregistrements supplémentaires"
         name: "recordings"
