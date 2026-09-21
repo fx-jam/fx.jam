@@ -1,8 +1,8 @@
 ---
 title: SOVA Party
 date: 2018-09-22
-format: dj
-role: B2B avec Joy (Døl Sax)
+format: hybride
+role: Peak-Timd B2B avec Joy (Døl Sax)
 venue: SOVA FEST
 city: Vosges
 country: France
