@@ -1,9 +1,9 @@
 ---
-title: ADN FESTIVAL (07)
+title: ADN Festival
 date: 2021-06-27
 format: hybride
 role: Landing
-venue: ADN FESTIVAL (07)
+venue: La Bamboche
 city: Valence
 country: France
 genre:
