@@ -11,7 +11,7 @@ genre:
 duration: ''
 lineup: []
 image: ''
-recordState: soon
+recordState: none
 recording: ''
 recordings: []
 eventUrl: ''
