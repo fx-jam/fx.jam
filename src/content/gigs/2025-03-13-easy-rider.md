@@ -1,10 +1,22 @@
 ---
-title: 'EASY RIDER'
-date: '2025-03-13'
-format: 'dj'
-venue: 'EASY RIDER'
-country: 'France'
-genre: ["funk tech house"]
+title: EASY RIDER
+date: 2025-03-13
+format: dj
+role: ''
+venue: EASY RIDER
+city: ''
+country: France
+genre:
+  - Disco House
+  - Tech House
+duration: ''
+lineup: []
+image: ''
+recordState: soon
+recording: ''
+recordings: []
+eventUrl: ''
+featured: false
 draft: false
-notes: '25/03/13 - EASY RIDER (FUNK TECH HOUSE)'
+notes: 25/03/13 - EASY RIDER (FUNK TECH HOUSE)
 ---
