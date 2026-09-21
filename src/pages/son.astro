@@ -52,6 +52,13 @@ const waveformUrl = (url: string): string | null => {
 
 const isDirectAudio = (url: string) => url.startsWith('https://media.hamcat.live/');
 
+/** Accepte aussi bien une URL Spotify complete qu'un identifiant nu. */
+const playlistId = (v?: string): string | null => {
+  if (!v) return null;
+  const m = v.match(/playlist[/:]([A-Za-z0-9]+)/);
+  return m ? m[1] : (/^[A-Za-z0-9]{16,}$/.test(v.trim()) ? v.trim() : null);
+};
+
 const STYLES = ['psychill','chillgressive','psydub','psyprog','psytrance',
                 'full-on','hi-tech','darkpsy','mentalcore','electrad'];
 
@@ -135,6 +142,38 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           <h1>{sonData.headline || 'DJ & Live'}</h1>
           {sonData.bio && <p class="bio">{sonData.bio}</p>}
           <p class="tags">{sonData.genres?.join(' · ') || 'psytrance · hi-tech · goa'}</p>
+        {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify ||
+          sonData.links?.instagram || sonData.links?.facebook || sonData.links?.presskit) && (
+          <div class="links-streaming">
+            {sonData.links.soundcloud && (
+              <a href={sonData.links.soundcloud} target="_blank" rel="noopener" class="link-btn">SoundCloud</a>
+            )}
+            {sonData.links.mixcloud && (
+              <a href={sonData.links.mixcloud} target="_blank" rel="noopener" class="link-btn">Mixcloud</a>
+            )}
+            {sonData.links.spotify && (
+              <a href={sonData.links.spotify} target="_blank" rel="noopener" class="link-btn">Spotify</a>
+            )}
+            {sonData.links.instagram && (
+              <a href={sonData.links.instagram} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Instagram</a>
+            )}
+            {sonData.links.facebook && (
+              <a href={sonData.links.facebook} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Facebook</a>
+            )}
+            {sonData.links.presskit && (
+              <a href={sonData.links.presskit} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Presskit</a>
+            )}
+          </div>
+        )}
+
+        {sonData.links?.soundcloud && (
+          <button
+            class="btn-ecouter"
+            data-type="soundcloud"
+            data-url={sonData.links.soundcloud}
+            data-lbl="SoundCloud"
+          >▶ Écouter</button>
+        )}
         </div>
       </div>
       <a class="home" href="/"
@@ -148,7 +187,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
          sur toute la largeur. -->
     <nav class="facet-tabs" id="facet-tabs">
       <button class="facet-tab is-on" data-panel="agenda">Agenda</button>
-      <button class="facet-tab" data-panel="sets">Bibliothèque</button>
       <button class="facet-tab" data-panel="playlists">Playlists</button>
     </nav>
 
@@ -225,6 +263,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                             : <a class="dl" href={r.url} target="_blank" rel="noopener"
                                  title="Ouvrir la page du set" aria-label="Ouvrir la page du set">↗</a>}
                         </>
+                      ) : playlistId(g.data.tracklist) ? (
+                        <>
+                          <button
+                            class="btn-ecouter rec-play"
+                            data-type="spotify"
+                            data-playlist-id={playlistId(g.data.tracklist)}
+                            data-lbl={g.data.title}
+                          >▶</button>
+                          <span class="rec-note rec-note--link">tracklist</span>
+                        </>
                       ) : (
                         <span class:list={['rec-note', g.data.recordState === 'soon' && 'rec-note--soon']}>
                           {g.data.recordState === 'soon' ? 'enregistré · bientôt en ligne' : 'set non enregistré'}
@@ -252,100 +300,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       </div>
 
       <!-- ── Sets ── -->
-      <div class="panel panel-sets" data-panel="sets">
-        <h2 class="col-title">Sets</h2>
-
-        {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify ||
-          sonData.links?.instagram || sonData.links?.facebook || sonData.links?.presskit) && (
-          <div class="links-streaming">
-            {sonData.links.soundcloud && (
-              <a href={sonData.links.soundcloud} target="_blank" rel="noopener" class="link-btn">SoundCloud</a>
-            )}
-            {sonData.links.mixcloud && (
-              <a href={sonData.links.mixcloud} target="_blank" rel="noopener" class="link-btn">Mixcloud</a>
-            )}
-            {sonData.links.spotify && (
-              <a href={sonData.links.spotify} target="_blank" rel="noopener" class="link-btn">Spotify</a>
-            )}
-            {sonData.links.instagram && (
-              <a href={sonData.links.instagram} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Instagram</a>
-            )}
-            {sonData.links.facebook && (
-              <a href={sonData.links.facebook} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Facebook</a>
-            )}
-            {sonData.links.presskit && (
-              <a href={sonData.links.presskit} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Presskit</a>
-            )}
-          </div>
-        )}
-
-        {sonData.links?.soundcloud && (
-          <button
-            class="btn-ecouter"
-            data-type="soundcloud"
-            data-url={sonData.links.soundcloud}
-            data-lbl="SoundCloud"
-          >▶ Écouter</button>
-        )}
-
-        {library.length > 0 && (
-          <div class="mixes-section">
-            <h3 class="sets-subtitle">Bibliothèque</h3>
-            {/* La bibliotheque se parcourt par tags, pas par date : l'agenda est
-                la seule liste chronologique de la page. */}
-            {libraryTags.length > 0 && (
-              <div class="tag-bar" id="tag-bar">
-                <button class="tag-chip is-on" data-tag="">Tout</button>
-                {libraryTags.map(t => (
-                  <button class="tag-chip" data-tag={t}>{t}</button>
-                ))}
-              </div>
-            )}
-            <ul class="mix-list" id="library-list">
-              {library.map(mix => (
-                <li class="mix-row" data-tags={(mix.tags ?? []).join('|')}>
-                  <div class="mix-line">
-                    <span class="mix-title">{mix.title}</span>
-                    {mix.duration_min > 0 && <span class="mix-dur">{mix.duration_min}min</span>}
-                    <span class="mix-links">
-                      {mix.mixcloud_url && (
-                        <a href={mix.mixcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">Mixcloud</a>
-                      )}
-                      {mix.soundcloud_url && (
-                        <a href={mix.soundcloud_url} target="_blank" rel="noopener" class="link-btn link-btn--sm">SC</a>
-                      )}
-                      {/* Le fichier direct (R2) prime sur l'embed SoundCloud : lecture continue, seek fiable. */}
-                      {(mix.audio_url || mix.soundcloud_url) && (
-                        <button
-                          class="btn-ecouter link-btn link-btn--sm"
-                          data-type={mix.audio_url ? 'audio' : 'soundcloud'}
-                          data-url={mix.audio_url || mix.soundcloud_url}
-                          data-lbl={mix.title}
-                          data-art={mix.image || ''}
-                        >▶</button>
-                      )}
-                    </span>
-                  </div>
-                  {(mix.tags ?? []).length > 0 && (
-                    <div class="mix-tags">
-                      {(mix.tags ?? []).map(t => (
-                        <button class="mix-tag" data-jump-tag={t}>{t}</button>
-                      ))}
-                    </div>
-                  )}
-                  {mix.audio_url && waveformUrl(mix.audio_url) && (
-                    <div class="wave" data-wave={waveformUrl(mix.audio_url)}
-                         data-url={mix.audio_url} data-lbl={mix.title}
-                         style={waveColor(mix.tags ?? [])}></div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <p class="empty" id="library-empty" hidden>Aucun set avec ce tag.</p>
-          </div>
-        )}
-      </div>
-
       <!-- ── Playlists ── -->
       <div class="panel panel-playlists" data-panel="playlists">
         <h2 class="col-title">Playlists</h2>

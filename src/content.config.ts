@@ -42,7 +42,10 @@ const gigs = defineCollection({
     image: z.string().optional(),
     // Etat de l'enregistrement quand il n'y a pas (encore) d'URL : evite une case
     // vide dans l'agenda et distingue "jamais enregistre" de "enregistre, a venir".
-    recordState: z.enum(['none', 'soon']).default('none'),
+    recordState: z.enum(['none', 'soon', 'tracklist']).default('none'),
+    // A defaut d'enregistrement, une playlist Spotify reconstituant le set :
+    // chaque date a alors quelque chose a ecouter. URL ou identifiant.
+    tracklist: z.string().optional(),
     recording: urlOrEmpty,      // Enregistrement principal (fichier direct R2, SoundCloud, Mixcloud)
     // Un gig peut avoir plusieurs enregistrements (deux scenes le meme week-end, par exemple).
     // `recording` reste l'entree simple ; `recordings` sert des qu'il y en a plus d'un.

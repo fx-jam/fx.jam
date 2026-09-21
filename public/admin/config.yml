@@ -49,6 +49,8 @@ collections:
         options:
           - { label: "Set non enregistré", value: "none" }
           - { label: "Enregistré — bientôt disponible", value: "soon" }
+          - { label: "Pas d'enregistrement — tracklist Spotify", value: "tracklist" }
+      - { label: "Tracklist Spotify (URL ou ID de playlist)", name: "tracklist", widget: "string", required: false, hint: "Utilisée quand il n'y a pas d'enregistrement du set" }
       - { label: "Enregistrement (URL)", name: "recording", widget: "string", required: false, hint: "Fichier direct media.hamcat.live, SoundCloud ou Mixcloud" }
       - label: "Enregistrements supplémentaires"
         name: "recordings"

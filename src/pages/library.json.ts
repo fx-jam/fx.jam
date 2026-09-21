@@ -39,6 +39,12 @@ const waveformUrl = (url: string): string | null => {
 
 const isDirect = (url: string) => url.startsWith('https://media.hamcat.live/');
 
+const playlistIdOf = (v?: string): string | null => {
+  if (!v) return null;
+  const m = v.match(/playlist[/:]([A-Za-z0-9]+)/);
+  return m ? m[1] : (/^[A-Za-z0-9]{16,}$/.test(v.trim()) ? v.trim() : null);
+};
+
 const sourceOf = (url: string): string =>
   isDirect(url) ? 'audio'
   : url.includes('mixcloud.com') ? 'mixcloud'
@@ -82,6 +88,27 @@ export const GET: APIRoute = async () => {
           orga:   [],
           mood:   [],
           artist: [],
+        },
+      });
+    }
+    // Une date sans enregistrement mais avec sa tracklist reconstituee reste
+    // ecoutable : elle a donc sa place dans la bibliotheque.
+    const pl = recs.length ? null : playlistIdOf(g.data.tracklist);
+    if (pl) {
+      entries.push({
+        id: `${g.id}:tracklist`,
+        title: g.data.title,
+        sub: 'tracklist',
+        date: g.data.date.toISOString(),
+        source: 'spotify',
+        url: '',
+        playlistId: pl,
+        waveform: null,
+        download: false,
+        tags: {
+          style:  toStyles(g.data.genre ?? []),
+          venue:  g.data.venue ? [g.data.venue] : [],
+          orga:   [], mood: [], artist: [],
         },
       });
     }
