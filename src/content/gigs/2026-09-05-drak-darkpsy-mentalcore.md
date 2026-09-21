@@ -1,9 +1,22 @@
 ---
-title: 'DRAK — DARKPSY / MENTALCORE'
-date: '2026-09-05'
-format: 'dj'
-venue: 'Drak'
-country: 'France'
-genre: ["darkpsy", "mentalcore"]
+title: DRAK — DARKPSY / MENTALCORE
+date: 2026-09-05
+format: dj
+role: ''
+venue: Drak
+city: ''
+country: France
+genre:
+  - Darkpsy
+  - Mentalcore
+duration: ''
+lineup: []
+image: ''
+recordState: soon
+recording: ''
+recordings: []
+eventUrl: ''
+featured: false
 draft: false
+notes: ''
 ---
