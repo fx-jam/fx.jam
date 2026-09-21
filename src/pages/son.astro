@@ -52,6 +52,15 @@ const waveformUrl = (url: string): string | null => {
 
 const isDirectAudio = (url: string) => url.startsWith('https://media.hamcat.live/');
 
+const STYLES = ['psychill','chillgressive','psydub','psyprog','psytrance',
+                'full-on','hi-tech','darkpsy','mentalcore','electrad'];
+
+/** Teinte de la waveform : le premier style reconnu du set, sinon la couleur de la facette. */
+const waveColor = (tags: string[] = []) => {
+  const hit = tags.map(t => t.toLowerCase().trim()).find(t => STYLES.includes(t));
+  return `--wave-played: var(--style-${hit ?? 'default'})`;
+};
+
 /** Sets deja rattaches a une date : ils s'affichent dans l'agenda, pas dans la bibliotheque. */
 const gigRecordingUrls = new Set(all.flatMap(g => recordingsOf(g.data).map(r => r.url)));
 
@@ -206,7 +215,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                         >▶</button>
                       )}
                       {wave && r && (
-                        <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}></div>
+                        <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}
+                             style={waveColor(g.data.genre ?? [])}></div>
                       )}
                       {wave && r && <span class="wave-time" data-time-for={r.url}></span>}
                     </span>
@@ -298,7 +308,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                   )}
                   {mix.audio_url && waveformUrl(mix.audio_url) && (
                     <div class="wave" data-wave={waveformUrl(mix.audio_url)}
-                         data-url={mix.audio_url} data-lbl={mix.title}></div>
+                         data-url={mix.audio_url} data-lbl={mix.title}
+                         style={waveColor(mix.tags ?? [])}></div>
                   )}
                 </li>
               ))}
@@ -740,10 +751,10 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     cursor: pointer;
     touch-action: manipulation;
   }
-  .wave svg { width: 100%; height: 100%; display: block; }
-  .wave .wave-bg { fill: color-mix(in srgb, var(--text-tertiary) 60%, transparent); }
-  .wave .wave-fg { fill: var(--facet-son); }
-  .wave:hover .wave-bg { fill: color-mix(in srgb, var(--text-secondary) 75%, transparent); }
+  .wave :global(svg) { width: 100%; height: 100%; display: block; }
+  .wave :global(.wave-bg) { fill: var(--wave-rest); }
+  .wave :global(.wave-fg) { fill: var(--wave-played, var(--style-default)); }
+  .wave:hover :global(.wave-bg) { fill: rgba(240, 240, 245, 0.48); }
 
   /* ── Bibliotheque : filtrage par tags ── */
   .tag-bar {
@@ -792,13 +803,10 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           const url = btn.dataset.url ?? '';
           const art = btn.dataset.art ?? '';
           if (!url) return;
-          // Recliquer le set deja charge met en pause / reprend, au lieu de le relancer a zero.
-          const cur = (window as any).__hamcatCurrent?.();
-          if (cur && cur.source === 'audio' && cur.url === url) {
-            document.dispatchEvent(new CustomEvent('hamcat:toggle'));
-            return;
-          }
-          document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl, art } }));
+          // `toggle` : si c'est deja ce set qui joue, le player met en pause au lieu
+          // de le relancer. La decision lui revient — cette page peut etre en iframe.
+          document.dispatchEvent(new CustomEvent('hamcat:play',
+            { detail: { type, url, lbl, art, toggle: true } }));
         } else if (type === 'spotify') {
           const playlistId = btn.dataset.playlistId ?? '';
           if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));
@@ -833,7 +841,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       bars.push(`<rect x="${x * 2}" y="${(100 - h) / 2}" width="1.1" height="${h}" rx="0.5"/>`);
     }
     el.innerHTML =
-      `<svg viewBox="0 0 ${bars.length * 2} 100" preserveAspectRatio="none" aria-hidden="true">` +
+      `<svg viewBox="0 0 ${bars.length * 2} 100" preserveAspectRatio="none" aria-hidden="true"` +
+      ` style="width:100%;height:100%;display:block">` +
       `<g class="wave-bg">${bars.join('')}</g>` +
       `<g class="wave-fg" clip-path="url(#clip-${el.dataset.waveId})">${bars.join('')}</g>` +
       `<clipPath id="clip-${el.dataset.waveId}"><rect x="0" y="0" width="0" height="100"/></clipPath>` +

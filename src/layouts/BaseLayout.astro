@@ -78,6 +78,23 @@ const facetHrefs = visibleFacets().map(f => f.href);
       --facet-outils:  oklch(0.65 0.18 260);  /* bleu           ~240 deg spectre */
       --facet-contact: oklch(0.68 0.20 320);  /* violet-rose    ~300 deg spectre */
 
+      /* Couleurs de style musical — waveforms et pastilles de genre.
+         Meme logique de spectre que les facettes : du plus calme au plus dur. */
+      --style-psychill:      oklch(0.78 0.13 195);
+      --style-chillgressive: oklch(0.75 0.15 215);
+      --style-psydub:        oklch(0.70 0.16 255);
+      --style-psyprog:       oklch(0.70 0.19 295);
+      --style-psytrance:     oklch(0.72 0.21 330);
+      --style-full-on:       oklch(0.78 0.19 60);
+      --style-hi-tech:       oklch(0.80 0.18 95);
+      --style-darkpsy:       oklch(0.62 0.20 285);
+      --style-mentalcore:    oklch(0.66 0.23 20);
+      --style-electrad:      oklch(0.76 0.19 140);
+      /* Teinte par defaut d'une waveform sans style reconnu */
+      --style-default:       var(--facet-son);
+      /* Partie non encore lue d'une waveform : gris clair, lisible sur le fond sombre */
+      --wave-rest: rgba(240, 240, 245, 0.30);
+
       /* Neutres (dark theme) */
       --bg-app: #0b0b10;       /* fond global */
       --bg-surface: #15151c;   /* surfaces / cartes */
@@ -576,10 +593,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.43 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.44 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.43');
+  console.log('🐱 fx_jam_v1.44');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -645,8 +662,20 @@ const facetHrefs = visibleFacets().map(f => f.href);
     })();
     if (_embedded) {
       console.log('[HMC] embedded mode → player délégué au parent');
-      document.addEventListener('hamcat:play', (e: any) => {
-        try { window.parent.document.dispatchEvent(new CustomEvent('hamcat:play', { detail: e.detail })); } catch (_) {}
+      // Les commandes montent vers le player du parent...
+      ['hamcat:play', 'hamcat:toggle'].forEach(evt => {
+        document.addEventListener(evt, (e: any) => {
+          try { window.parent.document.dispatchEvent(new CustomEvent(evt, { detail: e.detail })); } catch (_) {}
+        });
+      });
+      // ...et la progression redescend, sans quoi les waveforms de la page ne
+      // sauraient jamais ou en est la lecture.
+      window.addEventListener('message', (e: MessageEvent) => {
+        if (e.origin !== location.origin) return;
+        const d = e.data as any;
+        if (d && d.__hamcat === 'progress') {
+          document.dispatchEvent(new CustomEvent('hamcat:progress', { detail: d.detail }));
+        }
       });
       return;
     }
@@ -1106,10 +1135,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const FADE_OUT_MS = 280;
     const FADE_IN_MS  = 420;
 
-    async function playAudio(url: string, lbl: string, startAt = 0, art = '') {
+    async function playAudio(url: string, lbl: string, startAt = 0, art = '', toggle = false) {
       const vol = getSavedVolume() / 100; // v1.36
       const sameTrack = state.currentSource === 'audio'
         && !!audioEl.currentSrc && audioEl.currentSrc === url;
+
+      // Rejouer le set deja charge depuis son bouton : pause / reprise, pas un retour a zero.
+      // C'est le player qui tranche, parce qu'une page ouverte en iframe ne peut pas
+      // savoir ce qui joue chez le parent.
+      if (sameTrack && toggle) { togglePlayback(); return; }
 
       // Deplacement dans le set en cours : simple seek, surtout pas un rechargement.
       if (sameTrack) {
@@ -1688,9 +1722,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(audioEl.currentTime * 1000)} / ${fmtMs(dur * 1000)}`;
         if (miniTimeEl)   miniTimeEl.textContent = fmtMs(audioEl.currentTime * 1000);
         // Les waveforms affichees dans les pages ecoutent cet evenement pour suivre la lecture.
-        document.dispatchEvent(new CustomEvent('hamcat:progress', {
-          detail: { url: audioEl.currentSrc, position: audioEl.currentTime, duration: dur },
-        }));
+        const detail = { url: audioEl.currentSrc, position: audioEl.currentTime, duration: dur };
+        document.dispatchEvent(new CustomEvent('hamcat:progress', { detail }));
+        // Les facettes ouvertes en modale sont des iframes : elles ont leur propre document.
+        document.querySelectorAll('iframe').forEach(f => {
+          try { f.contentWindow?.postMessage({ __hamcat: 'progress', detail }, location.origin); } catch (_) {}
+        });
       }
       // Sauvegarde position toutes les 5 s
       if (Math.round(audioEl.currentTime) % 5 !== 0) return;
@@ -1790,8 +1827,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     // hamcat:play — depuis les boutons du site
     document.addEventListener('hamcat:play', (e: any) => {
-      const { type, url, playlistId, lbl, startAt, art } = e.detail;
-      if      (type === 'audio')      playAudio(url, lbl, startAt || 0, art || '');
+      const { type, url, playlistId, lbl, startAt, art, toggle } = e.detail;
+      if      (type === 'audio')      playAudio(url, lbl, startAt || 0, art || '', !!toggle);
       else if (type === 'soundcloud') playSC(url, lbl);
       else if (type === 'spotify')    playSpotify(playlistId, lbl);
     }, { signal });
@@ -1830,13 +1867,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     /** Les listes de la page demandent la bascule quand on reclique le set en cours. */
     document.addEventListener('hamcat:toggle', () => togglePlayback(), { signal });
-
-    /** L'URL du set en cours, pour que les pages sachent quoi basculer plutot que relancer. */
-    (w as any).__hamcatCurrent = () => ({
-      source: state.currentSource,
-      url: state.currentSource === 'audio' ? audioEl.currentSrc : '',
-      paused: audioEl.paused,
-    });
 
     // Barre espace = lecture/pause partout sur le site. On laisse la main des que
     // le focus est dans un champ ou sur un bouton, ou il a deja un sens.
@@ -2026,7 +2056,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.43';
+    _vt.textContent = 'fx_jam_v1.44';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
