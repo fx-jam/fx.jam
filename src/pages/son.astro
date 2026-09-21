@@ -597,7 +597,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       btn.addEventListener('click', () => {
         const type = btn.dataset.type ?? '';
         const lbl  = btn.dataset.lbl  ?? '';
-        if (type === 'soundcloud') {
+        if (type === 'audio' || type === 'soundcloud') {
           const url = btn.dataset.url ?? '';
           if (url) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, url, lbl } }));
         } else if (type === 'spotify') {
