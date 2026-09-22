@@ -7,9 +7,6 @@ venue: La Bobine
 city: Grenoble
 country: France
 genre: ["psychill", "chillgressive", "psydub", "psytrance"]
-  - Psychill
-  - Chillgressive
-  - Psytrance
 duration: ''
 lineup: []
 image: ''

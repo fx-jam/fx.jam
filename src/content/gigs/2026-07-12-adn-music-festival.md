@@ -7,7 +7,6 @@ venue: ADN Music Festival
 city: ''
 country: France
 genre: ["mashup-multigenre"]
-  - psytrance
 duration: ''
 lineup: []
 image: ''

@@ -6,5 +6,5 @@ venue: 'Hadra Trance Festival'
 country: 'France'
 genre: ["psytrance"]
 draft: false
-
-role: "concept set"---
+role: "concept set"
+---

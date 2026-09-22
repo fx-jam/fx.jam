@@ -7,7 +7,6 @@ venue: FESTIV'ARTS
 city: ''
 country: France
 genre: ["psyprog"]
-  - Psyprog
 duration: ''
 lineup: []
 image: ''

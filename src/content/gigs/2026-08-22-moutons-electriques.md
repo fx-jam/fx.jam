@@ -7,7 +7,6 @@ venue: Moutons Électriques
 city: ''
 country: France
 genre: ["mashup-multigenre"]
-  - hi-tech
 duration: ''
 lineup: []
 image: ''

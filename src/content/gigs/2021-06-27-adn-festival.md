@@ -7,8 +7,6 @@ venue: La Bamboche
 city: Valence
 country: France
 genre: ["mashup-multigenre"]
-  - Chillgressive
-  - Psychill
 duration: ''
 lineup: []
 image: ''

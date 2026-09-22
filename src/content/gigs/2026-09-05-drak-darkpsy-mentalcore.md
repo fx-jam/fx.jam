@@ -7,8 +7,6 @@ venue: Drak
 city: ''
 country: France
 genre: ["mentalcore", "darkpsy"]
-  - Darkpsy
-  - Mentalcore
 duration: ''
 lineup: []
 image: ''

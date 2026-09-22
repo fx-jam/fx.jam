@@ -7,8 +7,6 @@ venue: EASY RIDER
 city: ''
 country: France
 genre: ["tech-house"]
-  - Disco House
-  - Tech House
 duration: ''
 lineup: []
 image: ''

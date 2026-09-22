@@ -7,8 +7,6 @@ venue: SOVA FEST
 city: Vosges
 country: France
 genre: ["dub", "hi-tech"]
-  - Dub
-  - Hi-Tech
 duration: ''
 lineup: []
 image: ''
