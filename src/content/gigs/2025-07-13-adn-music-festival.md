@@ -2,7 +2,7 @@
 title: "ADN MUSIC FESTIVAL"
 date: "2025-07-13"
 format: "dj"
-venue: "ADN MUSIC FESTIVAL"
+venue: "ADN Music Festival"
 country: "France"
 description: ""
 genre: ["mashup-multigenre"]

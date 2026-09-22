@@ -2,7 +2,7 @@
 title: 'LA BELLE ELECTRIQUE'
 date: '2025-06-13'
 format: 'dj'
-venue: 'LA BELLE ELECTRIQUE'
+venue: "La Belle Électrique"
 country: 'France'
 genre: ["mashup-multigenre"]
 draft: false

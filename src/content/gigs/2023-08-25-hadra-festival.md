@@ -2,7 +2,7 @@
 title: 'HADRA FESTIVAL'
 date: '2023-08-25'
 format: 'dj'
-venue: 'HADRA FESTIVAL'
+venue: "Hadra Trance Festival"
 country: 'France'
 genre: ["chillgressive", "rock-psyche"]
 recording: 'https://media.hamcat.live/sets/2023-08-hadra-cocon-1.mp3'
