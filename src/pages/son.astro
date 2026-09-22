@@ -265,6 +265,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                           >▶</button>
                           {wave
                             ? <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}
+                                   data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
                                    style={waveColor(g.data.genre ?? [])}></div>
                             : <span class="rec-note rec-note--link">écoute externe</span>}
                           {wave && <span class="wave-time" data-time-for={r.url}></span>}
@@ -958,8 +959,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         const dur   = parseFloat(el.dataset.duration || '0');
         setWaveProgress(el, ratio);
         document.dispatchEvent(new CustomEvent('hamcat:play', {
-          detail: { type: 'audio', url: el.dataset.url, lbl: el.dataset.lbl,
-                    startAt: dur ? ratio * dur : 0 },
+          detail: { type: el.dataset.type || 'audio', url: el.dataset.url,
+                    lbl: el.dataset.lbl, startAt: dur ? ratio * dur : 0 },
         }));
       });
     });

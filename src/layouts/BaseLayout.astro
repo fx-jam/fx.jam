@@ -871,10 +871,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.56 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.57 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.56');
+  console.log('🐱 fx_jam_v1.57');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1158,6 +1158,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
             (w as any).__scDuration = dur;
             if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(pos)} / ${fmtMs(dur)}`;
             if (miniTimeEl) miniTimeEl.textContent = fmtMs(pos);
+            // Sans ca, les waveforms SoundCloud des pages restaient figees a zero.
+            emitProgress((w as any).__scUrl || '', pos / 1000, dur / 1000);
           }
           try {
             const s = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
@@ -1455,6 +1457,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     function playSC(url: string, lbl: string, startAtMs = 0, trackIndex = 0, shouldPlay = true, isRestore = false) {
       if (isRestore && _isMobile) shouldPlay = false; // v1.22: pas d'autoplay mobile — iOS le bloquerait de toute facon
+      // Meme set deja charge : on deplace la tete de lecture au lieu de
+      // recharger l'iframe, sans quoi cliquer la waveform repartait de zero.
+      if (state.currentSource === 'soundcloud' && (w as any).__scUrl === url && w.__scWidget) {
+        try {
+          w.__scWidget.seekTo(startAtMs);
+          if (shouldPlay) w.__scWidget.play();
+        } catch (_) {}
+        return;
+      }
+      (w as any).__scUrl = url;
       pauseAll();
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement;
       if (!state.scIframe) return;
@@ -2005,12 +2017,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(audioEl.currentTime * 1000)} / ${fmtMs(dur * 1000)}`;
         if (miniTimeEl)   miniTimeEl.textContent = fmtMs(audioEl.currentTime * 1000);
         // Les waveforms affichees dans les pages ecoutent cet evenement pour suivre la lecture.
-        const detail = { url: audioEl.currentSrc, position: audioEl.currentTime, duration: dur };
-        document.dispatchEvent(new CustomEvent('hamcat:progress', { detail }));
-        // Les facettes ouvertes en modale sont des iframes : elles ont leur propre document.
-        document.querySelectorAll('iframe').forEach(f => {
-          try { f.contentWindow?.postMessage({ __hamcat: 'progress', detail }, location.origin); } catch (_) {}
-        });
+        emitProgress(audioEl.currentSrc, audioEl.currentTime, dur);
       }
       // Sauvegarde position toutes les 5 s
       if (Math.round(audioEl.currentTime) % 5 !== 0) return;
@@ -2112,9 +2119,21 @@ const facetHrefs = visibleFacets().map(f => f.href);
     document.addEventListener('hamcat:play', (e: any) => {
       const { type, url, playlistId, lbl, startAt, art, toggle } = e.detail;
       if      (type === 'audio')      playAudio(url, lbl, startAt || 0, art || '', !!toggle);
-      else if (type === 'soundcloud') playSC(url, lbl);
+      else if (type === 'soundcloud') playSC(url, lbl, Math.round((startAt || 0) * 1000));
       else if (type === 'spotify')    playSpotify(playlistId, lbl);
     }, { signal });
+
+    /** Diffuse la position de lecture aux waveforms des pages, quelle que soit
+     *  la source. Les facettes ouvertes en modale sont des iframes : elles ont
+     *  leur propre document, d'ou le relais par postMessage. */
+    function emitProgress(url: string, position: number, duration: number) {
+      if (!duration) return;
+      const detail = { url, position, duration };
+      document.dispatchEvent(new CustomEvent('hamcat:progress', { detail }));
+      document.querySelectorAll('iframe').forEach(f => {
+        try { f.contentWindow?.postMessage({ __hamcat: 'progress', detail }, location.origin); } catch (_) {}
+      });
+    }
 
     /** Icone lecture/pause — il y a deux boutons (transport + pastille reduite). */
     function setPlayIcon(icon: string) {
@@ -2381,7 +2400,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
         const rect = wave.getBoundingClientRect();
         const ratio = Math.max(0, Math.min(1, ((e as MouseEvent).clientX - rect.left) / rect.width));
         const dur = parseFloat(wave.dataset.duration || '0');
-        if (dur) playAudio(wave.dataset.url!, state.currentLbl, ratio * dur);
+        if (dur) {
+          const row = wave.closest<HTMLElement>('.lib-row');
+          const lbl = (row?.querySelector('.lib-title') as HTMLElement)?.textContent?.trim()
+                      || state.currentLbl;
+          // La waveform d'un set SoundCloud doit le lancer comme les autres,
+          // a la position cliquee, et non passer par l'element <audio>.
+          if (row?.dataset.src === 'soundcloud') playSC(wave.dataset.url!, lbl, Math.round(ratio * dur * 1000));
+          else playAudio(wave.dataset.url!, lbl, ratio * dur);
+        }
         return;
       }
       const row = t.closest<HTMLElement>('.lib-row');
@@ -2607,7 +2634,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.56';
+    _vt.textContent = 'fx_jam_v1.57';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
