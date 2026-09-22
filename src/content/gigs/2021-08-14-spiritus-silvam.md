@@ -6,7 +6,7 @@ role: Warmup
 venue: Festival
 city: '38'
 country: France
-genre:
+genre: ["psydub"]
   - Psydub
 duration: ''
 lineup: []

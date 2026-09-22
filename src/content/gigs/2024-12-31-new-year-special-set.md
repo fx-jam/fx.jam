@@ -4,7 +4,7 @@ date: '2024-12-31'
 format: 'dj'
 venue: 'NEW YEAR SPECIAL SET'
 country: 'France'
-genre: ["multi mashup"]
+genre: ["mashup-multigenre"]
 draft: false
 notes: '24/12/31 - NEW YEAR SPECIAL SET (MULTI MASHUP)'
 ---

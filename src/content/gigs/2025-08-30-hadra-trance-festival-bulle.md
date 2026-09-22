@@ -5,7 +5,7 @@ format: 'dj'
 role: 'La Bulle'
 venue: 'Hadra Trance Festival'
 country: 'France'
-genre: ["chillgressive"]
+genre: ["chillgressive", "rock-psyche"]
 recording: 'https://media.hamcat.live/sets/2025-08-hadra-25-bulle.mp3'
 draft: false
 ---

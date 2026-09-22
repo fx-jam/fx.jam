@@ -6,7 +6,7 @@ role: Closing
 venue: La Bamboche
 city: Valence
 country: France
-genre:
+genre: ["chillgressive", "psychill"]
   - Mashup Multigenre
 duration: ''
 lineup: []

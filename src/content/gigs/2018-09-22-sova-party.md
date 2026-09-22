@@ -6,7 +6,7 @@ role: Peak-Timd B2B avec Joy (Døl Sax)
 venue: SOVA FEST
 city: Vosges
 country: France
-genre:
+genre: ["dub", "hi-tech"]
   - Dub
   - Hi-Tech
 duration: ''

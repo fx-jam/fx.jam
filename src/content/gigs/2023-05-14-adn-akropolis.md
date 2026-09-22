@@ -4,7 +4,7 @@ date: '2023-05-14'
 format: 'dj'
 venue: 'ADN AKROPOLIS'
 country: 'France'
-genre: ["chillgressive"]
+genre: ["chillgressive", "rock-psyche"]
 draft: false
 notes: '23/05/14 - ADN AKROPOLIS (CHILLGRESSIVE)'
 ---

@@ -4,6 +4,6 @@ date: '2026-04-18'
 format: 'dj'
 venue: 'Bivouak'
 country: 'France'
-genre: ["psytrance"]
+genre: ["psyprog"]
 draft: false
 ---

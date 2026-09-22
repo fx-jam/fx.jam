@@ -4,7 +4,7 @@ date: '2025-06-13'
 format: 'dj'
 venue: 'LA BELLE ELECTRIQUE'
 country: 'France'
-genre: ["techno rodeo"]
+genre: ["mashup-multigenre"]
 draft: false
 notes: '25/06/13 - LA BELLE ELECTRIQUE (TECHNO RODEO)'
 ---

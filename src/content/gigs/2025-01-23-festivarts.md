@@ -6,7 +6,7 @@ role: ''
 venue: FESTIV'ARTS
 city: ''
 country: France
-genre:
+genre: ["psyprog"]
   - Psyprog
 duration: ''
 lineup: []

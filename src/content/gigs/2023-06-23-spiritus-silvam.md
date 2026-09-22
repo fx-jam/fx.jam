@@ -6,7 +6,7 @@ role: Landing
 venue: Les Conciliabules
 city: '38'
 country: France
-genre:
+genre: ["psybient"]
   - psybient
 duration: ''
 lineup: []

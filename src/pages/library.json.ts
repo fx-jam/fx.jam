@@ -19,17 +19,23 @@ import type { SonData } from '../data/types';
 
 const sonData = sonJson as unknown as SonData;
 
-const STYLES = ['psychill', 'chillgressive', 'psydub', 'psyprog', 'psytrance',
-                'full-on', 'hi-tech', 'darkpsy', 'mentalcore', 'electrad'];
+/** "Rock Psyché" -> "rock-psyche" : un intitule devient un identifiant
+ *  stable, utilisable comme nom de jeton CSS et comme cle de filtre. */
+const styleSlug = (s: string): string =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+   .toLowerCase().trim()
+   .replace(/[^a-z0-9]+/g, '-')
+   .replace(/^-|-$/g, '');
 
-/** "dub hi-tech" → ["hi-tech"] : on ne retient que le vocabulaire connu. */
+/** Les styles d'une date, normalises et dedoublonnes en gardant l'ordre saisi :
+ *  le premier nomme est le dominant, c'est lui qui colore la waveform. */
 const toStyles = (raw: string[] = []): string[] => {
-  const out = new Set<string>();
+  const out: string[] = [];
   for (const r of raw) {
-    const s = r.toLowerCase().trim();
-    for (const k of STYLES) if (s === k || s.includes(k)) out.add(k);
+    const k = styleSlug(r);
+    if (k && !out.includes(k)) out.push(k);
   }
-  return [...out];
+  return out;
 };
 
 const waveformUrl = (url: string): string | null => {

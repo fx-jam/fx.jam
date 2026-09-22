@@ -6,7 +6,7 @@ role: ''
 venue: EASY RIDER
 city: ''
 country: France
-genre:
+genre: ["tech-house"]
   - Disco House
   - Tech House
 duration: ''

@@ -79,17 +79,34 @@ const facetHrefs = visibleFacets().map(f => f.href);
       --facet-contact: oklch(0.68 0.20 320);  /* violet-rose    ~300 deg spectre */
 
       /* Couleurs de style musical — waveforms et pastilles de genre.
-         Meme logique de spectre que les facettes : du plus calme au plus dur. */
-      --style-psychill:      oklch(0.78 0.13 195);
-      --style-chillgressive: oklch(0.75 0.15 215);
-      --style-psydub:        oklch(0.70 0.16 255);
-      --style-psyprog:       oklch(0.70 0.19 295);
-      --style-psytrance:     oklch(0.72 0.21 330);
-      --style-full-on:       oklch(0.78 0.19 60);
-      --style-hi-tech:       oklch(0.80 0.18 95);
-      --style-darkpsy:       oklch(0.62 0.20 285);
-      --style-mentalcore:    oklch(0.66 0.23 20);
-      --style-electrad:      oklch(0.76 0.19 140);
+         Meme logique de spectre que les facettes : les styles sont ranges du
+         plus calme au plus dur, et leur teinte suit la roue dans cet ordre.
+         Ajouter un style = ajouter son jeton ici, en le glissant a sa place
+         dans la progression ; le reste du site le prend sans rien changer. */
+      --style-dub:               oklch(0.72 0.14 162);
+      --style-psybient:          oklch(0.80 0.10 178);
+      --style-psychill:          oklch(0.78 0.13 195);
+      --style-chillgressive:     oklch(0.75 0.15 215);
+      --style-tech-house:        oklch(0.70 0.13 238);
+      --style-psydub:            oklch(0.70 0.16 255);
+      --style-dark-prog:         oklch(0.58 0.15 272);
+      --style-darkpsy:           oklch(0.62 0.20 285);
+      --style-psyprog:           oklch(0.70 0.19 295);
+      --style-dnb:               oklch(0.68 0.20 315);
+      --style-psytrance:         oklch(0.72 0.21 330);
+      --style-rock-psyche:       oklch(0.64 0.18 5);
+      --style-mentalcore:        oklch(0.66 0.23 20);
+      --style-goa:               oklch(0.74 0.17 45);
+      --style-full-on:           oklch(0.78 0.19 60);
+      --style-nitzhonot:         oklch(0.80 0.16 78);
+      --style-hi-tech:           oklch(0.80 0.18 95);
+      --style-ethno-grooves:     oklch(0.76 0.14 112);
+      --style-chill-hop:         oklch(0.80 0.11 128);
+      --style-electrad:          oklch(0.76 0.19 140);
+      /* Deux cas a part : le metal ne tient pas dans la roue psy, et un mashup
+         n'a par definition pas de teinte propre — tous deux desatures. */
+      --style-metal:             oklch(0.55 0.03 265);
+      --style-mashup-multigenre: oklch(0.74 0.05 320);
       /* Teinte par defaut d'une waveform sans style reconnu */
       --style-default:       var(--facet-son);
       /* Partie non encore lue d'une waveform : gris clair, lisible sur le fond sombre */
@@ -337,22 +354,43 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
     #btn-lib-close:hover { color: var(--text-primary); }
 
+    /* Une seule rangee qui defile : a vingt-deux styles, un retour a la ligne
+       mangerait la moitie de la hauteur utile de la liste. */
     .lib-filters {
-      display: flex; flex-wrap: wrap; gap: 0.3rem;
+      display: flex; gap: 0.3rem;
       padding: 0 1rem 0.5rem;
       flex: 0 0 auto;
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none;
     }
+    .lib-filters::-webkit-scrollbar { display: none; }
     .lib-chip {
+      flex: 0 0 auto;
+      display: inline-flex; align-items: center; gap: 0.3rem;
       font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.08em;
       padding: 0.24rem 0.55rem; border-radius: 999px;
       border: 1px solid var(--border); background: transparent;
-      color: var(--text-tertiary); cursor: pointer;
+      color: var(--text-tertiary); cursor: pointer; white-space: nowrap;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    /* Chaque pastille porte la couleur de son style : la rangee sert aussi de
+       legende pour les waveforms, qui utilisent exactement les memes teintes. */
+    .lib-chip[data-style]:not([data-style=""]) {
+      border-color: color-mix(in srgb, var(--chip) 40%, transparent);
+      color: color-mix(in srgb, var(--chip) 78%, var(--text-tertiary));
+    }
+    .lib-chip em {
+      font-style: normal; font-size: 0.56rem; opacity: 0.6;
+      font-variant-numeric: tabular-nums;
     }
     .lib-chip:hover { border-color: var(--facet-son); color: var(--text-secondary); }
     .lib-chip.is-on {
       border-color: var(--facet-son); color: var(--facet-son);
       background: color-mix(in srgb, var(--facet-son) 14%, transparent);
+    }
+    .lib-chip[data-style]:not([data-style=""]).is-on {
+      border-color: var(--chip); color: var(--chip);
+      background: color-mix(in srgb, var(--chip) 16%, transparent);
     }
 
     .lib-list { flex: 1 1 auto; overflow-y: auto; padding: 0 0.6rem 0.6rem; }
@@ -824,10 +862,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.58 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.59 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.58');
+  console.log('🐱 fx_jam_v1.59');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2148,7 +2186,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     };
 
     let libData: LibEntry[] | null = null;
-    let libStyle = '';
+    let libStyles = new Set<string>();
 
     const SRC_LABEL: Record<string, string> = {
       audio: '♪', soundcloud: 'SC', mixcloud: 'MC', spotify: 'SP',
@@ -2161,31 +2199,41 @@ const facetHrefs = visibleFacets().map(f => f.href);
       return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())}`;
     };
 
+    /** Pastilles de styles : les plus courants d'abord, chacune a sa couleur.
+     *  Vingt-deux styles ne tiennent pas sur une ligne — la rangee defile
+     *  horizontalement plutot que de manger la hauteur de la liste. */
     function renderLibFilters() {
       if (!libData) return;
-      const styles = [...new Set(libData.flatMap(e => e.tags.style || []))].sort();
+      const count = new Map<string, number>();
+      libData.forEach(e => (e.tags.style || []).forEach(t =>
+        count.set(t, (count.get(t) || 0) + 1)));
+      const styles = [...count.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
       libFilters.innerHTML =
-        `<button class="lib-chip${libStyle ? '' : ' is-on'}" data-style="">Tout</button>` +
-        styles.map(t => `<button class="lib-chip${libStyle === t ? ' is-on' : ''}" data-style="${t}">${t}</button>`).join('');
+        `<button class="lib-chip${libStyles.size ? '' : ' is-on'}" data-style="">Tout</button>`
+        + styles.map(([t, n]) =>
+            `<button class="lib-chip${libStyles.has(t) ? ' is-on' : ''}" data-style="${t}"`
+            + ` style="--chip: var(--style-${t}, var(--style-default))">`
+            + `${t}<em>${n}</em></button>`).join('');
     }
 
     function renderLibList() {
       if (!libData) return;
       const q = libSearch.value.trim().toLowerCase();
       const rows = libData.filter(e => {
-        if (libStyle && !(e.tags.style || []).includes(libStyle)) return false;
+        if (libStyles.size && !(e.tags.style || []).some(t => libStyles.has(t))) return false;
         if (q && !(`${e.title} ${e.sub}`.toLowerCase().includes(q))) return false;
         return true;
       });
       libCount.textContent = `${rows.length} / ${libData.length}`;
       libList.innerHTML = rows.map(e => {
         const styles = (e.tags.style || []).join(' · ');
-        const hue = (e.tags.style || [])[0];
+        const hue = (e.tags.style || [])[0] || 'default';
         // La zone waveform est toujours presente, vide au besoin : toutes les
         // lignes gardent ainsi exactement la meme hauteur.
         const wave = e.waveform
           ? `<div class="lib-wave" data-wave="${e.waveform}" data-url="${e.url}"`
-            + ` style="--wave-played: var(--style-${hue || 'default'})"></div>`
+            + ` style="--wave-played: var(--style-${hue}, var(--style-default))"></div>`
           : `<div class="lib-wave lib-wave--none"></div>`;
         return `<div class="lib-row" role="listitem" data-id="${e.id}" data-url="${e.url}"`
              + ` data-src="${e.source}"${e.playlistId ? ` data-pl="${e.playlistId}"` : ''}`
@@ -2442,7 +2490,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
     libFilters.addEventListener('click', e => {
       const c = (e.target as HTMLElement).closest<HTMLElement>('.lib-chip');
       if (!c) return;
-      libStyle = c.dataset.style || '';
+      const t = c.dataset.style || '';
+      // "Tout" remet a zero ; les autres s'ajoutent et se retirent librement,
+      // et un set ressort des qu'il porte l'un des styles retenus.
+      if (!t) libStyles.clear();
+      else if (libStyles.has(t)) libStyles.delete(t);
+      else libStyles.add(t);
       renderLibFilters(); renderLibList();
     }, { signal });
 
@@ -2691,7 +2744,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.58';
+    _vt.textContent = 'fx_jam_v1.59';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

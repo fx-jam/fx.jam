@@ -6,7 +6,7 @@ role: ''
 venue: Drak
 city: ''
 country: France
-genre:
+genre: ["mentalcore", "darkpsy"]
   - Darkpsy
   - Mentalcore
 duration: ''

@@ -6,7 +6,7 @@ role: Landing
 venue: La Bamboche
 city: Valence
 country: France
-genre:
+genre: ["mashup-multigenre"]
   - Chillgressive
   - Psychill
 duration: ''

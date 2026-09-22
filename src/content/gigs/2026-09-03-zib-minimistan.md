@@ -2,7 +2,7 @@
 title: ZIB — MINIMISTAN
 date: 2026-09-03
 format: dj
-role: ''
+role: "B2B"
 venue: Minimistan
 city: ''
 country: France

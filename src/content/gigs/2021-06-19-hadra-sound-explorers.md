@@ -6,7 +6,7 @@ role: Concert
 venue: La Bobine
 city: Grenoble
 country: France
-genre:
+genre: ["psychill", "chillgressive", "psydub", "psytrance"]
   - Psychill
   - Chillgressive
   - Psytrance

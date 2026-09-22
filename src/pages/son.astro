@@ -70,13 +70,21 @@ const playlistId = (v?: string): string | null => {
   return m ? m[1] : (/^[A-Za-z0-9]{16,}$/.test(v.trim()) ? v.trim() : null);
 };
 
-const STYLES = ['psychill','chillgressive','psydub','psyprog','psytrance',
-                'full-on','hi-tech','darkpsy','mentalcore','electrad'];
+/** "Rock Psyché" -> "rock-psyche" : meme normalisation que /library.json,
+ *  pour que la couleur d'un style soit la meme partout sur le site. */
+const styleSlug = (t: string): string =>
+  t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+   .toLowerCase().trim()
+   .replace(/[^a-z0-9]+/g, '-')
+   .replace(/^-|-$/g, '');
 
-/** Teinte de la waveform : le premier style reconnu du set, sinon la couleur de la facette. */
+// Le premier style nomme donne sa teinte a la waveform. Un style sans jeton
+// de couleur retombe sur la teinte par defaut grace au second argument de var().
 const waveColor = (tags: string[] = []) => {
-  const hit = tags.map(t => t.toLowerCase().trim()).find(t => STYLES.includes(t));
-  return `--wave-played: var(--style-${hit ?? 'default'})`;
+  const hit = tags.map(styleSlug).find(Boolean);
+  return hit
+    ? `--wave-played: var(--style-${hit}, var(--style-default))`
+    : '--wave-played: var(--style-default)';
 };
 
 /** Sets deja rattaches a une date : ils s'affichent dans l'agenda, pas dans la bibliotheque. */

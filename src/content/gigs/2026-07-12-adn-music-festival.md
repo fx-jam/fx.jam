@@ -6,7 +6,7 @@ role: ''
 venue: ADN Music Festival
 city: ''
 country: France
-genre:
+genre: ["mashup-multigenre"]
   - psytrance
 duration: ''
 lineup: []
