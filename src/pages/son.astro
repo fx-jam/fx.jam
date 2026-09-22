@@ -291,6 +291,13 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                         </span>
                       )}
                     </span>
+                    {/* Recit de la date. Replie sur deux lignes : une date
+                        racontee ne doit pas repousser les dix suivantes hors
+                        de l'ecran. Un clic deplie. */}
+                    {i === 0 && g.data.description && (
+                      <p class="gig-desc" tabindex="0" role="button"
+                         aria-label="Déplier la description">{g.data.description}</p>
+                    )}
                     {i === 0 && (g.data.city || g.data.duration || (g.data.lineup ?? []).length || g.data.eventUrl) && (
                       <span class="gig-det">
                         {g.data.city && <span class="det">{g.data.city}</span>}
@@ -501,6 +508,33 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      une mention qui accompagne un bouton se range dans la colonne waveform. */
   .c-rec > .rec-note { grid-column: 3 / -1; }
   .c-rec > .rec-note--link { grid-column: 4; }
+  /* Recit libre de la date. Meme colonne que le titre, pour que le regard
+     descende en ligne droite. */
+  .gig-desc {
+    grid-column: 2 / -1;
+    margin: 0.2rem 0 0;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .gig-desc.is-open {
+    -webkit-line-clamp: none;
+    line-clamp: none;
+    overflow: visible;
+  }
+  .gig-desc:hover { color: var(--text-primary); }
+  .gig-desc:focus-visible {
+    outline: 1px solid var(--facet-son);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
   /* Details complementaires : n'apparaissent que si le CMS les renseigne. */
   .gig-det {
     grid-column: 2 / -1;
@@ -783,6 +817,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     .c-rec > .rec-note--link { grid-column: 2; }
     .c-tags { max-width: none; flex: 1 1 100%; }
     .gig-det { grid-column: 1 / -1; }
+    .gig-desc { grid-column: 1 / -1; }
     /* Pas de projection laterale ici : ce sont les vignettes qui signalent
        les medias, sur leur propre ligne pour ne pas comprimer la waveform. */
     .c-rec > .c-mediabox { grid-column: 1 / -1; }
@@ -1205,7 +1240,25 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); }
+  /** Deplie / replie le recit d'une date. */
+  function attachDesc() {
+    const list = document.querySelector('.panel-agenda');
+    if (!list || (list as HTMLElement).dataset.descReady) return;
+    (list as HTMLElement).dataset.descReady = '1';
+    const toggle = (el: HTMLElement | null) => el?.classList.toggle('is-open');
+    list.addEventListener('click', e => {
+      toggle((e.target as HTMLElement).closest<HTMLElement>('.gig-desc'));
+    });
+    list.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const d = (e.target as HTMLElement).closest<HTMLElement>('.gig-desc');
+      if (!d) return;
+      e.preventDefault();
+      toggle(d);
+    });
+  }
+
+  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); attachDesc(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>
