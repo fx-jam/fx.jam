@@ -243,6 +243,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       50%       { opacity: 0.5; transform: scale(0.85); }
     }
 
+    /* Hauteur occupee par le player, exposee aux pages pour qu'elles se reservent
+       la place : sans ca, la barre reduite passe par-dessus le disque d'accueil. */
+    :root { --player-pad: 0px; }
     #hamcat-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; pointer-events: none; }
     #hamcat-player[data-active="true"] { pointer-events: auto; }
 
@@ -261,7 +264,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       pointer-events: auto;
     }
     #library-panel[hidden] { display: none; }
-    #library-panel { transition: height 0.18s ease; }
+    #library-panel { transition: height 0.11s cubic-bezier(0.2, 0, 0, 1); }
 
     #lib-grip {
       height: 14px;
@@ -392,6 +395,33 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     /* Pill — centré, toujours par-dessus */
+    .player-seed {
+      display: flex;
+      position: absolute;
+      bottom: 14px; left: 0; right: 0;
+      justify-content: center;
+      pointer-events: none;
+    }
+    #hamcat-player[data-active="true"] .player-seed { display: none; }
+    #btn-seed {
+      pointer-events: auto;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center; gap: 1px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+      backdrop-filter: blur(8px);
+      color: var(--text-secondary);
+      font-family: var(--font-mono); font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    #btn-seed span { font-size: 0.7rem; opacity: 0.7; }
+    #btn-seed:hover {
+      border-color: var(--facet-son); color: var(--facet-son);
+      background: color-mix(in srgb, var(--facet-son) 12%, var(--bg-elevated));
+    }
+
     .player-mini {
       display: none;
       position: absolute;
@@ -731,6 +761,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <div id="lib-list" class="lib-list" role="list"></div>
     </div>
 
+    <!-- État 0 : rien n'a encore été joué — une seule pastille, centrée. -->
+    <div class="player-seed">
+      <button id="btn-seed" aria-label="Choisir quelque chose à écouter">▶<span>?</span></button>
+    </div>
+
     <!-- État 1 : barre réduite — hamburger / bloc central / fermeture.
          Les deux boutons latéraux font la même taille : le centre est donc
          géométriquement centré, pas simplement "après" le bouton de gauche. -->
@@ -804,10 +839,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.54 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.55 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.54');
+  console.log('🐱 fx_jam_v1.55');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1266,6 +1301,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (!wasActive) {
         playerDiv.dataset.expanded = window.location.pathname !== '/' ? 'true' : 'false';
       }
+      syncPlayerPad();
       playerDiv.classList.toggle('playing', uiState === 'playing');
     }
 
@@ -2214,6 +2250,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
         .catch(() => el.remove());
     }
 
+    /** Tient --player-pad a jour selon l'etat courant du player. */
+    function syncPlayerPad() {
+      const active = playerDiv.dataset.active === 'true';
+      document.documentElement.style.setProperty('--player-pad', active ? '56px' : '62px');
+    }
+
     function openLibrary(open: boolean) {
       libPanel.hidden = !open;
       playerDiv.dataset.library = String(open);
@@ -2223,6 +2265,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (b) b.setAttribute('aria-expanded', String(open));
       if (!open) return;
       playerDiv.dataset.active = 'true';
+      syncPlayerPad();
       setLibHeight(readLibH() || libStops()[1]);
       if (libData) { renderLibFilters(); renderLibList(); return; }
       libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Chargement…</p>';
@@ -2306,6 +2349,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (row.dataset.src === 'audio') playAudio(row.dataset.url!, lbl, 0, '', true);
       else playSC(row.dataset.url!, lbl);
     }, { signal });
+
+    document.getElementById('btn-seed')?.addEventListener('click',
+      () => openLibrary(true), { signal });
 
     ['btn-library', 'btn-mini-library'].forEach(id => {
       document.getElementById(id)?.addEventListener('click',
@@ -2519,7 +2565,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.54';
+    _vt.textContent = 'fx_jam_v1.55';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
