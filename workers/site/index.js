@@ -315,7 +315,8 @@ async function verifyAccess(request, env) {
   const c = b64urlToJson(p);
   const now = Math.floor(Date.now() / 1000);
   const auds = Array.isArray(c.aud) ? c.aud : [c.aud];
-  if (!auds.includes(aud))                    throw new Error('access_bad_aud');
+  const allowed = aud.split(',').map(s => s.trim()).filter(Boolean);
+  if (!auds.some(a => allowed.includes(a)))   throw new Error('access_bad_aud');
   if (c.iss !== `https://${team}.cloudflareaccess.com`) throw new Error('access_bad_iss');
   if (!c.exp || c.exp < now)                  throw new Error('access_expired');
   if (c.nbf && c.nbf > now + 60)              throw new Error('access_not_yet_valid');
