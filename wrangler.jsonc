@@ -12,6 +12,13 @@
   },
   "vars": {
     // Client ID de l'app SoundCloud (non secret — visible dans le dashboard SC Developer)
-    "SC_CLIENT_ID": "X1d2YEhZ7BzT6ybpYARvrEHHWYpAD7FL"
+    "SC_CLIENT_ID": "X1d2YEhZ7BzT6ybpYARvrEHHWYpAD7FL",
+    // Cloudflare Access — ni l'un ni l'autre n'est un secret : l'AUD voyage
+    // dans chaque jeton, le nom d'equipe est dans l'URL de connexion. Ce qui
+    // protege, c'est la signature verifiee contre les cles publiques.
+    // Le verrou d'identite optionnel (ATELIER_EMAIL) reste un secret Cloudflare,
+    // pose a la main, pour ne pas versionner une adresse personnelle.
+    "ACCESS_TEAM": "felix-jambon20",
+    "ACCESS_AUD": "deca0f63839416a0a17aab7dcd8181a1fbe0648fc7511ddae9599385c557c0f7"
   }
 }

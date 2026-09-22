@@ -184,6 +184,20 @@ export default {
       }
     }
 
+
+    // /api/atelier/whoami — preuve de vie de l'authentification. Ne lit ni
+    // n'ecrit rien : elle sert a verifier qu'Access est bien branche AVANT de
+    // poser un chemin d'ecriture dessus.
+    if (path === '/api/atelier/whoami') {
+      try {
+        const who = await verifyAccess(request, env);
+        return okJson({ ok: true, email: who.email });
+      } catch (e) {
+        const m = e && e.message || 'access_error';
+        return errJson(m, m === 'access_not_configured' ? 503 : 401);
+      }
+    }
+
     // Toutes les autres routes → assets statiques Astro (build dist/)
     return env.ASSETS.fetch(request);
   },
@@ -229,4 +243,86 @@ function errJson(msg, status = 400) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// ── Cloudflare Access ────────────────────────────────────────────────────────
+//  Verification du jeton que Access pose sur chaque requete vers une route
+//  protegee. On verifie la signature ET l'emetteur ET l'audience : l'AUD seul
+//  dirait pour quelle application le jeton a ete emis, pas qui l'a emis.
+//
+//  La route echoue FERMEE : sans ACCESS_TEAM et ACCESS_AUD configures, elle
+//  refuse tout. Une couche d'authentification qui s'ouvre quand sa config
+//  manque ne protege rien.
+const ACCESS_CERTS_TTL = 3600e3;
+let accessKeys = { at: 0, team: '', keys: new Map() };
+
+async function accessJwks(team) {
+  if (accessKeys.team === team && Date.now() - accessKeys.at < ACCESS_CERTS_TTL) {
+    return accessKeys.keys;
+  }
+  const res = await fetch(`https://${team}.cloudflareaccess.com/cdn-cgi/access/certs`);
+  if (!res.ok) throw new Error(`access_certs ${res.status}`);
+  const { keys = [] } = await res.json();
+  const map = new Map();
+  for (const jwk of keys) {
+    if (jwk.kty !== 'RSA' || !jwk.kid) continue;
+    map.set(jwk.kid, await crypto.subtle.importKey(
+      'jwk',
+      { kty: jwk.kty, n: jwk.n, e: jwk.e, alg: 'RS256', ext: true },
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false, ['verify'],
+    ));
+  }
+  accessKeys = { at: Date.now(), team, keys: map };
+  return map;
+}
+
+const b64urlToBytes = (s) => {
+  const b = atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '='));
+  const out = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i);
+  return out;
+};
+const b64urlToJson = (s) => JSON.parse(new TextDecoder().decode(b64urlToBytes(s)));
+
+/** Rend l'identite si le jeton est valide, sinon leve. */
+async function verifyAccess(request, env) {
+  const team = env.ACCESS_TEAM, aud = env.ACCESS_AUD;
+  if (!team || !aud) throw new Error('access_not_configured');
+
+  // L'en-tete est la source recommandee : le cookie n'est pose que pour les
+  // requetes de navigation et peut manquer sur un fetch().
+  const token = request.headers.get('Cf-Access-Jwt-Assertion')
+             || (request.headers.get('Cookie') || '').match(/CF_Authorization=([^;]+)/)?.[1];
+  if (!token) throw new Error('access_missing_token');
+
+  const [h, p, s] = token.split('.');
+  if (!h || !p || !s) throw new Error('access_malformed');
+
+  const head = b64urlToJson(h);
+  if (head.alg !== 'RS256') throw new Error('access_bad_alg');
+
+  const key = (await accessJwks(team)).get(head.kid);
+  if (!key) throw new Error('access_unknown_kid');
+
+  const ok = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5', key,
+    b64urlToBytes(s),
+    new TextEncoder().encode(`${h}.${p}`),
+  );
+  if (!ok) throw new Error('access_bad_signature');
+
+  const c = b64urlToJson(p);
+  const now = Math.floor(Date.now() / 1000);
+  const auds = Array.isArray(c.aud) ? c.aud : [c.aud];
+  if (!auds.includes(aud))                    throw new Error('access_bad_aud');
+  if (c.iss !== `https://${team}.cloudflareaccess.com`) throw new Error('access_bad_iss');
+  if (!c.exp || c.exp < now)                  throw new Error('access_expired');
+  if (c.nbf && c.nbf > now + 60)              throw new Error('access_not_yet_valid');
+
+  // Une politique Access peut etre elargie par megarde. Si ATELIER_EMAIL est
+  // pose, il fait office de second verrou, independant du tableau de bord.
+  if (env.ATELIER_EMAIL && c.email !== env.ATELIER_EMAIL) throw new Error('access_wrong_identity');
+
+  return { email: c.email, sub: c.sub, exp: c.exp };
 }
