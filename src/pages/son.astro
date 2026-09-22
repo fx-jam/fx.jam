@@ -9,6 +9,9 @@ const sonData = sonJson as unknown as SonData;
 const f = getFacet('son');
 
 const all = await getCollection('gigs', ({ data }) => !data.draft);
+// Les dates masquees (draft) ne s'affichent pas mais ont bien eu lieu : elles
+// comptent dans le total de l'historique.
+const allIncludingHidden = await getCollection('gigs');
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -20,6 +23,8 @@ const upcoming = all
 const past = all
   .filter(g => g.data.date < today)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const pastCount = allIncludingHidden.filter(g => g.data.date < today).length;
 
 const fmtLong  = (d: Date) =>
   d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -219,7 +224,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         <details class="gig-group" open>
           <summary class="group-label">
             Historique
-            <span class="count">{past.length}</span>
+            <span class="count">{pastCount}</span>
             <span class="arrow" aria-hidden="true">▾</span>
           </summary>
           {past.length === 0 ? (
@@ -336,7 +341,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 <style>
   /* ── Layout racine ── */
   .son {
-    height: 100dvh;
+    height: calc(100dvh - var(--player-pad, 0px));
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -699,7 +704,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   @media (max-width: 768px) {
     .son {
       height: auto;
-      min-height: 100dvh;
+      min-height: calc(100dvh - var(--player-pad, 0px));
       overflow-y: auto;
     }
     .son-header {

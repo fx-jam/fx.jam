@@ -91,7 +91,7 @@ const hasContent = contactData.booking_email || contactData.email
 
 <style>
   .contact {
-    height: 100dvh;
+    height: calc(100dvh - var(--player-pad, 0px));
     overflow-y: auto;
     display: flex;
     flex-direction: column;

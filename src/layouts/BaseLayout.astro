@@ -254,7 +254,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       position: absolute;
       left: 0; right: 0; bottom: 100%;
       height: var(--lib-h, 50vh);
-      max-height: calc(100vh - 56px);
+      max-height: calc(100dvh - 56px);
       display: flex;
       flex-direction: column;
       background: color-mix(in srgb, var(--bg-app) 92%, transparent);
@@ -266,20 +266,50 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #library-panel[hidden] { display: none; }
     #library-panel { transition: height 0.11s cubic-bezier(0.2, 0, 0, 1); }
 
+    /* Poignee : toute la largeur du panneau est saisissable, et la zone deborde
+       vers le haut au-dela de sa hauteur visible pour rattraper les pouces. */
     #lib-grip {
-      height: 14px;
+      height: 22px;
       flex: 0 0 auto;
       cursor: ns-resize;
       touch-action: none;
+      position: relative;
       display: flex; align-items: center; justify-content: center;
+    }
+    #lib-grip::after {
+      content: '';
+      position: absolute; left: 0; right: 0; top: -10px; bottom: -6px;
     }
     #lib-grip::before {
       content: '';
-      width: 44px; height: 3px; border-radius: 2px;
+      width: 56px; height: 4px; border-radius: 2px;
       background: var(--border);
       transition: background 0.15s;
     }
-    #lib-grip:hover::before { background: var(--facet-son); }
+    #lib-grip:hover::before,
+    #lib-grip[data-drag="1"]::before { background: var(--facet-son); }
+
+    /* Poignee de remontee : quand la bibliotheque est fermee, le bord haut du
+       player reste saisissable — on tire vers le haut pour la rouvrir, sans
+       repasser par le hamburger. */
+    #lib-handle {
+      position: absolute;
+      left: 0; right: 0; top: -12px; height: 26px;
+      cursor: ns-resize;
+      touch-action: none;
+      pointer-events: auto;
+      display: flex; align-items: flex-end; justify-content: center;
+      padding-bottom: 4px;
+    }
+    #hamcat-player[data-library="true"] #lib-handle,
+    #hamcat-player[data-active="false"] #lib-handle { display: none; }
+    #lib-handle::before {
+      content: '';
+      width: 56px; height: 4px; border-radius: 2px;
+      background: color-mix(in srgb, var(--border) 70%, transparent);
+      transition: background 0.15s;
+    }
+    #lib-handle:hover::before { background: var(--facet-son); }
 
     .lib-head {
       display: flex; align-items: center; gap: 0.6rem;
@@ -389,7 +419,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     @media (max-width: 720px) {
-      #library-panel { max-height: 62vh; }
       .lib-row { grid-template-columns: 26px 72px minmax(0, 1fr) 26px; }
       .lib-styles { display: none; }
     }
@@ -635,7 +664,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       .player-scrubber { min-width: 30px; }
       #player-time { display: none; }
       #btn-sp-shuffle, #btn-sp-repeat { display: none; }
-      .player-volume-slider, .player-output-select { display: none; } /* v1.36: pas de place sur mobile, mute suffit */
+      /* v1.56: le volume reste reglable au pouce — slider court, colle au mute. */
+      .player-volume-slider { width: 52px; order: 8; margin-left: 0; }
+      .player-output-select { display: none; }
       .player-full button { padding: 0.2rem 0.3rem; font-size: 0.9rem; }
       .player-spotify-connect { font-size: 0.55rem !important; padding: 0.15rem 0.35rem !important; }
     }
@@ -745,6 +776,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     <!-- Bibliotheque — accessible depuis n'importe quelle page parce qu'elle vit
          dans le player, seul element qui survit aux navigations. Son contenu
          vient de /library.json, telecharge a la premiere ouverture. -->
+    <div id="lib-handle" role="separator" aria-label="Ouvrir la bibliothèque"></div>
     <div id="library-panel" hidden>
       <!-- Poignee : le hamburger bascule ouvert/ferme, le glissement ajuste
            finement la hauteur entre trois reperes. -->
@@ -839,10 +871,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.55 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.56 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.55');
+  console.log('🐱 fx_jam_v1.56');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2266,7 +2298,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (!open) return;
       playerDiv.dataset.active = 'true';
       syncPlayerPad();
-      setLibHeight(readLibH() || libStops()[1]);
+      setLibHeight(readLibH() || Math.round(libMax() * 0.5));
       if (libData) { renderLibFilters(); renderLibList(); return; }
       libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Chargement…</p>';
       fetch('/library.json')
@@ -2275,14 +2307,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
         .catch(() => { libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Bibliothèque indisponible.</p>'; });
     }
 
-    // ── Hauteur du panneau : glissement libre, puis aimantation sur trois
-    //    reperes (reduit / mi-hauteur / plein ecran). La derniere hauteur
-    //    ouverte est retenue pour la visite suivante.
+    // ── Hauteur du panneau : glissement libre, sans aimantation. Le panneau
+    //    s'arrete exactement ou on le lache ; seul un geste qui descend sous le
+    //    seuil bas vaut fermeture. Les deux poignees — celle du panneau et
+    //    celle du bord haut du player — partagent le meme code, si bien qu'on
+    //    rouvre la bibliotheque en tirant vers le haut sans passer par le menu.
     const LIB_H_KEY = 'hamcat-lib-height';
-    const libStops = () => {
-      const max = window.innerHeight - 56;
-      return [Math.round(max * 0.32), Math.round(max * 0.5), max];
-    };
+    const libMax = () => (window.visualViewport?.height || window.innerHeight) - 56;
+    const libMin = () => Math.round(libMax() * 0.22);
     const readLibH = () => {
       try { const v = parseInt(localStorage.getItem(LIB_H_KEY) || '', 10);
             return isFinite(v) && v > 100 ? v : 0; } catch (_) { return 0; }
@@ -2290,38 +2322,48 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const saveLibH = (h: number) => { try { localStorage.setItem(LIB_H_KEY, String(h)); } catch (_) {} };
 
     function setLibHeight(px: number) {
-      const max = window.innerHeight - 56;
-      libPanel.style.setProperty('--lib-h', Math.max(120, Math.min(max, px)) + 'px');
+      libPanel.style.setProperty('--lib-h', Math.max(80, Math.min(libMax(), px)) + 'px');
     }
 
-    const grip = document.getElementById('lib-grip');
-    if (grip) {
+    /** Branche une poignee. `fromClosed` : le geste ouvre d'abord le panneau. */
+    function bindGrip(el: HTMLElement | null, fromClosed: boolean) {
+      if (!el) return;
       let startY = 0, startH = 0, dragging = false;
-      grip.addEventListener('pointerdown', (e: PointerEvent) => {
+      el.addEventListener('pointerdown', (e: PointerEvent) => {
+        if (fromClosed) {
+          if (playerDiv.dataset.library === 'true') return;
+          openLibrary(true);
+          startH = 0;                       // on part de zero : la hauteur suit le doigt
+        } else {
+          startH = libPanel.getBoundingClientRect().height;
+        }
         dragging = true;
         startY = e.clientY;
-        startH = libPanel.getBoundingClientRect().height;
-        grip.setPointerCapture(e.pointerId);
+        el.setAttribute('data-drag', '1');
+        try { el.setPointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = 'none';
+        e.preventDefault();
       });
-      grip.addEventListener('pointermove', (e: PointerEvent) => {
+      el.addEventListener('pointermove', (e: PointerEvent) => {
         if (!dragging) return;
         setLibHeight(startH + (startY - e.clientY));
       });
-      grip.addEventListener('pointerup', (e: PointerEvent) => {
+      const end = (e: PointerEvent) => {
         if (!dragging) return;
         dragging = false;
-        try { grip.releasePointerCapture(e.pointerId); } catch (_) {}
+        el.removeAttribute('data-drag');
+        try { el.releasePointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = '';
         const h = libPanel.getBoundingClientRect().height;
-        // Sous le plus petit repere, on considere que le geste voulait refermer.
-        const stops = libStops();
-        if (h < stops[0] * 0.7) { openLibrary(false); return; }
-        const snap = stops.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a));
-        setLibHeight(snap);
-        saveLibH(snap);
-      });
+        if (h < libMin()) { openLibrary(false); return; }
+        saveLibH(Math.round(h));            // on garde la hauteur exacte, pas un repere
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
     }
+
+    bindGrip(document.getElementById('lib-grip'), false);
+    bindGrip(document.getElementById('lib-handle'), true);
 
     libFilters.addEventListener('click', e => {
       const c = (e.target as HTMLElement).closest<HTMLElement>('.lib-chip');
@@ -2565,7 +2607,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.55';
+    _vt.textContent = 'fx_jam_v1.56';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

@@ -73,7 +73,7 @@ const toolCats = Object.keys(toolsByCat);
 
 <style>
   .outils {
-    height: 100dvh;
+    height: calc(100dvh - var(--player-pad, 0px));
     overflow-y: auto;
     display: flex;
     flex-direction: column;
