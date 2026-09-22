@@ -1,0 +1,162 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+//  /styles — le spectre.
+//
+//  Premiere entite de premier rang apres la date (decision du 2026-09-22).
+//  Zero saisie : tout est derive du champ `genre` deja rempli sur chaque date.
+//  Les styles sont ranges par frequence — c'est l'ordre le plus honnete pour
+//  qui arrive ici sans rien connaitre : on voit d'abord ce que Fx joue le plus.
+// ─────────────────────────────────────────────────────────────────────────────
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { toStyles, styleColor, styleLabel } from '../../lib/styles';
+import { recordingsOf } from '../../lib/gigs';
+
+const gigs = (await getCollection('gigs')).filter(g => !g.data.draft);
+
+type Row = { slug: string; dates: number; sets: number; from: number; to: number };
+const acc = new Map<string, Row>();
+
+for (const g of gigs) {
+  const year = g.data.date.getFullYear();
+  const sets = recordingsOf(g.data).length;
+  for (const s of toStyles(g.data.genre ?? [])) {
+    const r = acc.get(s) ?? { slug: s, dates: 0, sets: 0, from: year, to: year };
+    r.dates += 1;
+    r.sets  += sets;
+    r.from   = Math.min(r.from, year);
+    r.to     = Math.max(r.to, year);
+    acc.set(s, r);
+  }
+}
+
+const rows = [...acc.values()].sort((a, b) => b.dates - a.dates || a.slug.localeCompare(b.slug));
+const totalSets = rows.reduce((n, r) => n + r.sets, 0);
+
+const seoTitle = 'Styles — le spectre des sets de Hamcat';
+const seoDesc  = `Les ${rows.length} styles joués par Hamcat, du psytrance au hi-tech : `
+               + `dates, sets écoutables et période pour chacun.`;
+---
+
+<BaseLayout title={seoTitle} description={seoDesc}>
+  <main class="sx">
+
+    <header class="sx-header">
+      <div class="hd-info">
+        <span class="label">Son</span>
+        <h1>Spectre</h1>
+        <p class="sub">{rows.length} styles · {gigs.length} dates · {totalSets} sets</p>
+      </div>
+      <a class="home" href="/son"
+         onclick="if(window.top!==window){event.preventDefault();window.location.href='/son';}">← Agenda</a>
+    </header>
+
+    <div class="sx-body">
+      <ul class="sx-list">
+        {rows.map(r => (
+          <li class="sx-row" style={`--c: ${styleColor(r.slug)}`}>
+            <a class="sx-link" href={`/styles/${r.slug}`}>
+              <span class="sx-name">{styleLabel(r.slug)}</span>
+              <span class="sx-bar" aria-hidden="true">
+                <span class="sx-fill" style={`width: ${Math.round((r.dates / rows[0].dates) * 100)}%`}></span>
+              </span>
+              <span class="sx-n">{r.dates}</span>
+              <span class="sx-years">{r.from === r.to ? r.from : `${r.from}–${r.to}`}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+  </main>
+</BaseLayout>
+
+<style>
+  /* Meme coquille que /son : hauteur de viewport moins la place du player,
+     scroll a l'interieur et non sur la page. */
+  .sx {
+    height: calc(100dvh - var(--player-pad, 0px));
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .sx-header {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-app);
+  }
+  .hd-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .label {
+    color: var(--facet-son);
+    font-family: var(--font-mono);
+    font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    letter-spacing: -0.01em; margin: 0; color: var(--text-primary);
+  }
+  .sub {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .home {
+    flex-shrink: 0;
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em;
+    color: var(--text-secondary); text-decoration: none;
+  }
+  .home:hover { color: var(--facet-son); }
+
+  .sx-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.25rem 1.5rem 2rem; }
+  .sx-list { list-style: none; margin: 0 auto; padding: 0; max-width: 760px; }
+
+  .sx-row { border-top: 1px solid var(--border); }
+  .sx-row:last-child { border-bottom: 1px solid var(--border); }
+
+  /* Quatre colonnes fixes : le nom, la barre qui respire, le compte et les
+     annees. Les chiffres restent alignes d'une ligne a l'autre. */
+  .sx-link {
+    display: grid;
+    grid-template-columns: 11em minmax(0, 1fr) 2.4em 5.4em;
+    align-items: center;
+    column-gap: 0.8rem;
+    padding: 0.5rem 0.2rem;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+  .sx-link:hover { background: color-mix(in srgb, var(--c) 8%, transparent); }
+  .sx-link:hover .sx-name { color: var(--c); }
+
+  .sx-name {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 0.95rem; letter-spacing: 0.01em;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+  .sx-bar {
+    height: 7px; border-radius: 4px;
+    background: color-mix(in srgb, var(--border) 70%, transparent);
+    overflow: hidden;
+  }
+  .sx-fill { display: block; height: 100%; background: var(--c); }
+  .sx-n {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text-secondary); text-align: right;
+  }
+  .sx-years {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--text-tertiary); text-align: right; white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .sx { height: auto; min-height: calc(100dvh - var(--player-pad, 0px)); overflow-y: auto; }
+    .sx-header { padding: 0.85rem 1rem; }
+    .sx-body { padding: 1rem; }
+    .sx-link { grid-template-columns: minmax(0, 1fr) 2.2em; row-gap: 0.25rem; }
+    .sx-bar   { grid-column: 1 / -1; }
+    .sx-years { grid-column: 1 / -1; text-align: left; }
+  }
+</style>

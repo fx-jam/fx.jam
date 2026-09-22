@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import sonJson from '../data/son.json';
 import type { SonData } from '../data/types';
+import { styleSlug, toStyles } from '../lib/styles';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  /library.json — catalogue unifie de tout ce qui est ecoutable sur le site.
@@ -18,25 +19,6 @@ import type { SonData } from '../data/types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sonData = sonJson as unknown as SonData;
-
-/** "Rock Psyché" -> "rock-psyche" : un intitule devient un identifiant
- *  stable, utilisable comme nom de jeton CSS et comme cle de filtre. */
-const styleSlug = (s: string): string =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-   .toLowerCase().trim()
-   .replace(/[^a-z0-9]+/g, '-')
-   .replace(/^-|-$/g, '');
-
-/** Les styles d'une date, normalises et dedoublonnes en gardant l'ordre saisi :
- *  le premier nomme est le dominant, c'est lui qui colore la waveform. */
-const toStyles = (raw: string[] = []): string[] => {
-  const out: string[] = [];
-  for (const r of raw) {
-    const k = styleSlug(r);
-    if (k && !out.includes(k)) out.push(k);
-  }
-  return out;
-};
 
 const waveformUrl = (url: string): string | null => {
   const m = url.match(/^(https:\/\/media\.hamcat\.live)\/sets\/(.+)\.[a-z0-9]+$/i);

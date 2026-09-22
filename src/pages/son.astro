@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { styleSlug, styleColor } from '../lib/styles';
 import { getCollection } from 'astro:content';
 import { getFacet } from '../data/facets.ts';
 import sonJson from '../data/son.json';
@@ -75,21 +76,11 @@ const playlistId = (v?: string): string | null => {
   return m ? m[1] : (/^[A-Za-z0-9]{16,}$/.test(v.trim()) ? v.trim() : null);
 };
 
-/** "Rock Psyché" -> "rock-psyche" : meme normalisation que /library.json,
- *  pour que la couleur d'un style soit la meme partout sur le site. */
-const styleSlug = (t: string): string =>
-  t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-   .toLowerCase().trim()
-   .replace(/[^a-z0-9]+/g, '-')
-   .replace(/^-|-$/g, '');
-
 // Le premier style nomme donne sa teinte a la waveform. Un style sans jeton
 // de couleur retombe sur la teinte par defaut grace au second argument de var().
 const waveColor = (tags: string[] = []) => {
   const hit = tags.map(styleSlug).find(Boolean);
-  return hit
-    ? `--wave-played: var(--style-${hit}, var(--style-default))`
-    : '--wave-played: var(--style-default)';
+  return `--wave-played: ${hit ? styleColor(hit) : 'var(--style-default)'}`;
 };
 
 /** Sets deja rattaches a une date : ils s'affichent dans l'agenda, pas dans la bibliotheque. */
@@ -168,8 +159,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           <p class="tags">{sonData.genres?.join(' · ') || 'psytrance · hi-tech · goa'}</p>
         </div>
       </div>
-      <a class="home" href="/"
-         onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
+      <nav class="hd-nav">
+        <a class="home" href="/styles">Spectre</a>
+        <a class="home" href="/"
+           onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
+      </nav>
     </header>
 
     <!-- Une seule section desormais : l'agenda, plein cadre. Les playlists
@@ -409,6 +403,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     letter-spacing: 0.06em;
     margin: 0;
   }
+  .hd-nav { flex-shrink: 0; display: flex; align-items: center; gap: 1rem; }
   .home {
     flex-shrink: 0;
     color: var(--facet-son);

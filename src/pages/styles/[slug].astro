@@ -1,0 +1,271 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+//  /styles/<slug> — une page par style.
+//
+//  Surface de decouverte : on arrive par un style, on ecoute, on repart vers un
+//  style voisin. Les sets ecoutables passent en premier — c'est ce qu'on vient
+//  chercher ; les dates sans enregistrement suivent, elles racontent le
+//  parcours. Les voisins sont calcules par co-occurrence reelle, pas par une
+//  liste ecrite a la main : ce sont les styles que Fx associe vraiment.
+// ─────────────────────────────────────────────────────────────────────────────
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { toStyles, styleColor, styleLabel } from '../../lib/styles';
+import { recordingsOf, isDirectAudio } from '../../lib/gigs';
+
+export async function getStaticPaths() {
+  const gigs = (await getCollection('gigs')).filter(g => !g.data.draft);
+  const slugs = new Set<string>();
+  for (const g of gigs) for (const s of toStyles(g.data.genre ?? [])) slugs.add(s);
+  return [...slugs].map(slug => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+
+const all = (await getCollection('gigs')).filter(g => !g.data.draft);
+const mine = all
+  .filter(g => toStyles(g.data.genre ?? []).includes(slug!))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Voisins : styles qui partagent une date avec celui-ci, les plus frequents d'abord.
+const near = new Map<string, number>();
+for (const g of mine)
+  for (const s of toStyles(g.data.genre ?? []))
+    if (s !== slug) near.set(s, (near.get(s) ?? 0) + 1);
+const neighbours = [...near.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+type Item = { url: string; label?: string; gig: (typeof mine)[number] };
+const sets: Item[] = mine.flatMap(g =>
+  recordingsOf(g.data).map(r => ({ ...r, gig: g }))
+);
+
+const years = mine.map(g => g.data.date.getFullYear());
+const from = Math.min(...years), to = Math.max(...years);
+const label = styleLabel(slug!);
+const venues = [...new Set(mine.map(g => g.data.venue).filter(Boolean))];
+
+const fmt = (d: Date) =>
+  d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+const seoTitle = `${label} — les sets de Hamcat`;
+const seoDesc  = `${mine.length} date${mine.length > 1 ? 's' : ''} en ${label} `
+               + `entre ${from} et ${to}, ${sets.length} set${sets.length > 1 ? 's' : ''} à écouter.`;
+---
+
+<BaseLayout title={seoTitle} description={seoDesc}>
+  <main class="st" style={`--c: ${styleColor(slug!)}`}>
+
+    <header class="st-header">
+      <div class="hd-info">
+        <span class="label">Style</span>
+        <h1>{label}</h1>
+        <p class="sub">
+          {mine.length} date{mine.length > 1 ? 's' : ''} ·
+          {from === to ? ` ${from}` : ` ${from}–${to}`} ·
+          {' '}{venues.length} lieu{venues.length > 1 ? 'x' : ''}
+        </p>
+      </div>
+      <a class="home" href="/styles"
+         onclick="if(window.top!==window){event.preventDefault();window.location.href='/styles';}">← Spectre</a>
+    </header>
+
+    <div class="st-body">
+
+      {sets.length > 0 && (
+        <section class="blk">
+          <h2 class="blk-title">À écouter <span class="n">{sets.length}</span></h2>
+          <ul class="lst">
+            {sets.map(s => (
+              <li class="row">
+                <button class="btn-ecouter play"
+                        data-type={isDirectAudio(s.url) ? 'audio' : 'soundcloud'}
+                        data-url={s.url}
+                        data-lbl={s.label ? `${s.gig.data.title} — ${s.label}` : s.gig.data.title}
+                        aria-label="Lecture">▶</button>
+                <span class="r-title">
+                  {s.gig.data.title}
+                  {s.label && <span class="r-sub"> · {s.label}</span>}
+                </span>
+                <time class="r-date" datetime={s.gig.data.date.toISOString()}>{fmt(s.gig.data.date)}</time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section class="blk">
+        <h2 class="blk-title">Toutes les dates <span class="n">{mine.length}</span></h2>
+        <ul class="lst">
+          {mine.map(g => (
+            <li class="row row--date">
+              <time class="r-date r-date--l" datetime={g.data.date.toISOString()}>{fmt(g.data.date)}</time>
+              <span class="r-title">
+                {g.data.title}
+                {g.data.venue && g.data.venue !== g.data.title && (
+                  <span class="r-sub"> · {g.data.venue}</span>
+                )}
+              </span>
+              <span class="r-tags">
+                {toStyles(g.data.genre ?? []).filter(s => s !== slug).map(s => (
+                  <a class="chip" href={`/styles/${s}`}
+                     style={`--c2: ${styleColor(s)}`}>{styleLabel(s)}</a>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {neighbours.length > 0 && (
+        <section class="blk">
+          <h2 class="blk-title">Souvent joué avec</h2>
+          <ul class="near">
+            {neighbours.map(([s, n]) => (
+              <li>
+                <a class="chip chip--big" href={`/styles/${s}`} style={`--c2: ${styleColor(s)}`}>
+                  {styleLabel(s)} <span class="chip-n">{n}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .st {
+    height: calc(100dvh - var(--player-pad, 0px));
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .st-header {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-app);
+    /* La couleur du style ne teinte que ce liseré : le reste de la page garde
+       les neutres du site, sinon chaque page aurait son ambiance et l'ensemble
+       perdrait son unite. */
+    box-shadow: inset 0 -2px 0 -1px var(--c);
+  }
+  .hd-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .label {
+    color: var(--c);
+    font-family: var(--font-mono);
+    font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    letter-spacing: -0.01em; margin: 0; color: var(--text-primary);
+  }
+  .sub {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .home {
+    flex-shrink: 0; font-family: var(--font-mono);
+    font-size: 0.68rem; letter-spacing: 0.08em;
+    color: var(--text-secondary); text-decoration: none;
+  }
+  .home:hover { color: var(--c); }
+
+  .st-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.25rem 1.5rem 2rem; }
+  .blk { max-width: 760px; margin: 0 auto 1.75rem; }
+  .blk-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 0 0 0.4rem;
+  }
+  .blk-title .n {
+    margin-left: 0.4rem; padding: 0.05rem 0.35rem;
+    border: 1px solid var(--border); border-radius: 9px;
+    color: var(--text-secondary);
+  }
+
+  .lst { list-style: none; margin: 0; padding: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 5.2em;
+    align-items: center; column-gap: 0.6rem;
+    padding: 0.3rem 0.1rem;
+    border-top: 1px solid var(--border);
+  }
+  .row:last-child { border-bottom: 1px solid var(--border); }
+  .row--date { grid-template-columns: 5.2em minmax(0, 1fr) minmax(0, 14em); }
+
+  .play {
+    width: 24px; height: 24px; padding: 0;
+    border: 1px solid var(--border); border-radius: 5px;
+    background: transparent; color: var(--text-secondary);
+    font-size: 0.6rem; line-height: 1; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .play:hover { color: var(--c); border-color: var(--c); }
+
+  .r-title {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: var(--font-display); font-weight: 600; font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+  .r-sub { color: var(--text-tertiary); font-weight: 400; }
+  .r-date {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    color: var(--text-tertiary); text-align: right; white-space: nowrap;
+  }
+  .r-date--l { text-align: left; }
+  .r-tags {
+    display: flex; gap: 0.25rem; justify-content: flex-end;
+    overflow: hidden;
+  }
+
+  .chip {
+    font-family: var(--font-mono); font-size: 0.55rem;
+    letter-spacing: 0.05em; white-space: nowrap;
+    padding: 0.1rem 0.35rem; border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--c2) 40%, transparent);
+    color: var(--c2); text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  .chip:hover { background: color-mix(in srgb, var(--c2) 14%, transparent); }
+  .chip--big { font-size: 0.68rem; padding: 0.25rem 0.6rem; }
+  .chip-n { color: var(--text-tertiary); margin-left: 0.25rem; }
+
+  .near { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; }
+
+  @media (max-width: 640px) {
+    .st { height: auto; min-height: calc(100dvh - var(--player-pad, 0px)); overflow-y: auto; }
+    .st-header { padding: 0.85rem 1rem; }
+    .st-body { padding: 1rem; }
+    .row, .row--date { grid-template-columns: 28px minmax(0, 1fr); row-gap: 0.15rem; }
+    .row--date { grid-template-columns: minmax(0, 1fr); }
+    .r-date { grid-column: 1 / -1; text-align: left; }
+    .r-tags { grid-column: 1 / -1; justify-content: flex-start; flex-wrap: wrap; }
+  }
+</style>
+
+<script>
+  // Le player vit dans le layout, donc sur toutes les pages : il suffit de lui
+  // annoncer quoi jouer. `toggle` lui laisse decider de mettre en pause si
+  // c'est deja ce set qui tourne.
+  function attachPlay() {
+    document.querySelectorAll<HTMLButtonElement>('.btn-ecouter').forEach(btn => {
+      if (btn.dataset.listenerAttached) return;
+      btn.dataset.listenerAttached = '1';
+      btn.addEventListener('click', () => {
+        const url = btn.dataset.url ?? '';
+        if (!url) return;
+        document.dispatchEvent(new CustomEvent('hamcat:play', {
+          detail: { type: btn.dataset.type ?? 'audio', url, lbl: btn.dataset.lbl ?? '', toggle: true },
+        }));
+      });
+    });
+  }
+  attachPlay();
+  document.addEventListener('astro:page-load', attachPlay);
+</script>
