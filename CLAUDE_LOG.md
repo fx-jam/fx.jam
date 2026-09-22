@@ -1,3 +1,212 @@
+## v1.60 → v1.64 — Les medias arrivent sur les dates — 2026-09-22
+
+### Contexte
+Les 382 medias exportes sur R2 (voir chantier outillage plus bas) devaient enfin
+se voir sur le site. Trois questions de design tranchees avec Fx en cours de route,
+chacune apres un essai rate — c'est le mode de travail qui marche : on livre, il
+regarde, il conteste, on corrige.
+
+### Projection en fond (v1.60 → v1.62)
+Premiere version : image plein ecran derriere le cadre, avec un voile sombre pour
+garder le texte lisible. **Rejetee par Fx**, avec raison : le voile se peignait sans
+condition (`#media-bg::after` sans garde) et assombrissait tout le site des l'accueil,
+et surtout on obtenait ni une belle photo ni un texte propre.
+
+Version retenue : **deux bandes laterales** de `calc((100vw - 820px) / 2)`, de part et
+d'autre du cadre. L'image ne passe jamais sous le texte. Masques en degrade vers le
+cadre et en haut/bas (`mask-composite: intersect`), derive verticale lente decalee
+entre les deux cotes, opacite 0.55 — elle peut se permettre d'etre presente puisqu'elle
+est chez elle. La bande gauche montre `media[i]`, la droite `media[i+1]` : deux photos
+differentes, et le defilement avance de deux crans. Sous 1220px les bandes n'ont pas la
+place d'exister : `display: none`.
+`#media-bg[data-on="true"]` est le garde — rien n'est peint sans survol.
+
+### Visionneuse (v1.62)
+La pastille du nombre de medias existait depuis v1.60 mais **n'avait aucun handler de
+clic** : la projection ambiante etait le seul rendu. Corrige.
+`.mlb` en `position: fixed` — la facette s'ouvrant en iframe, le fixed epouse
+exactement le cadre de 820px sans deborder. Fleches, clavier (fleches + Echap), balayage
+horizontal, compteur, preload des voisins. Les videos se lisent (`.mp4` + poster
+`-p.webp`) et changer de media coupe la lecture en cours.
+
+**Mobile** : pas de projection (les bandes n'existent pas), la pastille est remplacee
+par trois vignettes de 34px dans la ligne de la date, sur leur propre rangee pour ne pas
+comprimer la waveform, avec un `+N` au-dela. Elles ouvrent la meme visionneuse.
+
+### Descriptions (v1.63)
+`description` etait au schema et ecrit par l'outil local, mais **rendu nulle part** —
+Fx allait saisir dans le vide. `.gig-desc`, meme colonne que le titre, repliee sur
+deux lignes (`line-clamp`), un clic deplie.
+
+### Vocabulaire de styles (v1.64)
+Audit : 9 valeurs hors vocabulaire sur 10 dates. Rabattues : `hitech` → `hi-tech`,
+`psy` → `psytrance`, `live psybient` → `psybient` (le « live » est un format, champ
+`format`), `groovy psy` et `funky psyprog` → `psyprog`, `hi-tech mashup` → `hi-tech`
++ `mashup-multigenre`. Deux nouveaux tokens decides par Fx : **`acidcore`** (hue 32,
+entre mentalcore et goa) et **`j-core`** (hue 86, entre nitzhonot et hi-tech). Le
+vocabulaire passe a 24 tokens. `magic music` reste en attente d'explication.
+
+### Convention confirmee
+Le vocabulaire de styles n'existe **qu'une fois** dans le repo, comme tokens
+`--style-*` dans BaseLayout. Les puces de filtre se construisent depuis les donnees,
+les couleurs par `var(--style-X, var(--style-default))`. Ajouter un style = ajouter
+son jeton a sa place dans la progression, rien d'autre. Seule copie externe : le
+vocabulaire de l'outil local (`/root/selector/form.js`), a tenir synchrone.
+
+---
+
+## v1.55 → v1.59 — Le player porte tout — 2026-09-20
+
+### Contexte
+Fx : « l'etat reduit du player peut afficher toutes les infos : play/pause,
+previous/next, mute, tout le texte, image, waveform. je pense meme qu'on peut
+remplacer la seek bar par la waveform active ». Et avant ca, une liste de griefs
+sur la manipulation du panneau bibliotheque : « objectif, controle eclair ».
+
+### Panneau bibliotheque (v1.55, v1.56)
+- `#lib-grip` porte a 22px avec debordement `::after` (`top:-10px; bottom:-6px`), et
+  reponse sur **toute la transversale**, pas seulement au centre.
+- Nouveau `#lib-handle` sur l'arete haute du player : le panneau se remonte
+  directement au glisser, sans repasser par le hamburger. `bindGrip(el, fromClosed)`
+  partage entre les deux.
+- **Aimantation supprimee** : le panneau s'arrete exactement ou on le lache, la hauteur
+  exacte est memorisee. C'etait la vraie demande — les points de rebond etaient percus
+  comme une perte de controle.
+- `max-height: calc(100dvh - 56px)` : le panneau monte jusqu'en haut sur telephone.
+- Slider de volume ajoute en mobile (`width:52px; order:8`), il manquait.
+- Les facettes se reservent la hauteur du player (`--player-pad`) : l'etat reduit ne
+  mange plus la fenetre plein page.
+
+### Barre unique (v1.58)
+`.player-mini` **supprime entierement**. Une seule barre, `.player-full`, qui porte
+tout : titre, pochette, temps, transport, volume. `#btn-prev` / `#btn-next` avec
+`stepLibrary(dir)` qui navigue dans `libData`. `#player-wave` remplace la barre de
+progression par la **waveform du morceau en cours** (`waveSrc()`, `setPlayerWave()`,
+`setPlayerWaveProgress()`). Deux rangees en mobile.
+
+### Vocabulaire ouvert et colore (v1.59)
+22 tokens de style ranges sur la roue spectrale « du plus calme au plus dur », teinte
+suivant cet ordre. Filtres **multi-selection** (`libStyles = new Set()`), puces triees
+par frequence, portant leur couleur et leur compte, sur une seule rangee defilante.
+Styles de 59 dates repris depuis le formulaire rempli par Fx.
+
+---
+
+## v1.47 → v1.54 — Bibliotheque globale, agenda au centre — 2026-09-18
+
+- **v1.47** : la bibliotheque quitte /son et entre dans le player. Catalogue servi par
+  `/library.json` (endpoint Astro), recherche, filtres, waveform sur la ligne en lecture.
+- **v1.50** : tracklist Spotify comme troisieme etat des dates sans enregistrement —
+  chaque date a alors quelque chose a ecouter.
+- **v1.51 → v1.53** : les styles de la bibliotheque s'appliquent aussi aux lignes
+  generees en JS ; densite de barres constante quelle que soit la largeur (fini la
+  palissade etiree) ; `:global()` retire du bloc deja global (il cassait le style).
+- **v1.54** : etat reduit repense en barre symetrique, panneau redimensionnable.
+
+### Waveforms SoundCloud (v1.56 → v1.57)
+Nouvel endpoint Worker `GET /api/sc/waveform?url=` : resout la piste via l'app token
+(client_credentials, cache par isolate), echange `.png` contre `.json` sur le
+`waveform_url` (le champ pointe une image ; la meme URL en `.json` donne les samples),
+normalise sur 0-255, cache une semaine a l'edge.
+Puis **v1.57** : les waveforms SC etaient figees et non cliquables — seul `<audio>`
+emettait `hamcat:progress` et le handler de clic supposait `type: 'audio'`. Corrige par
+un `emitProgress(url, position, duration)` partage et un `data-type` sur l'element.
+`playSC` cherche sans recharger l'iframe quand le meme set est deja charge.
+
+### Agenda seul (v1.58, meme session)
+Fx : « maintenant que les sources sont melees plus besoin d'afficher cette partie, on
+peut montrer juste l'agenda ». Liens de plateformes, bouton d'ecoute global, onglets de
+facettes et panneau playlists retires de /son. `.c-rec` passe de flex a **grid**
+(`8.2em 22px 28px minmax(0,1fr) 7.4em 22px`) : les colonnes s'alignent enfin d'une
+ligne a l'autre et les waveforms retrouvent leur largeur.
+
+---
+
+## v1.38 → v1.46 — L'agenda devient le porteur des enregistrements — 2026-09-16
+
+- **v1.38** : SEO par page (title/description/canonical/OG), robots.txt, JSON-LD
+  artiste + MusicEvent.
+- **v1.39** : scrubber synchronise sur la source audio, pochette par defaut (logo)
+  pour les sets R2. Sets R2 jouables via le champ `audio_url`, support des requetes
+  Range et `Content-Disposition: inline` sur le worker media.
+- **v1.40 → v1.43** : l'agenda devient l'unique porteur des enregistrements ;
+  waveforms cliquables, coloration par style, une ligne par set, duree et position sur
+  la waveform, barre espace, play/pause depuis les lignes.
+- **v1.46** : trois etats d'enregistrement (`none` / `soon` / `tracklist`) — plus de
+  case vide, et on distingue « jamais enregistre » de « enregistre, a venir ».
+  Bouton de telechargement, tags cliquables.
+- **v1.48 → v1.49** : agenda sur deux lignes en mobile ; ville, duree, line-up et lien
+  evenement affiches ; schema rendu tolerant aux champs URL vides du CMS (le build
+  echouait dessus).
+
+---
+
+## Outillage — agent VPS, Immich, export R2, outil d'edition local — 2026-09-19 → 22
+
+### Agent VPS versionne
+`scripts/vps-agent.py` entre au repo. `build_steps(clean=True)`, route `/build` en
+**conditions CI**, `/deploy-worker` repare (npm et non pnpm, message clair quand
+wrangler n'est pas authentifie), et surtout `/deploy {"check": true}` qui lance un
+build propre et **refuse de pousser s'il echoue**.
+
+> **Piege Astro a retenir.** Un `npm run build` local peut afficher « Complete! »
+> alors que des frontmatter sont casses : le cache `.astro/` sert l'ancien parse.
+> Seul `rm -rf dist .astro node_modules && npm ci && npm run build` le revele.
+> C'est ce qui a laisse passer 27 fiches au YAML casse (restes de listes en bloc
+> orphelines apres une reecriture de masse du champ `genre`). D'ou la regle :
+> **tout ce qui touche `src/content/` passe par `/deploy {"check": true}`**.
+
+> **Piege reseau.** Cloudflare renvoie 403 sur le User-Agent `Python-urllib` par
+> defaut. Tout script appelant l'API VPS doit envoyer son propre UA.
+
+### Croisement Immich
+Immich v3.2.2 sur WSL (fx-m2). Les photos d'une date ne sont pas forcement datees du
+jour exact — **les sets sont souvent apres minuit, donc au lendemain** : la fenetre de
+recherche en tient compte. 74 dates sur 81 ont trouve des candidats, 1194 medias
+proposes. Note d'API : `GET /albums/{id}` retourne toujours `assets: []`, il faut
+`POST /search/metadata` avec `{"albumIds":[id]}`.
+
+### Import Drive 4_DIFF
+250 des 269 fichiers etaient deja dans Immich — seul le **groupement** manquait. Piege :
+les trois nombres d'un nom de fichier Facebook sont par fichier, pas par serie ; grouper
+dessus eclatait une serie en dix singletons. Repli sur le dossier.
+
+### Export R2
+375 medias, 1.46 Go. Deux tailles par image (`-t` vignette, `-f` plein cadre) ;
+les videos ont `-p.webp` (affiche) + `.mp4`. Reprise possible via
+`/root/export-faits.json`.
+Piege ffmpeg : `scale=-2:720:force_original_aspect_ratio=decrease` echoue
+**silencieusement** sur une video portrait 720x1280 — il faut borner les deux cotes
+puis forcer des dimensions paires.
+
+### Outil d'edition local (`/root/selector`, fx-m2)
+Serveur local sur 127.0.0.1:8787 — tri des medias et edition complete des fiches
+(renommer, infos, line-up, medias, description, styles, tracklist). Ecrit directement
+dans le repo, publie via l'API VPS. `smoke.js` est un harnais DOM sans navigateur
+(quatre cas) ne apres un bug ou une `ReferenceError` tuait le rendu du formulaire
+apres l'en-tete : l'interface etait vide sur toutes les dates. Tout changement du
+formulaire passe par lui.
+
+---
+
+## Reste en cours au 2026-09-22
+
+- **41 dates sur 81 sans aucun media**, 14 dates avec medias mais **sans cover
+  designee**, 11 groupes de medias (63 fichiers) non rattaches.
+- **0 date sur 81 a une description ou un line-up** — le chantier de saisie de Fx,
+  etale sur plusieurs sessions.
+- `magic music` (marche de Noel, decembre 2021) : style en attente d'arbitrage.
+- Deux fiches en `draft` a confirmer : `SENOI GATHERING` (2020-06-26) et
+  `BAL DES GLINGUES` (2025-01-23).
+- **Cle API Immich a faire tourner** (exposee pendant l'import).
+- Immich : 1298 groupes de doublons a passer en revue.
+- Flyers d'evenements : ni dans Immich ni dans le Drive, chantier a part.
+- Tags d'artistes avec timecodes ; Cast (Chromecast / AirPlay).
+- **Desequilibre structurel** : /son pese 54 Ko de donnees et 1200 lignes de page,
+  les cinq autres facettes entre 250 et 650 octets chacune, le blog zero article.
+
+---
+
 ## v1.37 — Fix auto-collapse au clic + metadonnees/scrubber stale + embed Spotify fantome — 2026-09-14
 
 ### Contexte
