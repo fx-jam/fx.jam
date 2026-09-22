@@ -185,6 +185,43 @@ export default {
     }
 
 
+    // /api/atelier/answers — applique un lot de reponses. Le Worker ne patche
+    // RIEN lui-meme : il authentifie, puis transmet a l'agent VPS, seul endroit
+    // ou l'on sait verifier un build en conditions reelles avant de pousser.
+    if (path === '/api/atelier/answers' && request.method === 'POST') {
+      let who;
+      try {
+        who = await verifyAccess(request, env);
+      } catch (e) {
+        const m = (e && e.message) || 'access_error';
+        return errJson(m, m === 'access_not_configured' ? 503 : 401);
+      }
+      if (!env.VPS_TOKEN) return errJson('vps_token_absent', 503);
+      let body;
+      try { body = await request.json(); } catch { return errJson('json_invalide', 400); }
+      const answers = Array.isArray(body && body.answers) ? body.answers : [];
+      if (!answers.length) return errJson('aucune_reponse', 400);
+      try {
+        const res = await fetch(`${VPS_AGENT}/atelier/apply`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.VPS_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            answers,
+            message: `atelier: ${answers.length} reponses (${who.email})`,
+          }),
+        });
+        return new Response(await res.text(), {
+          status: res.status,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        return errJson(`agent_injoignable: ${e && e.message}`, 502);
+      }
+    }
+
     // /api/atelier/whoami — preuve de vie de l'authentification. Ne lit ni
     // n'ecrit rien : elle sert a verifier qu'Access est bien branche AVANT de
     // poser un chemin d'ecriture dessus.

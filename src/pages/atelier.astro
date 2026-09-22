@@ -58,8 +58,11 @@ import { TRACKS } from '../lib/atelier';
 
     <section class="done" id="done" hidden>
       <p class="done-t" id="done-t"></p>
-      <button class="btn btn--ok" id="copy">Copier les réponses</button>
-      <p class="done-h">Colle-les dans le chat : elles seront appliquées aux fiches.</p>
+      <div class="q-actions">
+        <button class="btn btn--ok" id="send">Envoyer</button>
+        <button class="btn" id="copy">Copier</button>
+      </div>
+      <p class="done-h">Envoyer applique directement aux fiches. Copier sert de repli.</p>
     </section>
 
   </main>
@@ -362,6 +365,39 @@ import { TRACKS } from '../lib/atelier';
 
   $('q-ok').onclick = commit;
   $('q-skip').onclick = skip;
+
+  // Envoi direct quand Access est branche ; repli copier-coller sinon, pour
+  // que des reponses deja donnees ne soient jamais perdues.
+  $('send').onclick = async () => {
+    const btn = $('send') as HTMLButtonElement;
+    const list = Object.entries(answers).map(([id, value]) => {
+      const i = id.lastIndexOf(':');
+      return { gig: id.slice(0, i), field: id.slice(i + 1), value };
+    });
+    if (!list.length) return;
+    btn.disabled = true; btn.textContent = 'Envoi…';
+    try {
+      const r = await fetch('/api/atelier/answers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: list }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        // Le lot est ecrit : on vide, sinon il repartirait au prochain envoi.
+        answers = {}; save(answers);
+        btn.textContent = `${d.changed?.length ?? list.length} appliquées`;
+        all = all.filter(q => !list.some(a => `${a.gig}:${a.field}` === q.id));
+        counts(); pick(track);
+      } else {
+        btn.disabled = false;
+        btn.textContent = `Échec : ${d.error || r.status} — utilise Copier`;
+      }
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = 'Hors ligne — utilise Copier';
+    }
+  };
 
   $('copy').onclick = async () => {
     // Le format porte le champ et la fiche : lisible par un humain comme par
