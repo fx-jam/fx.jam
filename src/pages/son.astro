@@ -153,54 +153,15 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           <h1>{sonData.headline || 'DJ & Live'}</h1>
           {sonData.bio && <p class="bio">{sonData.bio}</p>}
           <p class="tags">{sonData.genres?.join(' · ') || 'psytrance · hi-tech · goa'}</p>
-        {(sonData.links?.soundcloud || sonData.links?.mixcloud || sonData.links?.spotify ||
-          sonData.links?.instagram || sonData.links?.facebook || sonData.links?.presskit) && (
-          <div class="links-streaming">
-            {sonData.links.soundcloud && (
-              <a href={sonData.links.soundcloud} target="_blank" rel="noopener" class="link-btn">SoundCloud</a>
-            )}
-            {sonData.links.mixcloud && (
-              <a href={sonData.links.mixcloud} target="_blank" rel="noopener" class="link-btn">Mixcloud</a>
-            )}
-            {sonData.links.spotify && (
-              <a href={sonData.links.spotify} target="_blank" rel="noopener" class="link-btn">Spotify</a>
-            )}
-            {sonData.links.instagram && (
-              <a href={sonData.links.instagram} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Instagram</a>
-            )}
-            {sonData.links.facebook && (
-              <a href={sonData.links.facebook} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Facebook</a>
-            )}
-            {sonData.links.presskit && (
-              <a href={sonData.links.presskit} target="_blank" rel="noopener" class="link-btn link-btn--secondary">Presskit</a>
-            )}
-          </div>
-        )}
-
-        {sonData.links?.soundcloud && (
-          <button
-            class="btn-ecouter"
-            data-type="soundcloud"
-            data-url={sonData.links.soundcloud}
-            data-lbl="SoundCloud"
-          >▶ Écouter</button>
-        )}
         </div>
       </div>
       <a class="home" href="/"
          onclick="if(window.top!==window){event.preventDefault();window.top.location.href='/';}">← Accueil</a>
     </header>
 
-    <!-- ── SECTIONS ───────────────────────────────────────────────── -->
-    <!-- L'agenda et la bibliotheque ne cohabitent plus en colonnes : a trois
-         colonnes dans une fenetre, chacune tombait sous 250 px et les titres
-         d'evenements etaient tronques a deux caracteres. Une section a la fois,
-         sur toute la largeur. -->
-    <nav class="facet-tabs" id="facet-tabs">
-      <button class="facet-tab is-on" data-panel="agenda">Agenda</button>
-      <button class="facet-tab" data-panel="playlists">Playlists</button>
-    </nav>
-
+    <!-- Une seule section desormais : l'agenda, plein cadre. Les playlists
+         Spotify restent accessibles depuis la bibliotheque du player, avec
+         toutes les autres sources. -->
     <div class="panels" id="panels">
 
       <!-- ── Agenda ── -->
@@ -311,36 +272,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         </details>
       </div>
 
-      <!-- ── Sets ── -->
-      <!-- ── Playlists ── -->
-      <div class="panel panel-playlists" data-panel="playlists">
-        <h2 class="col-title">Playlists</h2>
-
-        {Object.keys(playlistsByCategory).length === 0 ? (
-          <p class="empty">Playlists à venir.</p>
-        ) : (
-          Object.entries(playlistsByCategory).map(([cat, playlists]) => (
-            <div class="playlist-group">
-              <span class="embed-label">{cat}</span>
-              {playlists.map(p => (
-                <div class="playlist-item">
-                  {p.description && <p class="playlist-desc">{p.description}</p>}
-                  <div class="playlist-meta">
-                    {p.spotify_tracks > 0 && <span class="playlist-tracks">{p.spotify_tracks} titres</span>}
-                    <button
-                      class="btn-ecouter btn-ecouter--sm"
-                      data-type="spotify"
-                      data-playlist-id={p.id}
-                      data-lbl={p.spotify_title}
-                    >▶ Écouter</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))
-        )}
-      </div>
-
     </div>
   </main>
 </BaseLayout>
@@ -436,36 +367,8 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
   /* ── Grille 3 colonnes ── */
   .panels { flex: 1; overflow: hidden; display: block; }
-  .panels > .panel { display: none; }
-  .panels > .panel.is-on { display: block; }
 
   /* ── Onglets de section ── */
-  .facet-tabs {
-    display: flex;
-    gap: 0.4rem;
-    padding: 0 1.25rem 0.6rem;
-    flex: 0 0 auto;
-  }
-  .facet-tab {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    padding: 0.4rem 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    background: transparent;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  }
-  .facet-tab:hover { border-color: var(--facet-son); color: var(--text-secondary); }
-  .facet-tab.is-on {
-    border-color: var(--facet-son);
-    color: var(--facet-son);
-    background: color-mix(in srgb, var(--facet-son) 14%, transparent);
-  }
-
   .panel {
     height: 100%;
     overflow-y: auto;
@@ -513,7 +416,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      du bloc lecture restent en place et simplement vides quand il n'y a rien. */
   .gig-row {
     display: grid;
-    grid-template-columns: 82px minmax(0, 1fr) minmax(300px, 1.8fr);
+    grid-template-columns: 82px minmax(0, 1fr) minmax(380px, 2.6fr);
     align-items: center;
     column-gap: 0.7rem;
     padding: 0.22rem 0;
@@ -531,7 +434,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .c-rec {
     display: grid;
-    grid-template-columns: 10em 30px minmax(0, 1fr) 9.2em 24px;
+    grid-template-columns: 8.2em 28px minmax(0, 1fr) 7.4em 22px;
     align-items: center;
     column-gap: 0.45rem;
     min-width: 0;
@@ -646,30 +549,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     margin: 0 0 1rem;
   }
 
-  /* ── Sets — liens streaming ── */
-  .links-streaming {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-  .link-btn {
-    display: inline-block;
-    padding: 0.4rem 0.8rem;
-    border: 1px solid var(--facet-son);
-    border-radius: 7px;
-    color: var(--facet-son);
-    text-decoration: none;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    transition: background 0.2s ease;
-  }
-  .link-btn:hover { background: color-mix(in srgb, var(--facet-son) 15%, transparent); }
-  .link-btn--secondary { border-color: var(--text-tertiary); color: var(--text-secondary); }
-  .link-btn--secondary:hover { background: color-mix(in srgb, var(--text-tertiary) 12%, transparent); }
-  .link-btn--sm { padding: 0.25rem 0.55rem; font-size: 0.66rem; }
-
   /* ── Embed SoundCloud ── */
   .embed-frame {
     border-radius: var(--radius-lg);
@@ -753,7 +632,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
     .panels { overflow: visible; }
     .panel { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
-    .facet-tabs { flex-wrap: wrap; padding: 0 1rem 0.6rem; }
     .c-venue { display: none; }
   }
 
@@ -979,7 +857,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       const total = parseFloat(el.dataset.duration || '0') || duration;
       // Pendant la lecture on affiche position / total, comme la barre du player ;
       // au repos, la duree seule.
-      t.textContent = mine ? `${fmtTime(position)} / ${fmtTime(total)}` : fmtTime(total);
+      t.textContent = mine ? `${fmtTime(position)}/${fmtTime(total)}` : fmtTime(total);
     });
   });
 
@@ -1016,28 +894,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  function attachTabs() {
-    const tabs = document.getElementById('facet-tabs');
-    const panels = document.getElementById('panels');
-    if (!tabs || !panels || tabs.dataset.ready) return;
-    tabs.dataset.ready = '1';
-    const show = (key: string) => {
-      tabs.querySelectorAll<HTMLElement>('.facet-tab')
-          .forEach(t => t.classList.toggle('is-on', t.dataset.panel === key));
-      panels.querySelectorAll<HTMLElement>('.panel')
-            .forEach(p => p.classList.toggle('is-on', p.dataset.panel === key));
-      // Les waveforms de la section qui vient d'apparaitre n'ont jamais croise
-      // l'observateur tant qu'elles etaient masquees.
-      attachWaveforms();
-    };
-    tabs.addEventListener('click', e => {
-      const t = (e.target as HTMLElement).closest<HTMLElement>('.facet-tab');
-      if (t?.dataset.panel) show(t.dataset.panel);
-    });
-    show('agenda');
-  }
-
-  function initSon() { attachTabs(); attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
+  function initSon() { attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>
