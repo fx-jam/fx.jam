@@ -146,7 +146,10 @@ export default {
         const t = await res.json();
         if (!t || !t.waveform_url) return errJson('no_waveform', 404);
 
-        const wRes = await fetch(t.waveform_url);
+        // SoundCloud sert historiquement une image ; la meme adresse en .json
+        // renvoie les echantillons bruts, qui sont ce qui nous interesse.
+        const wfUrl = String(t.waveform_url).replace(/\.png(\?|$)/, '.json$1');
+        const wRes = await fetch(wfUrl);
         if (!wRes.ok) return errJson('sc_waveform_error', wRes.status);
         const w = await wRes.json();
         const samples = w.samples || [];
