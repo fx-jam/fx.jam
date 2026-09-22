@@ -451,71 +451,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
       background: color-mix(in srgb, var(--facet-son) 12%, var(--bg-elevated));
     }
 
-    .player-mini {
-      display: none;
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 56px;
-      padding: 0 1.25rem;
-      align-items: center;
-      gap: 0.75rem;
-      background: var(--bg-elevated);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(8px);
-      /* 3 colonnes : contrepoids, centre, contrepoids. */
-      grid-template-columns: 44px 1fr 44px;
-    }
-    .mini-center {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
-      min-width: 0;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: inherit;
-      padding: 0;
-    }
-    #mini-art {
-      width: 34px; height: 34px; border-radius: 4px; object-fit: cover;
-      flex: 0 0 auto; display: none;
-    }
-    .mini-meta { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-    .player-label-mini {
-      font-family: var(--font-display); font-weight: 600; font-size: 0.9rem;
-      color: var(--text-primary); max-width: 46vw;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .mini-sub {
-      display: flex; align-items: center; gap: 0.45rem;
-      font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-tertiary);
-    }
-    #hamcat-player[data-active="true"] .player-mini { display: grid; }
-    #hamcat-player[data-expanded="true"] .player-mini { display: none; }
-
-    /* Les deux boutons lateraux sont strictement identiques : c'est ce qui rend
-       le bloc central vraiment centre. */
-    .player-mini > button.player-lib-btn,
-    .player-mini > button.player-play-btn {
-      width: 44px; height: 44px;
-      display: flex; align-items: center; justify-content: center;
-      padding: 0;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
-    }
-    .player-mini > button:hover {
-      background: var(--bg-surface);
-      border-color: var(--facet-son);
-      color: var(--facet-son);
-    }
-    .mini-center:hover .player-label-mini { color: var(--facet-son); }
-
     .play-dot {
       width: 7px; height: 7px;
       border-radius: 50%;
@@ -536,7 +471,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       border-top: 1px solid var(--border);
       backdrop-filter: blur(8px);
     }
-    #hamcat-player[data-active="true"][data-expanded="true"] .player-full { display: flex; }
+    #hamcat-player[data-active="true"] .player-full { display: flex; }
 
     #player-artwork {
       width: 40px; height: 40px;
@@ -590,7 +525,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     .player-spotify-connect:hover { background: oklch(0.55 0.22 145 / 0.15) !important; color: oklch(0.65 0.22 145) !important; }
 
     .player-scrubber {
-      flex: 1; height: 20px;
+      flex: 1; height: 30px;
       background: transparent;
       cursor: pointer;
       position: relative;
@@ -613,6 +548,25 @@ const facetHrefs = visibleFacets().map(f => f.href);
       border-radius: 2px;
       pointer-events: none;
     }
+    /* Quand la waveform est la, elle prend toute la place et la barre pleine
+       s'efface — y compris son rail, sans quoi un trait la traversait. */
+    #player-wave { position: absolute; inset: 0; pointer-events: none; }
+    #player-wave svg { width: 100%; height: 100%; display: block; }
+    #player-wave .wave-bg { fill: color-mix(in srgb, var(--wave-played, var(--facet-son)) 28%, transparent); }
+    #player-wave .wave-fg { fill: var(--wave-played, var(--facet-son)); }
+    .player-scrubber:has(#player-wave:not([hidden])) { background: none; }
+    .player-scrubber:has(#player-wave:not([hidden]))::before { display: none; }
+    .player-scrubber:has(#player-wave:not([hidden])) #scrubber-fill { display: none; }
+
+    /* Precedent / suivant : memes dimensions que les autres boutons du
+       transport, pour que la rangee reste reguliere. */
+    .player-step {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-secondary); font-size: 0.85rem;
+      padding: 0.3rem 0.45rem; border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .player-step:hover { color: var(--facet-son); background: var(--bg-surface); }
     #player-time {
       font-family: var(--font-mono);
       font-size: 0.72rem;
@@ -648,20 +602,28 @@ const facetHrefs = visibleFacets().map(f => f.href);
     @media (max-width: 480px) {
       /* Trois commandes atteignables au pouce, bien separees : menu a gauche,
          lecture au centre, muet a droite. Le reste se range entre les deux. */
-      .player-full { gap: 0.35rem; padding: 0 0.5rem; }
-      .player-mini  { gap: 0.35rem; padding: 0 0.5rem; }
+      /* La barre porte desormais tout : sur telephone elle passe sur deux
+         rangees plutot que de sacrifier des commandes. La waveform occupe la
+         seconde a elle seule, ou elle a enfin la largeur de se lire. */
+      .player-full {
+        gap: 0.35rem; padding: 0.3rem 0.5rem;
+        flex-wrap: wrap; height: auto; min-height: 56px;
+        align-content: center;
+      }
       .player-full > * { order: 5; }
-      #btn-library { order: 0; margin-right: auto; }
-      #btn-playpause { order: 1; margin: 0 auto; }
-      #btn-volume { order: 9; margin-left: auto; }
-      .player-meta { order: 2; }
-      .player-scrubber { order: 3; }
-      #btn-close { order: 10; }
+      #btn-library { order: 0; }
+      #btn-prev { order: 1; margin-left: auto; }
+      #btn-playpause { order: 2; }
+      #btn-next { order: 3; }
+      #btn-volume { order: 4; margin-left: auto; }
+      .player-meta { order: 0; flex: 1 1 auto; }
+      .player-scrubber { order: 6; flex: 1 0 100%; height: 26px; }
+      #btn-close { order: 4; }
       .player-full button { min-width: 44px; min-height: 44px; font-size: 1rem; padding: 0; }
       #player-artwork { display: none; }
       #player-source-badge { display: none; }
       .player-meta { min-width: 64px; }
-      .player-scrubber { min-width: 30px; }
+
       #player-time { display: none; }
       #btn-sp-shuffle, #btn-sp-repeat { display: none; }
       /* v1.56: le volume reste reglable au pouce — slider court, colle au mute. */
@@ -798,25 +760,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-seed" aria-label="Choisir quelque chose à écouter">▶<span>?</span></button>
     </div>
 
-    <!-- État 1 : barre réduite — hamburger / bloc central / fermeture.
-         Les deux boutons latéraux font la même taille : le centre est donc
-         géométriquement centré, pas simplement "après" le bouton de gauche. -->
-    <div class="player-mini">
-      <button id="btn-mini-library" class="player-lib-btn" aria-label="Bibliothèque">≡</button>
-      <button id="btn-expand" class="mini-center" aria-label="Ouvrir le lecteur">
-        <img id="mini-art" src="" alt="" width="34" height="34" data-fallback={siteData.logo_url} />
-        <span class="mini-meta">
-          <span id="mini-title" class="player-label-mini">—</span>
-          <span class="mini-sub">
-            <span id="mini-time">—</span>
-            <span id="mini-source" class="source-badge">SC</span>
-          </span>
-        </span>
-      </button>
-      <button id="btn-mini-play" class="player-play-btn" aria-label="Lecture / pause">▶</button>
-    </div>
-
-    <!-- État 2 : transport bar (pleine largeur) -->
+    <!-- Barre unique : tout y tient — menu, pochette, texte, transport,
+         waveform, temps, volume. Il n'y a plus d'etat "reduit" appauvri ;
+         deplier ne fait qu'ouvrir la bibliotheque au-dessus. -->
     <div class="player-full">
       <!-- Le menu reste a la meme place d'un etat a l'autre : premier element. -->
       <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
@@ -832,11 +778,18 @@ const facetHrefs = visibleFacets().map(f => f.href);
       </div>
       <button id="btn-sp-shuffle" class="player-sp-extra" aria-label="Lecture aleatoire" hidden data-active="0">🔀</button>
       <button id="btn-sp-prev" class="player-sp-extra" aria-label="Piste precedente" hidden>⏮</button>
+      <!-- Precedent / suivant parcourent la bibliotheque, qui est la liste de
+           lecture du site : c'est la meme source pour toutes les pages. -->
+      <button id="btn-prev" class="player-step" aria-label="Set précédent">⏮</button>
       <button id="btn-playpause" class="player-play-btn" aria-label="Play/Pause">▶</button>
+      <button id="btn-next" class="player-step" aria-label="Set suivant">⏭</button>
       <button id="btn-sp-next" class="player-sp-extra" aria-label="Piste suivante" hidden>⏭</button>
       <button id="btn-sp-repeat" class="player-sp-extra" aria-label="Repetition" hidden data-mode="0">🔁</button>
+      <!-- La waveform remplace la barre de progression quand elle existe ;
+           la barre pleine reste le repli pour Spotify, qui n'en a pas. -->
       <div class="player-scrubber" id="player-scrubber" role="progressbar">
         <div id="scrubber-fill"></div>
+        <div id="player-wave" hidden></div>
       </div>
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Muet">🔊</button>
@@ -871,10 +824,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.57 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.58 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.57');
+  console.log('🐱 fx_jam_v1.58');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1153,6 +1106,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           const pos = prog.currentPosition || 0;
           const rel = prog.relativePosition || 0;
           if (scrubFill) scrubFill.style.width = (rel * 100) + '%';
+          setPlayerWaveProgress(rel);
           if (rel > 0) {
             const dur = pos / rel;
             (w as any).__scDuration = dur;
@@ -1386,6 +1340,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (artistEl) artistEl.textContent = '';
       if (titleEl)  titleEl.removeAttribute('href'); // n'etait pertinent que pour Spotify
       if (scrubFill)    scrubFill.style.width = '0%';
+      setPlayerWaveProgress(0);
       if (playerTimeEl) playerTimeEl.textContent = '0:00 / 0:00';
       if (miniTimeEl)   miniTimeEl.textContent = '—';
     }
@@ -1452,6 +1407,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
       setAudioArtwork(art); // pauseAll() vide la pochette : on la repose apres updateUI
+      setPlayerWave(url);
       saveState({ type: 'audio', url, lbl, art, position: startAt, playing: true });
     }
 
@@ -1467,6 +1423,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
       (w as any).__scUrl = url;
+      setPlayerWave(url);
       pauseAll();
       if (!state.scIframe) state.scIframe = document.getElementById('sc-embed') as HTMLIFrameElement;
       if (!state.scIframe) return;
@@ -1527,6 +1484,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
               if ('mediaSession' in navigator) navigator.mediaSession.playbackState = d.isPaused ? 'paused' : 'playing';
               setPlayIcon(d.isPaused ? '▶' : '⏸');
               if (scrubFill && d.duration) scrubFill.style.width = ((d.position / d.duration) * 100) + '%';
+              if (d.duration) setPlayerWaveProgress(d.position / d.duration);
               if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(d.position || 0)} / ${fmtMs(d.duration || 0)}`;
               if (miniTimeEl) miniTimeEl.textContent = fmtMs(d.position || 0);
             });
@@ -1906,6 +1864,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
             const dur = st.duration || 0;
             if (dur > 0) {
               if (scrubFill) scrubFill.style.width = ((pos / dur) * 100) + '%';
+              setPlayerWaveProgress(pos / dur);
               if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(pos)} / ${fmtMs(dur)}`;
               if (miniTimeEl) miniTimeEl.textContent = fmtMs(pos);
             }
@@ -1965,6 +1924,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     function playSpotify(playlistId: string, lbl: string) {
+      setPlayerWave('');   // Spotify n'expose pas de pics : barre pleine
       pauseAll();
 
       state.currentSource = 'spotify';
@@ -2014,6 +1974,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const dur = audioEl.duration;
       if (isFinite(dur) && dur > 0) {
         if (scrubFill)    scrubFill.style.width = ((audioEl.currentTime / dur) * 100) + '%';
+        setPlayerWaveProgress(audioEl.currentTime / dur);
         if (playerTimeEl) playerTimeEl.textContent = `${fmtMs(audioEl.currentTime * 1000)} / ${fmtMs(dur * 1000)}`;
         if (miniTimeEl)   miniTimeEl.textContent = fmtMs(audioEl.currentTime * 1000);
         // Les waveforms affichees dans les pages ecoutent cet evenement pour suivre la lecture.
@@ -2301,10 +2262,104 @@ const facetHrefs = visibleFacets().map(f => f.href);
         .catch(() => el.remove());
     }
 
+    // ── Waveform de la barre ───────────────────────────────────────────────
+    //    La meme que dans les pages et la bibliotheque : meme source de pics,
+    //    meme densite de barres. Elle remplace la barre de progression quand
+    //    elle existe ; Spotify, qui n'expose aucun pic, garde la barre pleine.
+    const waveEl = document.getElementById('player-wave') as HTMLElement | null;
+
+    /** Adresse des pics pour une source donnee, ou null s'il n'y en a pas. */
+    function waveSrc(url: string): string | null {
+      const m = url.match(/^(https:\/\/media\.hamcat\.live)\/sets\/(.+)\.[a-z0-9]+$/i);
+      if (m) return `${m[1]}/waveforms/${m[2]}.json`;
+      if (/^https:\/\/soundcloud\.com\/[\w-]+\/[\w-]+/.test(url)) {
+        return `/api/sc/waveform?url=${encodeURIComponent(url.split('?')[0])}`;
+      }
+      return null;
+    }
+
+    let waveToken = 0;
+
+    /** Charge et trace la waveform du set en cours. Passer '' la retire. */
+    function setPlayerWave(url: string) {
+      if (!waveEl) return;
+      const src = url ? waveSrc(url) : null;
+      const mine = ++waveToken;
+      if (!src) { waveEl.hidden = true; waveEl.innerHTML = ''; return; }
+      fetch(src)
+        .then(r => (r.ok ? r.json() : Promise.reject(r.status)))
+        .then(d => {
+          if (mine !== waveToken) return;          // un autre set a pris la main
+          const peaks: number[] = d.peaks || [];
+          if (!peaks.length) { waveEl.hidden = true; return; }
+          const px = waveEl.clientWidth || 300;
+          const want = Math.max(40, Math.min(peaks.length, Math.round(px / 2.2)));
+          const step = Math.max(1, Math.floor(peaks.length / want));
+          const bars: string[] = [];
+          for (let i = 0, x = 0; i < peaks.length; i += step, x++) {
+            const v = Math.max(...peaks.slice(i, i + step)) / 255;
+            const h = Math.max(2, Math.round(v * 100));
+            bars.push(`<rect x="${x * 2}" y="${(100 - h) / 2}" width="1.1" height="${h}" rx="0.5"/>`);
+          }
+          const id = 'pwclip' + Math.random().toString(36).slice(2, 8);
+          waveEl.innerHTML =
+            `<svg viewBox="0 0 ${bars.length * 2} 100" preserveAspectRatio="none"`
+            + ` style="width:100%;height:100%;display:block">`
+            + `<g class="wave-bg">${bars.join('')}</g>`
+            + `<g class="wave-fg" clip-path="url(#${id})">${bars.join('')}</g>`
+            + `<clipPath id="${id}"><rect x="0" y="0" width="0" height="100"/></clipPath></svg>`;
+          waveEl.hidden = false;
+        })
+        .catch(() => { if (mine === waveToken) { waveEl.hidden = true; waveEl.innerHTML = ''; } });
+    }
+
+    /** Avance le remplissage de la waveform de la barre. */
+    function setPlayerWaveProgress(ratio: number) {
+      if (!waveEl || waveEl.hidden) return;
+      const r = waveEl.querySelector('clipPath rect') as SVGRectElement | null;
+      const svg = waveEl.querySelector('svg') as SVGSVGElement | null;
+      if (!r || !svg) return;
+      r.setAttribute('width', String(Math.max(0, Math.min(1, ratio)) * svg.viewBox.baseVal.width));
+    }
+
+    /** Lit l'entree precedente ou suivante de la bibliotheque.
+     *  La bibliotheque est la liste de lecture du site : precedent et suivant
+     *  s'y deplacent, quelle que soit la page d'ou la lecture est partie. */
+    function stepLibrary(dir: number) {
+      if (!libData) {
+        // Premiere utilisation : on va chercher le catalogue puis on rejoue.
+        fetch('/library.json')
+          .then(r => r.json())
+          .then(d => { libData = d.entries || []; stepLibrary(dir); })
+          .catch(() => {});
+        return;
+      }
+      let cur = '';
+      let curPl = '';
+      try {
+        const sv = JSON.parse(localStorage.getItem('hamcat-player') || '{}');
+        cur = sv.url || '';
+        curPl = sv.playlistId || '';
+      } catch (_) {}
+      const list = libData;
+      let i = list.findIndex(e => (cur && e.url === cur) || (curPl && e.playlistId === curPl));
+      if (i < 0) i = dir > 0 ? -1 : 0;           // rien en cours : on entre par le bord
+      const next = list[i + dir];
+      if (!next) return;                          // on est deja au bout de la liste
+      if (next.source === 'spotify' && next.playlistId) playSpotify(next.playlistId, next.title);
+      else if (next.source === 'audio') playAudio(next.url, next.title, 0, '', false);
+      else playSC(next.url, next.title);
+    }
+
     /** Tient --player-pad a jour selon l'etat courant du player. */
     function syncPlayerPad() {
       const active = playerDiv.dataset.active === 'true';
-      document.documentElement.style.setProperty('--player-pad', active ? '56px' : '62px');
+      // Mesuree et non codee en dur : sur telephone la barre passe sur deux
+      // rangees, et le disque d'accueil doit se reserver la bonne hauteur.
+      const bar = playerDiv.querySelector('.player-full') as HTMLElement | null;
+      const h = active && bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+      document.documentElement.style.setProperty('--player-pad',
+        (active ? (h || 56) : 62) + 'px');
     }
 
     function openLibrary(open: boolean) {
@@ -2490,6 +2545,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
 
+      if (target.closest('#btn-prev')) { stepLibrary(-1); return; }
+      if (target.closest('#btn-next')) { stepLibrary(1);  return; }
+
       if (target.closest('#btn-spotify-connect')) {
         spStartAuth(); // v1.26: lance le flow OAuth PKCE Spotify
         return;
@@ -2559,7 +2617,6 @@ const facetHrefs = visibleFacets().map(f => f.href);
         return;
       }
 
-      if (target.closest('#btn-expand'))   { playerDiv.dataset.expanded = 'true';  return; }
 
       if (target.closest('#btn-close')) {
         pauseAll();
@@ -2634,7 +2691,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.57';
+    _vt.textContent = 'fx_jam_v1.58';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
