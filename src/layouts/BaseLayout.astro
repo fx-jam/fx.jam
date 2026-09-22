@@ -250,7 +250,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #library-panel {
       position: absolute;
       left: 0; right: 0; bottom: 100%;
-      max-height: 50vh;
+      height: var(--lib-h, 50vh);
+      max-height: calc(100vh - 56px);
       display: flex;
       flex-direction: column;
       background: color-mix(in srgb, var(--bg-app) 92%, transparent);
@@ -260,6 +261,22 @@ const facetHrefs = visibleFacets().map(f => f.href);
       pointer-events: auto;
     }
     #library-panel[hidden] { display: none; }
+    #library-panel { transition: height 0.18s ease; }
+
+    #lib-grip {
+      height: 14px;
+      flex: 0 0 auto;
+      cursor: ns-resize;
+      touch-action: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #lib-grip::before {
+      content: '';
+      width: 44px; height: 3px; border-radius: 2px;
+      background: var(--border);
+      transition: background 0.15s;
+    }
+    #lib-grip:hover::before { background: var(--facet-son); }
 
     .lib-head {
       display: flex; align-items: center; gap: 0.6rem;
@@ -378,44 +395,67 @@ const facetHrefs = visibleFacets().map(f => f.href);
     .player-mini {
       display: none;
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       height: 56px;
       padding: 0 1.25rem;
       align-items: center;
       gap: 0.75rem;
-      pointer-events: none;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      /* 3 colonnes : contrepoids, centre, contrepoids. */
+      grid-template-columns: 44px 1fr 44px;
     }
-    .player-mini > * { pointer-events: auto; }
-    #hamcat-player[data-active="true"] .player-mini { display: flex; }
+    .mini-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      min-width: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      padding: 0;
+    }
+    #mini-art {
+      width: 34px; height: 34px; border-radius: 4px; object-fit: cover;
+      flex: 0 0 auto; display: none;
+    }
+    .mini-meta { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+    .player-label-mini {
+      font-family: var(--font-display); font-weight: 600; font-size: 0.9rem;
+      color: var(--text-primary); max-width: 46vw;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .mini-sub {
+      display: flex; align-items: center; gap: 0.45rem;
+      font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-tertiary);
+    }
+    #hamcat-player[data-active="true"] .player-mini { display: grid; }
     #hamcat-player[data-expanded="true"] .player-mini { display: none; }
 
-    .player-mini button {
-      display: flex; align-items: center; gap: 0.5rem;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0.55rem 1.2rem;
-      min-height: 44px;
-      cursor: pointer;
-      color: var(--text-primary);
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      backdrop-filter: blur(8px);
-      white-space: nowrap;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-      transition: background 0.15s;
-    }
-    .player-mini button:hover { background: var(--bg-surface); }
-    #btn-mini-library { min-height: 44px; border-radius: 50%; width: 44px; }
-    #btn-mini-play {
-      width: 44px; min-height: 44px;
-      justify-content: center;
+    /* Les deux boutons lateraux sont strictement identiques : c'est ce qui rend
+       le bloc central vraiment centre. */
+    .player-mini > button.player-lib-btn,
+    .player-mini > button.player-play-btn {
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
       padding: 0;
       border-radius: 50%;
-      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
+    .player-mini > button:hover {
+      background: var(--bg-surface);
+      border-color: var(--facet-son);
+      color: var(--facet-son);
+    }
+    .mini-center:hover .player-label-mini { color: var(--facet-son); }
 
     .play-dot {
       width: 7px; height: 7px;
@@ -676,6 +716,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
          dans le player, seul element qui survit aux navigations. Son contenu
          vient de /library.json, telecharge a la premiere ouverture. -->
     <div id="library-panel" hidden>
+      <!-- Poignee : le hamburger bascule ouvert/ferme, le glissement ajuste
+           finement la hauteur entre trois reperes. -->
+      <div id="lib-grip" role="separator" aria-label="Redimensionner la bibliothèque"></div>
       <div class="lib-head">
         <input id="lib-search" type="search" placeholder="Chercher un set…" aria-label="Chercher un set" />
         <span id="lib-count" class="lib-count"></span>
@@ -688,16 +731,22 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <div id="lib-list" class="lib-list" role="list"></div>
     </div>
 
-    <!-- État 1 : pill discret (centré bas) -->
+    <!-- État 1 : barre réduite — hamburger / bloc central / fermeture.
+         Les deux boutons latéraux font la même taille : le centre est donc
+         géométriquement centré, pas simplement "après" le bouton de gauche. -->
     <div class="player-mini">
       <button id="btn-mini-library" class="player-lib-btn" aria-label="Bibliothèque">≡</button>
-      <button id="btn-mini-play" class="player-play-btn" aria-label="Lecture / pause">▶</button>
-      <button id="btn-expand" aria-label="Ouvrir le lecteur">
-        <span class="play-dot"></span>
-        <span id="mini-time">—</span>
-        <span id="mini-source" class="source-badge">SC</span>
-        <span class="expand-icon">⌃</span>
+      <button id="btn-expand" class="mini-center" aria-label="Ouvrir le lecteur">
+        <img id="mini-art" src="" alt="" width="34" height="34" data-fallback={siteData.logo_url} />
+        <span class="mini-meta">
+          <span id="mini-title" class="player-label-mini">—</span>
+          <span class="mini-sub">
+            <span id="mini-time">—</span>
+            <span id="mini-source" class="source-badge">SC</span>
+          </span>
+        </span>
       </button>
+      <button id="btn-mini-play" class="player-play-btn" aria-label="Lecture / pause">▶</button>
     </div>
 
     <!-- État 2 : transport bar (pleine largeur) -->
@@ -755,10 +804,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.53 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.54 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.53');
+  console.log('🐱 fx_jam_v1.54');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -1171,6 +1220,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const srcBadge = playerDiv.querySelector('#player-source-badge') as HTMLElement;
       const miniSrc  = playerDiv.querySelector('#mini-source')         as HTMLElement;
       if (lblEl) lblEl.textContent = lbl;
+      const miniLbl = document.getElementById('mini-title');
+      if (miniLbl) miniLbl.textContent = lbl || '—';
       playerDiv.querySelectorAll('.player-play-btn')
                .forEach(b => b.setAttribute('data-state', uiState));
       setPlayIcon(uiState === 'playing' ? '⏸' : '▶');
@@ -1271,12 +1322,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     /** Pochette de la source "audio" : celle du set si fournie, sinon le logo du site. */
     function setAudioArtwork(art = '') {
-      const artEl = document.getElementById('player-artwork') as HTMLImageElement;
-      if (!artEl) return;
-      const src = art || artEl.dataset.fallback || '';
-      if (!src) return;
-      artEl.src = src;
-      artEl.style.display = '';
+      ['player-artwork', 'mini-art'].forEach(id => {
+        const el = document.getElementById(id) as HTMLImageElement | null;
+        if (!el) return;
+        const src = art || el.dataset.fallback || '';
+        if (!src) return;
+        el.src = src;
+        el.style.display = '';
+      });
     }
 
     /** Rampe de volume — sert aux fondus entre deux sets. Resout quand la cible est atteinte. */
@@ -2170,12 +2223,61 @@ const facetHrefs = visibleFacets().map(f => f.href);
       if (b) b.setAttribute('aria-expanded', String(open));
       if (!open) return;
       playerDiv.dataset.active = 'true';
+      setLibHeight(readLibH() || libStops()[1]);
       if (libData) { renderLibFilters(); renderLibList(); return; }
       libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Chargement…</p>';
       fetch('/library.json')
         .then(r => r.json())
         .then(d => { libData = d.entries || []; renderLibFilters(); renderLibList(); })
         .catch(() => { libList.innerHTML = '<p style="padding:1rem;color:var(--text-tertiary);font-size:0.75rem">Bibliothèque indisponible.</p>'; });
+    }
+
+    // ── Hauteur du panneau : glissement libre, puis aimantation sur trois
+    //    reperes (reduit / mi-hauteur / plein ecran). La derniere hauteur
+    //    ouverte est retenue pour la visite suivante.
+    const LIB_H_KEY = 'hamcat-lib-height';
+    const libStops = () => {
+      const max = window.innerHeight - 56;
+      return [Math.round(max * 0.32), Math.round(max * 0.5), max];
+    };
+    const readLibH = () => {
+      try { const v = parseInt(localStorage.getItem(LIB_H_KEY) || '', 10);
+            return isFinite(v) && v > 100 ? v : 0; } catch (_) { return 0; }
+    };
+    const saveLibH = (h: number) => { try { localStorage.setItem(LIB_H_KEY, String(h)); } catch (_) {} };
+
+    function setLibHeight(px: number) {
+      const max = window.innerHeight - 56;
+      libPanel.style.setProperty('--lib-h', Math.max(120, Math.min(max, px)) + 'px');
+    }
+
+    const grip = document.getElementById('lib-grip');
+    if (grip) {
+      let startY = 0, startH = 0, dragging = false;
+      grip.addEventListener('pointerdown', (e: PointerEvent) => {
+        dragging = true;
+        startY = e.clientY;
+        startH = libPanel.getBoundingClientRect().height;
+        grip.setPointerCapture(e.pointerId);
+        libPanel.style.transition = 'none';
+      });
+      grip.addEventListener('pointermove', (e: PointerEvent) => {
+        if (!dragging) return;
+        setLibHeight(startH + (startY - e.clientY));
+      });
+      grip.addEventListener('pointerup', (e: PointerEvent) => {
+        if (!dragging) return;
+        dragging = false;
+        try { grip.releasePointerCapture(e.pointerId); } catch (_) {}
+        libPanel.style.transition = '';
+        const h = libPanel.getBoundingClientRect().height;
+        // Sous le plus petit repere, on considere que le geste voulait refermer.
+        const stops = libStops();
+        if (h < stops[0] * 0.7) { openLibrary(false); return; }
+        const snap = stops.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a));
+        setLibHeight(snap);
+        saveLibH(snap);
+      });
     }
 
     libFilters.addEventListener('click', e => {
@@ -2417,7 +2519,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.53';
+    _vt.textContent = 'fx_jam_v1.54';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
