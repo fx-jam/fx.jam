@@ -121,10 +121,94 @@ export default {
       return okJson({ liked: checks.filter(c => c.liked).map(c => c.id) });
     }
 
+    // GET /api/sc/waveform?url=<url du set SoundCloud>
+    // Renvoie { duration, peaks } au meme format que les waveforms generees
+    // par ffmpeg et rangees dans R2, pour que les sets SoundCloud s'affichent
+    // exactement comme les sets heberges. Cache au bord : SoundCloud n'est
+    // interroge qu'une fois par set.
+    if (path === '/api/sc/waveform' && request.method === 'GET') {
+      const track = url.searchParams.get('url') || '';
+      if (!/^https:\/\/soundcloud\.com\/[\w-]+\/[\w-]+/.test(track)) {
+        return errJson('bad_url');
+      }
+      const cache = caches.default;
+      const ck = new Request(`https://wf.hamcat.live/${encodeURIComponent(track)}`);
+      const hit = await cache.match(ck);
+      if (hit) return hit;
+
+      try {
+        const token = await scAppToken(env);
+        const res = await fetch(
+          `${SC_API}/resolve?url=${encodeURIComponent(track)}`,
+          { headers: { Authorization: `OAuth ${token}`, Accept: 'application/json' } },
+        );
+        if (!res.ok) return errJson('sc_resolve_error', res.status);
+        const t = await res.json();
+        if (!t || !t.waveform_url) return errJson('no_waveform', 404);
+
+        const wRes = await fetch(t.waveform_url);
+        if (!wRes.ok) return errJson('sc_waveform_error', wRes.status);
+        const w = await wRes.json();
+        const samples = w.samples || [];
+        if (!samples.length) return errJson('no_samples', 404);
+
+        // SoundCloud echantillonne sur `height` ; on ramene sur 0-255 comme
+        // les fichiers R2, en gardant la crete de chaque tranche.
+        const H = w.height || Math.max(...samples) || 100;
+        const WANT = 1200;
+        const step = samples.length / Math.min(WANT, samples.length);
+        const peaks = [];
+        for (let i = 0; i < samples.length; i += step) {
+          let m = 0;
+          for (let j = Math.floor(i); j < Math.min(samples.length, Math.floor(i + step)); j++) {
+            if (samples[j] > m) m = samples[j];
+          }
+          peaks.push(Math.round((m / H) * 255));
+        }
+
+        const out = new Response(
+          JSON.stringify({ duration: (t.duration || 0) / 1000, peaks }),
+          { headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+              'Cache-Control': 'public, max-age=604800',
+          } },
+        );
+        await cache.put(ck, out.clone());
+        return out;
+      } catch (_) {
+        return errJson('sc_waveform_failed', 502);
+      }
+    }
+
     // Toutes les autres routes → assets statiques Astro (build dist/)
     return env.ASSETS.fetch(request);
   },
 };
+
+// Jeton client_credentials : sert les appels qui ne concernent aucun
+// utilisateur (resolution d'un set public). Garde en memoire le temps de vie
+// de l'isolat pour ne pas redemander un jeton a chaque requete.
+let appToken = { value: '', expires: 0 };
+async function scAppToken(env) {
+  if (appToken.value && Date.now() < appToken.expires) return appToken.value;
+  const res = await fetch(SC_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'client_credentials',
+      client_id:     env.SC_CLIENT_ID,
+      client_secret: env.SC_CLIENT_SECRET,
+    }),
+  });
+  if (!res.ok) throw new Error('sc_app_token');
+  const j = await res.json();
+  appToken = {
+    value: j.access_token,
+    expires: Date.now() + Math.max(60, (j.expires_in || 3600) - 120) * 1000,
+  };
+  return appToken.value;
+}
 
 function bearerToken(req) {
   const auth = req.headers.get('Authorization') || '';

@@ -514,8 +514,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     min-height: 30px;
   }
   .gig-row .c-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .c-tags { flex: 0 1 auto; min-width: 0; max-width: 11em;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .c-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .c-sub { color: var(--text-tertiary); font-weight: 400; }
   .c-tags {
     font-family: var(--font-mono);
@@ -523,7 +522,22 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     letter-spacing: 0.06em;
     color: var(--text-tertiary);
   }
-  .c-rec { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+  .c-rec {
+    display: grid;
+    grid-template-columns: 10em 30px minmax(0, 1fr) 9.2em 24px;
+    align-items: center;
+    column-gap: 0.45rem;
+    min-width: 0;
+  }
+  .c-rec > .c-tags   { grid-column: 1; }
+  .c-rec > .rec-play { grid-column: 2; }
+  .c-rec > .wave     { grid-column: 3; }
+  .c-rec > .wave-time { grid-column: 4; }
+  .c-rec > .dl       { grid-column: 5; }
+  /* Une mention sans lecteur (set non enregistre) occupe toute la zone ;
+     une mention qui accompagne un bouton se range dans la colonne waveform. */
+  .c-rec > .rec-note { grid-column: 2 / -1; }
+  .c-rec > .rec-note--link { grid-column: 3; }
   /* Details complementaires : n'apparaissent que si le CMS les renseigne. */
   .gig-det {
     grid-column: 2 / -1;
@@ -564,8 +578,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     font-size: 0.58rem;
     color: var(--text-tertiary);
     white-space: nowrap;
-    flex: 0 0 9.2em;
-    width: 9.2em;
     text-align: right;
   }
   .gig-line { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; }
@@ -717,10 +729,21 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       grid-template-columns: 78px minmax(0, 1fr);
       row-gap: 0.15rem;
     }
-    .c-rec { grid-column: 1 / -1; flex-wrap: wrap; }
+    .c-rec {
+      grid-column: 1 / -1;
+      grid-template-columns: 28px minmax(0, 1fr) 20px;
+      row-gap: 0.15rem;
+    }
+    .c-rec > .c-tags    { grid-column: 1 / -1; }
+    .c-rec > .rec-play  { grid-column: 1; }
+    .c-rec > .wave      { grid-column: 2; }
+    .c-rec > .wave-time { display: none; }
+    .c-rec > .dl        { grid-column: 3; }
+    .c-rec > .rec-note  { grid-column: 1 / -1; }
+    .c-rec > .rec-note--link { grid-column: 2; }
     .c-tags { max-width: none; flex: 1 1 100%; }
     .gig-det { grid-column: 1 / -1; }
-    .wave-time { flex: 0 0 auto; width: auto; }
+
     .panels { overflow: visible; }
     .panel { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
     .facet-tabs { flex-wrap: wrap; padding: 0 1rem 0.6rem; }
