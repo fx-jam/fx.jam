@@ -17,11 +17,14 @@ interface Props {
   image?: string;
   /** Donnees structurees schema.org injectees dans un <script type="application/ld+json">. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Pages internes (atelier) : hors index des moteurs. Ce n'est pas une
+   *  protection — juste de l'hygiene, elles n'ont rien a faire en resultat. */
+  noindex?: boolean;
 }
 // v1.38 — SEO par page. Avant : les props title/description etaient deconstruites
 // mais jamais utilisees, le <head> lisait toujours l'objet seo global. Resultat :
 // les 8 pages sortaient le meme titre, la meme description et le meme canonical.
-const { title, description, image, jsonLd } = Astro.props;
+const { title, description, image, jsonLd, noindex } = Astro.props;
 const pageTitle       = title       ?? seo.title;
 const pageDescription = description ?? seo.description;
 const pageImage       = image       ?? seo.image;
@@ -36,6 +39,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <title>{pageTitle}</title>
   <meta name="description" content={pageDescription} />
   <link rel="canonical" href={canonicalUrl} />
+  {noindex && <meta name="robots" content="noindex, nofollow" />}
   <!-- Open Graph -->
   <meta property="og:type"        content="website" />
   <meta property="og:url"         content={canonicalUrl} />
@@ -933,10 +937,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.66 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.67 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.66');
+  console.log('🐱 fx_jam_v1.67');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2916,7 +2920,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.66';
+    _vt.textContent = 'fx_jam_v1.67';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

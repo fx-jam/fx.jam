@@ -1,0 +1,375 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+//  /atelier — la file de questions.
+//
+//  Une question a la fois, plein cadre, repondable au pouce. Les reponses sont
+//  gardees dans le navigateur et reprises telles quelles a la session suivante :
+//  on peut en faire dix et fermer.
+//
+//  L'ECRITURE n'est pas branchee. Elle demandera un appel authentifie au Worker
+//  (le jeton de l'API VPS ne doit jamais partir dans du JS client), donc
+//  Cloudflare Access d'abord. En attendant, les reponses s'exportent d'un bouton
+//  et sont appliquees par l'architecte — meme boucle, un relais de plus.
+//
+//  Page volontairement absente du sitemap et des liens publics : ce n'est pas
+//  un secret, mais ca n'a rien a faire dans les resultats de recherche.
+// ─────────────────────────────────────────────────────────────────────────────
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { TRACKS } from '../lib/atelier';
+---
+
+<BaseLayout title="Atelier — hamcat.live" description="File de questions interne." noindex={true}>
+  <main class="at">
+
+    <header class="at-head">
+      <div class="hd-info">
+        <span class="label">Atelier</span>
+        <h1 id="at-title">Questions</h1>
+        <p class="sub" id="at-sub">chargement…</p>
+      </div>
+      <a class="home" href="/son">← Agenda</a>
+    </header>
+
+    <!-- Choix du parcours : on repond selon le temps qu'on a, pas selon un
+         ordre impose. -->
+    <nav class="tracks" id="tracks">
+      {TRACKS.map(t => (
+        <button class="tr" data-track={t.key}>
+          <span class="tr-l">{t.label}</span>
+          <span class="tr-n" data-count={t.key}>–</span>
+          <span class="tr-b">{t.blurb}</span>
+        </button>
+      ))}
+    </nav>
+
+    <section class="card" id="card" hidden>
+      <p class="q-meta"><span id="q-date"></span> · <span id="q-title"></span></p>
+      <h2 class="q-prompt" id="q-prompt"></h2>
+      <p class="q-why" id="q-why" hidden></p>
+
+      <div class="q-input" id="q-input"></div>
+
+      <div class="q-actions">
+        <button class="btn btn--skip" id="q-skip">Passer</button>
+        <button class="btn btn--ok"   id="q-ok">Valider</button>
+      </div>
+      <p class="q-pos" id="q-pos"></p>
+    </section>
+
+    <section class="done" id="done" hidden>
+      <p class="done-t" id="done-t"></p>
+      <button class="btn btn--ok" id="copy">Copier les réponses</button>
+      <p class="done-h">Colle-les dans le chat : elles seront appliquées aux fiches.</p>
+    </section>
+
+  </main>
+</BaseLayout>
+
+<style>
+  .at {
+    min-height: calc(100dvh - var(--player-pad, 0px));
+    display: flex; flex-direction: column;
+  }
+  .at-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border);
+  }
+  .hd-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .label {
+    color: var(--facet-outils); font-family: var(--font-mono);
+    font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem); margin: 0; color: var(--text-primary);
+  }
+  .sub {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .home {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    color: var(--text-secondary); text-decoration: none;
+  }
+  .home:hover { color: var(--facet-outils); }
+
+  .tracks {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+    padding: 1rem 1.5rem 0; max-width: 760px; margin: 0 auto; width: 100%;
+  }
+  .tr {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.5rem;
+    text-align: left; padding: 0.6rem 0.7rem;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: transparent; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .tr[aria-current="true"] {
+    border-color: var(--facet-outils);
+    background: color-mix(in srgb, var(--facet-outils) 10%, transparent);
+  }
+  .tr:hover { border-color: var(--facet-outils); }
+  .tr-l {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: 0.88rem; color: var(--text-primary);
+  }
+  .tr-n {
+    font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-secondary);
+  }
+  .tr-b {
+    grid-column: 1 / -1;
+    font-size: 0.66rem; line-height: 1.3; color: var(--text-tertiary);
+  }
+
+  .card, .done {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    gap: 0.7rem; max-width: 760px; margin: 0 auto; width: 100%;
+    padding: 1.5rem;
+  }
+  .card[hidden], .done[hidden] { display: none; }
+
+  .q-meta {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .q-prompt {
+    margin: 0; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.2rem, 4vw, 1.8rem); line-height: 1.2;
+    color: var(--text-primary);
+  }
+  .q-why { margin: 0; font-size: 0.75rem; color: var(--text-secondary); }
+
+  .q-input { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; }
+  .opt {
+    padding: 0.4rem 0.8rem; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--text-secondary); cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .opt:hover, .opt[aria-pressed="true"] {
+    color: var(--facet-outils); border-color: var(--facet-outils);
+    background: color-mix(in srgb, var(--facet-outils) 10%, transparent);
+  }
+  .fld {
+    flex: 1 1 100%; padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg-surface); color: var(--text-primary);
+    font-family: var(--font-mono); font-size: 0.85rem;
+  }
+  .fld:focus { outline: none; border-color: var(--facet-outils); }
+  textarea.fld { min-height: 5.5rem; resize: vertical; line-height: 1.45; }
+
+  /* Choix de cover : les vignettes sont la reponse, on ne lit rien. */
+  .thumbs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .th {
+    width: 84px; height: 84px; padding: 0; overflow: hidden;
+    border: 2px solid var(--border); border-radius: 7px;
+    background: var(--bg-surface); cursor: pointer;
+  }
+  .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .th[aria-pressed="true"] { border-color: var(--facet-outils); }
+
+  .q-actions { display: flex; gap: 0.5rem; margin-top: 0.3rem; }
+  .btn {
+    padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+    font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.06em;
+    border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .btn--ok {
+    color: var(--facet-outils); border-color: var(--facet-outils);
+    background: color-mix(in srgb, var(--facet-outils) 12%, transparent);
+  }
+  .btn:hover { border-color: var(--facet-outils); color: var(--facet-outils); }
+  .q-pos {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.6rem; color: var(--text-tertiary);
+  }
+
+  .done-t {
+    margin: 0; font-family: var(--font-display); font-weight: 700;
+    font-size: 1.3rem; color: var(--text-primary);
+  }
+  .done-h { margin: 0; font-size: 0.72rem; color: var(--text-tertiary); }
+
+  @media (max-width: 640px) {
+    .at-head { padding: 0.85rem 1rem; }
+    .tracks { grid-template-columns: 1fr; padding: 0.8rem 1rem 0; }
+    .card, .done { padding: 1rem; }
+  }
+</style>
+
+<script>
+  type Q = {
+    id: string; track: string; gig: string; title: string; date: string;
+    field: string; prompt: string; input: 'choice' | 'text' | 'media';
+    options?: string[]; suggestion?: string; why?: string;
+    media?: { id: string; kind: string }[];
+  };
+
+  const MEDIA_BASE = 'https://media.hamcat.live/media';
+  const KEY = 'hamcat-atelier';
+
+  let all: Q[] = [];
+  let track = 'rapide';
+  let queue: Q[] = [];
+  let at = 0;
+  let value = '';
+
+  // Les reponses survivent a la fermeture de l'onglet : c'est la condition pour
+  // pouvoir en faire trois dans le tram et reprendre plus tard.
+  const load = (): Record<string, string> => {
+    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+  };
+  const save = (a: Record<string, string>) => {
+    try { localStorage.setItem(KEY, JSON.stringify(a)); } catch { /* navigation privee */ }
+  };
+  let answers = load();
+
+  const $ = (id: string) => document.getElementById(id)!;
+
+  function counts() {
+    for (const t of ['rapide', 'lineup', 'recits']) {
+      const n = all.filter(q => q.track === t && !(q.id in answers)).length;
+      const el = document.querySelector(`[data-count="${t}"]`);
+      if (el) el.textContent = String(n);
+    }
+    const done = Object.keys(answers).length;
+    $('at-sub').textContent = `${all.length - done} questions · ${done} réponse${done > 1 ? 's' : ''} en attente d’envoi`;
+  }
+
+  function pick(t: string) {
+    track = t;
+    document.querySelectorAll('.tr').forEach(b =>
+      b.setAttribute('aria-current', String((b as HTMLElement).dataset.track === t)));
+    queue = all.filter(q => q.track === t && !(q.id in answers));
+    at = 0;
+    render();
+  }
+
+  function render() {
+    const q = queue[at];
+    if (!q) {
+      $('card').hidden = true;
+      $('done').hidden = Object.keys(answers).length === 0;
+      $('done-t').textContent = Object.keys(answers).length
+        ? `${Object.keys(answers).length} réponses prêtes.`
+        : 'Rien à faire ici.';
+      counts();
+      return;
+    }
+    $('done').hidden = true;
+    $('card').hidden = false;
+    $('q-date').textContent  = q.date;
+    $('q-title').textContent = q.title;
+    $('q-prompt').textContent = q.prompt;
+    $('q-why').textContent = q.why ?? '';
+    $('q-why').hidden = !q.why;
+    $('q-pos').textContent = `${at + 1} / ${queue.length}`;
+
+    value = q.suggestion ?? '';
+    const box = $('q-input');
+    box.innerHTML = '';
+
+    if (q.input === 'media') {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumbs';
+      (q.media ?? []).forEach(m => {
+        const b = document.createElement('button');
+        b.className = 'th';
+        b.setAttribute('aria-pressed', 'false');
+        const img = document.createElement('img');
+        img.src = `${MEDIA_BASE}/${q.date}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`;
+        img.alt = ''; img.loading = 'lazy';
+        b.appendChild(img);
+        b.onclick = () => {
+          value = m.id;
+          wrap.querySelectorAll('.th').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+        };
+        wrap.appendChild(b);
+      });
+      box.appendChild(wrap);
+      return;
+    }
+
+    if (q.input === 'choice') {
+      (q.options ?? []).forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = o;
+        b.setAttribute('aria-pressed', String(o === value));
+        // Un choix ferme vaut validation : pas de second geste pour confirmer.
+        b.onclick = () => { value = o; commit(); };
+        box.appendChild(b);
+      });
+      return;
+    }
+
+    // Texte. La suggestion est pre-remplie quand elle existe : repondre devient
+    // valider. Les valeurs deja employees ailleurs sont proposees a cote.
+    const long = q.field === 'description' || q.field === 'lineup';
+    const f = document.createElement(long ? 'textarea' : 'input') as HTMLInputElement;
+    f.className = 'fld';
+    f.value = value;
+    if (q.field === 'lineup') f.placeholder = 'Un nom par ligne';
+    f.oninput = () => { value = f.value; };
+    f.onkeydown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !long) { e.preventDefault(); commit(); }
+    };
+    box.appendChild(f);
+    (q.options ?? []).slice(0, 8).forEach(o => {
+      const b = document.createElement('button');
+      b.className = 'opt'; b.textContent = o;
+      b.onclick = () => { value = o; f.value = o; };
+      box.appendChild(b);
+    });
+    setTimeout(() => f.focus(), 30);
+  }
+
+  function commit() {
+    const q = queue[at];
+    if (!q || !value.trim()) return;
+    answers[q.id] = value.trim();
+    save(answers);
+    queue.splice(at, 1);
+    if (at >= queue.length) at = Math.max(0, queue.length - 1);
+    counts();
+    render();
+  }
+
+  function skip() {
+    if (!queue.length) return;
+    at = (at + 1) % queue.length;
+    render();
+  }
+
+  $('q-ok').onclick = commit;
+  $('q-skip').onclick = skip;
+
+  $('copy').onclick = async () => {
+    // Le format porte le champ et la fiche : lisible par un humain comme par
+    // l'architecte, sans table de correspondance.
+    const lines = Object.entries(answers).map(([id, v]) => {
+      const [gig, field] = id.split(':');
+      return `${gig}\t${field}\t${v.replace(/\n/g, ' | ')}`;
+    });
+    const txt = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(txt);
+      ($('copy') as HTMLButtonElement).textContent = 'Copié';
+    } catch {
+      // Le presse-papier est refuse hors contexte sur.
+      const ta = document.createElement('textarea');
+      ta.className = 'fld'; ta.value = txt; ta.rows = 10;
+      $('done').appendChild(ta); ta.select();
+    }
+  };
+
+  document.querySelectorAll('.tr').forEach(b =>
+    b.addEventListener('click', () => pick((b as HTMLElement).dataset.track!)));
+
+  fetch('/atelier.json')
+    .then(r => r.json())
+    .then(d => { all = d.questions ?? []; counts(); pick('rapide'); })
+    .catch(() => { $('at-sub').textContent = 'file indisponible'; });
+</script>

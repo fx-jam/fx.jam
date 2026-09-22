@@ -8,7 +8,8 @@ try { commitHash = execSync('git rev-parse --short HEAD').toString().trim(); } c
 
 export default defineConfig({
   site: 'https://hamcat.live',
-  integrations: [tailwind(), sitemap()],
+  // L'atelier est une page interne : elle n'a rien a faire dans le sitemap.
+  integrations: [tailwind(), sitemap({ filter: (u) => !u.includes('/atelier') })],
   output: 'static',
   vite: {
     define: { '__COMMIT__': JSON.stringify(commitHash) },
