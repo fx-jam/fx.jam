@@ -34,7 +34,13 @@ const toStyles = (raw: string[] = []): string[] => {
 
 const waveformUrl = (url: string): string | null => {
   const m = url.match(/^(https:\/\/media\.hamcat\.live)\/sets\/(.+)\.[a-z0-9]+$/i);
-  return m ? `${m[1]}/waveforms/${m[2]}.json` : null;
+  if (m) return `${m[1]}/waveforms/${m[2]}.json`;
+  // Les sets SoundCloud passent par le Worker, qui va chercher les echantillons
+  // chez SoundCloud et les renvoie au meme format : meme rendu que les sets R2.
+  if (/^https:\/\/soundcloud\.com\/[\w-]+\/[\w-]+/.test(url)) {
+    return `/api/sc/waveform?url=${encodeURIComponent(url.split('?')[0])}`;
+  }
+  return null;
 };
 
 const isDirect = (url: string) => url.startsWith('https://media.hamcat.live/');
