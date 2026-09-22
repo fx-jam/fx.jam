@@ -63,6 +63,11 @@ const waveformUrl = (url: string): string | null => {
 
 const isDirectAudio = (url: string) => url.startsWith('https://media.hamcat.live/');
 
+/** Racine des medias exportes sur R2. Chaque media existe en trois formes :
+ *  -t.webp (vignette), -f.webp (plein cadre), et pour les videos -p.webp
+ *  (affiche) + .mp4 (lecture). */
+const MEDIA_BASE = 'https://media.hamcat.live/media';
+
 /** Accepte aussi bien une URL Spotify complete qu'un identifiant nu. */
 const playlistId = (v?: string): string | null => {
   if (!v) return null;
@@ -228,9 +233,27 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                     <span class="c-rec">
                       <span class="c-tags">{tags}</span>
                       {i === 0 && (g.data.media ?? []).length > 0 && (
-                        <button class="c-media" title="Voir les photos de cette date"
-                                aria-label={`${(g.data.media ?? []).length} médias`}
-                        >{(g.data.media ?? []).length}</button>
+                        <span class="c-mediabox">
+                          {/* Desktop : une pastille discrete. Mobile : de vraies
+                              vignettes, puisqu'il n'y a pas de projection en fond
+                              pour dire qu'il y a quelque chose a voir. */}
+                          <button class="c-media" title="Voir les médias de cette date"
+                                  aria-label={`${(g.data.media ?? []).length} médias`}
+                          >{(g.data.media ?? []).length}</button>
+                          <span class="c-thumbs">
+                            {(g.data.media ?? []).slice(0, 3).map((m, mi) => (
+                              <button class="c-th" data-mi={mi} aria-label={`Média ${mi + 1}`}>
+                                <img src={`${MEDIA_BASE}/${g.data.date.toISOString().slice(0, 10)}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`}
+                                     alt="" loading="lazy" decoding="async" />
+                                {m.kind === 'video' && <span class="c-th-v">▶</span>}
+                              </button>
+                            ))}
+                            {(g.data.media ?? []).length > 3 && (
+                              <button class="c-th c-th--more" data-mi="3"
+                              >+{(g.data.media ?? []).length - 3}</button>
+                            )}
+                          </span>
+                        </span>
                       )}
                       {r ? (
                         <>
@@ -288,6 +311,19 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         </details>
       </div>
 
+    </div>
+
+    {/* Visionneuse : occupe le cadre par-dessus l'agenda. Le markup est unique,
+        le contenu est injecte au clic. */}
+    <div id="mlb" class="mlb" hidden>
+      <div class="mlb-head">
+        <span class="mlb-title" id="mlb-title"></span>
+        <span class="mlb-count" id="mlb-count"></span>
+        <button class="mlb-x" id="mlb-close" aria-label="Fermer">✕</button>
+      </div>
+      <div class="mlb-stage" id="mlb-stage"></div>
+      <button class="mlb-nav mlb-nav--p" id="mlb-prev" aria-label="Média précédent">‹</button>
+      <button class="mlb-nav mlb-nav--n" id="mlb-next" aria-label="Média suivant">›</button>
     </div>
   </main>
 </BaseLayout>
@@ -512,6 +548,95 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .c-media:hover { color: var(--facet-son); border-color: var(--facet-son); }
 
+  /* Vignettes : cachees en desktop, ou la pastille suffit et ou la projection
+     laterale montre deja de quoi il s'agit. */
+  .c-thumbs { display: none; gap: 3px; align-items: center; }
+  .c-th {
+    position: relative;
+    width: 34px; height: 34px; padding: 0;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-surface); overflow: hidden; cursor: pointer;
+    flex: 0 0 auto;
+  }
+  .c-th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .c-th-v {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.6rem; color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.18);
+  }
+  .c-th--more {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--text-tertiary);
+  }
+
+  /* ── Visionneuse plein cadre ────────────────────────────────────────────
+     La facette s'ouvre en iframe : `fixed` epouse donc exactement le cadre
+     de 820px, sans deborder sur le reste du site. */
+  .mlb {
+    position: fixed; inset: 0; z-index: 40;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    background: color-mix(in srgb, var(--bg-app) 95%, transparent);
+    backdrop-filter: blur(6px);
+  }
+  .mlb[hidden] { display: none; }
+  .mlb-head {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .mlb-title {
+    flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 0.9rem; letter-spacing: 0.02em;
+    color: var(--text-primary);
+  }
+  .mlb-count {
+    flex: 0 0 auto;
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.08em; color: var(--text-tertiary);
+  }
+  .mlb-x {
+    flex: 0 0 auto;
+    width: 26px; height: 26px; padding: 0;
+    border: 1px solid var(--border); border-radius: 5px;
+    background: transparent; color: var(--text-tertiary);
+    font-size: 0.7rem; line-height: 1; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .mlb-x:hover { color: var(--facet-son); border-color: var(--facet-son); }
+
+  .mlb-stage {
+    min-height: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0.9rem;
+  }
+  .mlb-stage img, .mlb-stage video {
+    max-width: 100%; max-height: 100%;
+    width: auto; height: auto;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #000;
+  }
+
+  /* Deux fleches symetriques, collees aux bords du cadre. */
+  .mlb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 34px; height: 54px; padding: 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
+    color: var(--text-secondary);
+    font-size: 1.1rem; line-height: 1; cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .mlb-nav:hover { color: var(--facet-son); border-color: var(--facet-son); }
+  .mlb-nav[disabled] { opacity: 0; pointer-events: none; }
+  .mlb-nav--p { left: 0.5rem; }
+  .mlb-nav--n { right: 0.5rem; }
+
   .wave-time {
     font-family: var(--font-mono);
     font-size: 0.58rem;
@@ -658,6 +783,12 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     .c-rec > .rec-note--link { grid-column: 2; }
     .c-tags { max-width: none; flex: 1 1 100%; }
     .gig-det { grid-column: 1 / -1; }
+    /* Pas de projection laterale ici : ce sont les vignettes qui signalent
+       les medias, sur leur propre ligne pour ne pas comprimer la waveform. */
+    .c-rec > .c-mediabox { grid-column: 1 / -1; }
+    .c-media { display: none; }
+    .c-thumbs { display: flex; }
+    .mlb-nav { width: 30px; height: 46px; }
 
     .panels { overflow: visible; }
     .panel { height: auto; overflow-y: visible; padding: 1.25rem 1rem; }
@@ -957,7 +1088,124 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); }
+  // ── Visionneuse ───────────────────────────────────────────────────────────
+  const MEDIA_BASE = 'https://media.hamcat.live/media';
+  type Med = { id: string; kind: string };
+
+  let lbMedia: Med[] = [];
+  let lbDate = '';
+  let lbAt = 0;
+
+  const lbEl    = () => document.getElementById('mlb');
+  const lbStage = () => document.getElementById('mlb-stage');
+
+  const lbUrl = (m: Med, size: 'f' | 't' | 'p') =>
+    `${MEDIA_BASE}/${lbDate}/${m.id}-${size}.webp`;
+  const lbVideo = (m: Med) => `${MEDIA_BASE}/${lbDate}/${m.id}.mp4`;
+
+  function lbRender() {
+    const stage = lbStage();
+    if (!stage) return;
+    const m = lbMedia[lbAt];
+    if (!m) return;
+    // On remplace le contenu : une video laissee en place continuerait a jouer.
+    stage.innerHTML = '';
+    if (m.kind === 'video') {
+      const v = document.createElement('video');
+      v.src = lbVideo(m);
+      v.poster = lbUrl(m, 'p');
+      v.controls = true;
+      v.playsInline = true;
+      v.preload = 'metadata';
+      stage.appendChild(v);
+    } else {
+      const img = document.createElement('img');
+      img.src = lbUrl(m, 'f');
+      img.alt = '';
+      stage.appendChild(img);
+    }
+    const cnt = document.getElementById('mlb-count');
+    if (cnt) cnt.textContent = `${lbAt + 1} / ${lbMedia.length}`;
+    const solo = lbMedia.length < 2;
+    (document.getElementById('mlb-prev') as HTMLButtonElement | null)?.toggleAttribute('disabled', solo);
+    (document.getElementById('mlb-next') as HTMLButtonElement | null)?.toggleAttribute('disabled', solo);
+    // Precharger les voisins : la navigation doit etre instantanee.
+    [lbAt + 1, lbAt - 1].forEach(i => {
+      const n = lbMedia[(i + lbMedia.length) % lbMedia.length];
+      if (n && n.kind !== 'video') new Image().src = lbUrl(n, 'f');
+    });
+  }
+
+  function lbStep(dir: number) {
+    if (lbMedia.length < 2) return;
+    lbAt = (lbAt + dir + lbMedia.length) % lbMedia.length;
+    lbRender();
+  }
+
+  function lbOpen(media: Med[], date: string, title: string, at: number) {
+    const el = lbEl();
+    if (!el || !media.length) return;
+    lbMedia = media; lbDate = date; lbAt = Math.min(at, media.length - 1);
+    const t = document.getElementById('mlb-title');
+    if (t) t.textContent = title;
+    el.hidden = false;
+    lbRender();
+    (document.getElementById('mlb-close') as HTMLElement | null)?.focus();
+  }
+
+  function lbClose() {
+    const el = lbEl();
+    if (!el || el.hidden) return;
+    el.hidden = true;
+    const stage = lbStage();
+    if (stage) stage.innerHTML = '';     // coupe la video en cours
+    lbMedia = []; lbDate = '';
+  }
+
+  function attachLightbox() {
+    const el = lbEl();
+    if (!el || (el as HTMLElement).dataset.ready) return;
+    (el as HTMLElement).dataset.ready = '1';
+
+    document.getElementById('mlb-close')?.addEventListener('click', lbClose);
+    document.getElementById('mlb-prev')?.addEventListener('click', () => lbStep(-1));
+    document.getElementById('mlb-next')?.addEventListener('click', () => lbStep(1));
+    // Cliquer a cote de l'image ferme ; sur l'image, non.
+    el.addEventListener('click', e => { if (e.target === el || (e.target as HTMLElement).id === 'mlb-stage') lbClose(); });
+
+    document.addEventListener('keydown', e => {
+      if (lbEl()?.hidden) return;
+      if (e.key === 'Escape')     { e.preventDefault(); lbClose(); }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); lbStep(-1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); lbStep(1); }
+    });
+
+    // Balayage horizontal, assez franc pour ne pas gener le scroll vertical.
+    let sx = 0, sy = 0;
+    el.addEventListener('touchstart', (e: TouchEvent) => {
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStep(dx < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // Pastille et vignettes ouvrent la meme visionneuse.
+    document.querySelector('.panel-agenda')?.addEventListener('click', e => {
+      const hit = (e.target as HTMLElement).closest<HTMLElement>('.c-media, .c-th');
+      if (!hit) return;
+      const row = hit.closest<HTMLElement>('.gig-row');
+      if (!row || !row.dataset.media) return;
+      let media: Med[] = [];
+      try { media = JSON.parse(row.dataset.media); } catch (_) { return; }
+      const title = row.querySelector('.c-title')?.textContent?.trim() ?? '';
+      const at = Number(hit.dataset.mi ?? 0) || 0;
+      lbOpen(media, row.dataset.mdate ?? '', title, at);
+    });
+  }
+
+  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>

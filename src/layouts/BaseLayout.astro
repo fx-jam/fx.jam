@@ -931,10 +931,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.61 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.62 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.61');
+  console.log('🐱 fx_jam_v1.62');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2228,22 +2228,35 @@ const facetHrefs = visibleFacets().map(f => f.href);
       }
     }
 
-    function mbShow(url: string) {
+    /** Affiche la paire d'images a l'index donne : la bande de gauche montre
+     *  mbList[i], celle de droite la suivante. Deux photos differentes a
+     *  l'ecran a chaque instant, et le defilement les fait glisser de droite
+     *  a gauche. Avec un seul media les deux cotes montrent la meme image,
+     *  il n'y a rien d'autre a montrer. */
+    function mbShow(i: number) {
       mbEnsure();
-      if (!mbBands.length) return;
+      if (!mbBands.length || !mbList.length) return;
+      const urls = [mbList[i % mbList.length],
+                    mbList[(i + 1) % mbList.length]];
       // Precharger avant d'afficher : sans ca le calque s'allume sur du vide.
-      const img = new Image();
-      img.onload = () => {
+      let left = urls.length;
+      const paint = () => {
+        if (--left) return;                      // on attend les deux
         const cur = mbSlot, prev = 1 - mbSlot;
-        mbBands.forEach(layers => {
-          layers[cur].style.backgroundImage = `url("${url}")`;
+        mbBands.forEach((layers, b) => {
+          layers[cur].style.backgroundImage = `url("${urls[b]}")`;
           layers[cur].classList.add('on');
           layers[prev].classList.remove('on');
         });
         mbSlot = prev;
         if (mediaBg) mediaBg.dataset.on = 'true';
       };
-      img.src = url;
+      urls.forEach(u => {
+        const img = new Image();
+        img.onload = paint;
+        img.onerror = paint;                     // un media absent ne bloque pas
+        img.src = u;
+      });
     }
 
     function mbStop() {
@@ -2261,12 +2274,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       // Les videos ont une affiche ; on projette des images fixes uniquement.
       mbList = media.map(m => `${MEDIA_BASE}/${date}/${m.id}${m.kind === 'video' ? '-p' : '-f'}.webp`);
       mbAt = 0;
-      mbShow(mbList[0]);
+      mbShow(mbAt);
       if (mbTimer) clearInterval(mbTimer);
-      if (mbList.length > 1) {
+      if (mbList.length > 2) {
         mbTimer = window.setInterval(() => {
-          mbAt = (mbAt + 1) % mbList.length;
-          mbShow(mbList[mbAt]);
+          // Deux images sont a l'ecran : on avance de deux pour ne pas
+          // reafficher a gauche celle qu'on vient de voir a droite.
+          mbAt = (mbAt + 2) % mbList.length;
+          mbShow(mbAt);
         }, 7000);
       }
     }
@@ -2899,7 +2914,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.61';
+    _vt.textContent = 'fx_jam_v1.62';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
