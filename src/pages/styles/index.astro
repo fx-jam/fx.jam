@@ -47,8 +47,11 @@ const seoDesc  = `Les ${rows.length} styles joués par Hamcat, du psytrance au h
         <h1>Spectre</h1>
         <p class="sub">{rows.length} styles · {gigs.length} dates · {totalSets} sets</p>
       </div>
-      <a class="home" href="/son"
+      <nav class="hd-nav">
+        <a class="home" href="/lieux">Lieux</a>
+        <a class="home" href="/son"
          onclick="if(window.top!==window){event.preventDefault();window.location.href='/son';}">← Agenda</a>
+      </nav>
     </header>
 
     <div class="sx-body">
@@ -103,6 +106,7 @@ const seoDesc  = `Les ${rows.length} styles joués par Hamcat, du psytrance au h
     margin: 0; font-family: var(--font-mono);
     font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
   }
+  .hd-nav { flex-shrink: 0; display: flex; align-items: center; gap: 1rem; }
   .home {
     flex-shrink: 0;
     font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em;

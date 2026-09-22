@@ -1,0 +1,194 @@
+---
+// ─────────────────────────────────────────────────────────────────────────────
+//  /lieux — ou Hamcat a joue.
+//
+//  Zero saisie : derive du champ `venue`, obligatoire sur chaque date. Les
+//  lieux recurrents passent devant — c'est ce qu'un programmateur regarde :
+//  non pas la liste des salles, mais celles ou on revient.
+// ─────────────────────────────────────────────────────────────────────────────
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { venueSlug, isPlaceholderVenue } from '../../lib/venues';
+
+const gigs = (await getCollection('gigs')).filter(g => !g.data.draft);
+
+type V = { slug: string; name: string; city?: string; dates: number; from: number; to: number };
+const acc = new Map<string, V>();
+
+for (const g of gigs) {
+  const name = (g.data.venue ?? '').trim();
+  if (isPlaceholderVenue(name)) continue;
+  const slug = venueSlug(name);
+  const y = g.data.date.getFullYear();
+  const v = acc.get(slug) ?? { slug, name, city: g.data.city, dates: 0, from: y, to: y };
+  v.dates += 1;
+  v.from = Math.min(v.from, y);
+  v.to   = Math.max(v.to, y);
+  v.city = v.city || g.data.city;
+  acc.set(slug, v);
+}
+
+const list = [...acc.values()].sort(
+  (a, b) => b.dates - a.dates || a.name.localeCompare(b.name, 'fr')
+);
+const repeat = list.filter(v => v.dates > 1);
+const once   = list.filter(v => v.dates === 1)
+                   .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+
+const seoTitle = 'Lieux — où joue Hamcat';
+const seoDesc  = `Les ${list.length} salles, festivals et clubs où Hamcat a joué : `
+               + `${repeat.length} lieux où il revient, et la liste complète.`;
+---
+
+<BaseLayout title={seoTitle} description={seoDesc}>
+  <main class="lx">
+
+    <header class="lx-header">
+      <div class="hd-info">
+        <span class="label">Son</span>
+        <h1>Lieux</h1>
+        <p class="sub">{list.length} lieux · {gigs.length} dates</p>
+      </div>
+      <nav class="hd-nav">
+        <a class="home" href="/styles">Spectre</a>
+        <a class="home" href="/son">← Agenda</a>
+      </nav>
+    </header>
+
+    <div class="lx-body">
+
+      <section class="blk">
+        <h2 class="blk-title">Où je reviens <span class="n">{repeat.length}</span></h2>
+        <ul class="lst">
+          {repeat.map(v => (
+            <li class="row">
+              <a class="lnk" href={`/lieux/${v.slug}`}>
+                <span class="v-name">{v.name}</span>
+                <span class="v-bar" aria-hidden="true">
+                  <span class="v-fill" style={`width: ${Math.round((v.dates / repeat[0].dates) * 100)}%`}></span>
+                </span>
+                <span class="v-n">{v.dates}</span>
+                <span class="v-years">{v.from === v.to ? v.from : `${v.from}–${v.to}`}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {once.length > 0 && (
+        <section class="blk">
+          <h2 class="blk-title">Une fois <span class="n">{once.length}</span></h2>
+          <ul class="tiles">
+            {once.map(v => (
+              <li><a class="tile" href={`/lieux/${v.slug}`}>{v.name}<span class="t-y">{v.from}</span></a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .lx {
+    height: calc(100dvh - var(--player-pad, 0px));
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .lx-header {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-app);
+  }
+  .hd-info { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .hd-nav { flex-shrink: 0; display: flex; align-items: center; gap: 1rem; }
+  .label {
+    color: var(--facet-son); font-family: var(--font-mono);
+    font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    letter-spacing: -0.01em; margin: 0; color: var(--text-primary);
+  }
+  .sub {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.62rem; letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .home {
+    font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.08em;
+    color: var(--text-secondary); text-decoration: none;
+  }
+  .home:hover { color: var(--facet-son); }
+
+  .lx-body { flex: 1; min-height: 0; overflow-y: auto; padding: 1.25rem 1.5rem 2rem; }
+  .blk { max-width: 760px; margin: 0 auto 1.75rem; }
+  .blk-title {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--text-tertiary); margin: 0 0 0.4rem;
+  }
+  .blk-title .n {
+    margin-left: 0.4rem; padding: 0.05rem 0.35rem;
+    border: 1px solid var(--border); border-radius: 9px; color: var(--text-secondary);
+  }
+
+  .lst { list-style: none; margin: 0; padding: 0; }
+  .row { border-top: 1px solid var(--border); }
+  .row:last-child { border-bottom: 1px solid var(--border); }
+  .lnk {
+    display: grid;
+    grid-template-columns: 13em minmax(0, 1fr) 2.4em 5.4em;
+    align-items: center; column-gap: 0.8rem;
+    padding: 0.45rem 0.2rem;
+    text-decoration: none; color: var(--text-primary);
+  }
+  .lnk:hover { background: color-mix(in srgb, var(--facet-son) 8%, transparent); }
+  .lnk:hover .v-name { color: var(--facet-son); }
+  .v-name {
+    font-family: var(--font-display); font-weight: 600; font-size: 0.92rem;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+  .v-bar {
+    height: 7px; border-radius: 4px; overflow: hidden;
+    background: color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .v-fill { display: block; height: 100%; background: var(--facet-son); }
+  .v-n {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text-secondary); text-align: right;
+  }
+  .v-years {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--text-tertiary); text-align: right; white-space: nowrap;
+  }
+
+  /* Les lieux d'un soir : une grille de pastilles, ni barre ni classement —
+     les comparer n'aurait aucun sens, ils valent tous une date. */
+  .tiles {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.35rem;
+  }
+  .tile {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: var(--font-display); font-weight: 600; font-size: 0.8rem;
+    color: var(--text-secondary); text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tile:hover { color: var(--facet-son); border-color: var(--facet-son); }
+  .t-y { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-tertiary); }
+
+  @media (max-width: 640px) {
+    .lx { height: auto; min-height: calc(100dvh - var(--player-pad, 0px)); overflow-y: auto; }
+    .lx-header { padding: 0.85rem 1rem; }
+    .lx-body { padding: 1rem; }
+    .lnk { grid-template-columns: minmax(0, 1fr) 2.2em; row-gap: 0.25rem; }
+    .v-bar   { grid-column: 1 / -1; }
+    .v-years { grid-column: 1 / -1; text-align: left; }
+  }
+</style>
