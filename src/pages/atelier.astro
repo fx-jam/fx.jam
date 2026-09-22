@@ -50,10 +50,13 @@ import { TRACKS } from '../lib/atelier';
       <div class="q-input" id="q-input"></div>
 
       <div class="q-actions">
+        <button class="btn" id="q-undo" hidden>Annuler</button>
+        <button class="btn" id="q-never">Je ne sais plus</button>
         <button class="btn btn--skip" id="q-skip">Passer</button>
         <button class="btn btn--ok"   id="q-ok">Valider</button>
       </div>
       <p class="q-pos" id="q-pos"></p>
+      <p class="milestone" id="milestone" hidden></p>
     </section>
 
     <section class="done" id="done" hidden>
@@ -206,6 +209,17 @@ import { TRACKS } from '../lib/atelier';
     margin: 0; font-family: var(--font-mono);
     font-size: 0.6rem; color: var(--text-tertiary);
   }
+  /* Jalon : marque l'avancee sans couper l'elan — pas de fin imposee. */
+  .milestone {
+    margin: 0; font-family: var(--font-mono);
+    font-size: 0.68rem; letter-spacing: 0.06em;
+    color: var(--facet-outils);
+  }
+  .milestone[hidden] { display: none; }
+  .q-same {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--facet-outils); margin-left: 0.4rem;
+  }
 
   .done-t {
     margin: 0; font-family: var(--font-display); font-weight: 700;
@@ -229,7 +243,8 @@ import { TRACKS } from '../lib/atelier';
   };
 
   const MEDIA_BASE = 'https://media.hamcat.live/media';
-  const KEY = 'hamcat-atelier';
+  const KEY  = 'hamcat-atelier';
+  const KEYD = 'hamcat-atelier-ecartees';
 
   let all: Q[] = [];
   let track = 'rapide';
@@ -247,11 +262,26 @@ import { TRACKS } from '../lib/atelier';
   };
   let answers = load();
 
+  // Questions sans reponse possible (« je ne sais plus ») : ecartees pour de
+  // bon, sinon elles remontent a chaque session et polluent la file.
+  const loadD = (): string[] => {
+    try { return JSON.parse(localStorage.getItem(KEYD) || '[]'); } catch { return []; }
+  };
+  let dismissed = new Set<string>(loadD());
+  const saveD = () => {
+    try { localStorage.setItem(KEYD, JSON.stringify([...dismissed])); } catch {}
+  };
+
+  // Pile d'annulation : un choix ferme valide au premier tap, il faut pouvoir
+  // revenir sur un tap malheureux.
+  let undoStack: Q[] = [];
+  let sessionDone = 0;
+
   const $ = (id: string) => document.getElementById(id)!;
 
   function counts() {
     for (const t of ['rapide', 'lineup', 'recits']) {
-      const n = all.filter(q => q.track === t && !(q.id in answers)).length;
+      const n = all.filter(q => q.track === t && !(q.id in answers) && !dismissed.has(q.id)).length;
       const el = document.querySelector(`[data-count="${t}"]`);
       if (el) el.textContent = String(n);
     }
@@ -263,7 +293,14 @@ import { TRACKS } from '../lib/atelier';
     track = t;
     document.querySelectorAll('.tr').forEach(b =>
       b.setAttribute('aria-current', String((b as HTMLElement).dataset.track === t)));
-    queue = all.filter(q => q.track === t && !(q.id in answers));
+    // Regroupees par date : se rappeler une soiree coute plus cher que
+    // repondre. Une fois qu'on y est, on traite ses trous d'affilee. L'ordre
+    // entre dates suit la priorite de leur question la plus urgente.
+    const left = all.filter(q => q.track === t && !(q.id in answers) && !dismissed.has(q.id));
+    const rank = new Map<string, number>();
+    left.forEach((q, i) => { if (!rank.has(q.gig)) rank.set(q.gig, i); });
+    queue = left.sort((a, b) =>
+      (rank.get(a.gig)! - rank.get(b.gig)!) || 0);
     at = 0;
     render();
   }
@@ -286,7 +323,10 @@ import { TRACKS } from '../lib/atelier';
     $('q-prompt').textContent = q.prompt;
     $('q-why').textContent = q.why ?? '';
     $('q-why').hidden = !q.why;
-    $('q-pos').textContent = `${at + 1} / ${queue.length}`;
+    const sameDate = queue.filter(x => x.gig === q.gig).length;
+    $('q-pos').innerHTML = `${at + 1} / ${queue.length}`
+      + (sameDate > 1 ? `<span class="q-same">${sameDate - 1} autre${sameDate > 2 ? 's' : ''} sur cette date</span>` : '');
+    ($('q-undo') as HTMLElement).hidden = undoStack.length === 0;
 
     value = q.suggestion ?? '';
     const box = $('q-input');
@@ -351,8 +391,17 @@ import { TRACKS } from '../lib/atelier';
     if (!q || !value.trim()) return;
     answers[q.id] = value.trim();
     save(answers);
+    undoStack.push(q);
     queue.splice(at, 1);
     if (at >= queue.length) at = Math.max(0, queue.length - 1);
+    sessionDone += 1;
+    const ms = $('milestone');
+    if (sessionDone % 10 === 0) {
+      ms.textContent = `${sessionDone} de plus.`;
+      ms.hidden = false;
+    } else if (sessionDone % 10 === 1) {
+      ms.hidden = true;
+    }
     counts();
     render();
   }
@@ -365,6 +414,26 @@ import { TRACKS } from '../lib/atelier';
 
   $('q-ok').onclick = commit;
   $('q-skip').onclick = skip;
+
+  $('q-never').onclick = () => {
+    const q = queue[at];
+    if (!q) return;
+    dismissed.add(q.id); saveD();
+    queue.splice(at, 1);
+    if (at >= queue.length) at = Math.max(0, queue.length - 1);
+    counts(); render();
+  };
+
+  $('q-undo').onclick = () => {
+    const q = undoStack.pop();
+    if (!q) return;
+    delete answers[q.id];
+    save(answers);
+    queue.splice(at, 0, q);
+    sessionDone = Math.max(0, sessionDone - 1);
+    $('milestone').hidden = true;
+    counts(); render();
+  };
 
   // Envoi direct quand Access est branche ; repli copier-coller sinon, pour
   // que des reponses deja donnees ne soient jamais perdues.
