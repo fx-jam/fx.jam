@@ -176,8 +176,8 @@ export default {
         );
         await cache.put(ck, out.clone());
         return out;
-      } catch (_) {
-        return errJson('sc_waveform_failed', 502);
+      } catch (e) {
+        return errJson(`sc_waveform_failed: ${e && e.message}`, 502);
       }
     }
 
@@ -201,7 +201,7 @@ async function scAppToken(env) {
       client_secret: env.SC_CLIENT_SECRET,
     }),
   });
-  if (!res.ok) throw new Error('sc_app_token');
+  if (!res.ok) throw new Error(`sc_app_token ${res.status} ${(await res.text().catch(() => '')).slice(0, 160)}`);
   const j = await res.json();
   appToken = {
     value: j.access_token,
