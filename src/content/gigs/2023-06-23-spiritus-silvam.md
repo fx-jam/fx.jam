@@ -1,20 +1,22 @@
 ---
-title: SPIRITUS SILVAM
-date: 2023-06-23
-format: dj
-role: Landing
-venue: Les Conciliabules
-city: '38'
-country: France
+title: "SPIRITUS SILVAM"
+date: "2023-06-23"
+format: "dj"
+role: "Landing"
+venue: "Les Conciliabules"
+city: "38"
+country: "France"
 genre: ["psybient"]
-duration: ''
+duration: ""
 lineup: []
-image: ''
-recordState: none
-recording: ''
+image: ""
+media: [{"id": "e50e8776-e7f9-4b6e-abff-1a42ba89ede5", "kind": "image"}]
+cover: "e50e8776-e7f9-4b6e-abff-1a42ba89ede5"
+recordState: "none"
+recording: ""
 recordings: []
-eventUrl: ''
+eventUrl: ""
 featured: false
 draft: false
-notes: 23/06/23 - SPIRITUS SILVAM (PSYBIENT)
+notes: "23/06/23 - SPIRITUS SILVAM (PSYBIENT)"
 ---

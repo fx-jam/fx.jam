@@ -1,10 +1,12 @@
 ---
-title: 'ADN OPEN AIR'
-date: '2025-10-04'
-format: 'dj'
-venue: 'ADN Open Air'
-country: 'France'
+title: "ADN OPEN AIR"
+date: "2025-10-04"
+format: "dj"
+venue: "ADN Open Air"
+country: "France"
 genre: ["hi-tech"]
-recording: 'https://media.hamcat.live/sets/2025-10-open-air-adn.mp3'
+media: [{"id": "31a5d929-f5f7-4f8d-af71-9e33f2f15554", "kind": "video"}, {"id": "dd5613d2-6bbe-4354-a4ac-11036f8ab0ab", "kind": "video"}, {"id": "01b52215-5c96-4300-8861-56004b0c43c4", "kind": "video"}, {"id": "1f6c7433-56c4-41ce-90e4-e06e01d393a1", "kind": "video"}, {"id": "6df1e3d7-4cda-4ed0-92c2-57463d672b77", "kind": "video"}]
+cover: ""
+recording: "https://media.hamcat.live/sets/2025-10-open-air-adn.mp3"
 draft: false
 ---
