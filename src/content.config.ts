@@ -35,11 +35,19 @@ const gigs = defineCollection({
     city: z.string().optional(),
     country: z.string().default('France'),
     // Détails
+    description: z.string().optional(),          // Texte libre affiché sur la date
     genre: z.array(z.string()).default([]),      // Ex: ["psytrance", "hi-tech"]
     duration: z.string().optional(),             // Ex: "2h", "1h30"
     lineup: z.array(z.string()).default([]),     // Autres artistes au line-up
     // Médias & liens
     image: z.string().optional(),
+    // Medias rattaches a la date, servis depuis R2. `cover` est l'image de la
+    // date : pochette dans le player et image principale en fond.
+    media: z.array(z.object({
+      id:   z.string(),
+      kind: z.enum(['image', 'video']).default('image'),
+    })).default([]),
+    cover: z.string().optional(),
     // Etat de l'enregistrement quand il n'y a pas (encore) d'URL : evite une case
     // vide dans l'agenda et distingue "jamais enregistre" de "enregistre, a venir".
     recordState: z.enum(['none', 'soon', 'tracklist']).default('none'),
