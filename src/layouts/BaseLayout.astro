@@ -261,14 +261,51 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     /* ── Projection des medias ──────────────────────────────────────
-       Deux calques qui alternent : l'un s'efface pendant que l'autre apparait,
-       ce qui donne un fondu sans a-coup meme si une image met du temps a
-       charger. La derive tres lente evite l'effet diaporama. */
+       Deux bandes verticales de part et d'autre du cadre de la facette, qui
+       fait 820 px de large et reste centre. Une image plein ecran derriere du
+       texte oblige a la voiler pour rester lisible : on n'a alors ni une belle
+       photo ni un texte net. Les bandes occupent l'espace deja vide, ne
+       recouvrent aucun texte, et respectent la symetrie du site — deux moitiees
+       identiques autour du cadre.
+       Rien n'est peint tant qu'aucune date n'est survolee : sans le garde
+       data-on, le degrade assombrissait tout le site des l'accueil. */
+    :root { --frame-w: 820px; --band-w: calc((100vw - var(--frame-w)) / 2); }
+
     #media-bg {
       position: fixed; inset: 0; z-index: 0;
-      pointer-events: none; overflow: hidden;
+      pointer-events: none;
+      opacity: 0; transition: opacity 0.7s ease;
     }
-    #media-bg .mb {
+    #media-bg[data-on="true"] { opacity: 1; }
+    /* Sous cette largeur les bandes sont trop etroites pour montrer quoi que
+       ce soit : on s'abstient plutot que d'entasser. */
+    @media (max-width: 1219px) { #media-bg { display: none; } }
+
+    .mb-band {
+      position: absolute; top: 0; bottom: 0;
+      width: var(--band-w);
+      overflow: hidden;
+    }
+    .mb-band--l { left: 0; }
+    .mb-band--r { right: 0; }
+    /* Fondu vers le cadre : la bande s'eteint avant de l'atteindre, et
+       s'estompe aussi en haut et en bas pour ne pas faire un bloc. */
+    .mb-band--l {
+      -webkit-mask-image: linear-gradient(to right, #000 0%, #000 45%, transparent 92%),
+                          linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+              mask-image: linear-gradient(to right, #000 0%, #000 45%, transparent 92%),
+                          linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+      -webkit-mask-composite: source-in; mask-composite: intersect;
+    }
+    .mb-band--r {
+      -webkit-mask-image: linear-gradient(to left, #000 0%, #000 45%, transparent 92%),
+                          linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+              mask-image: linear-gradient(to left, #000 0%, #000 45%, transparent 92%),
+                          linear-gradient(to bottom, transparent 0%, #000 18%, #000 82%, transparent 100%);
+      -webkit-mask-composite: source-in; mask-composite: intersect;
+    }
+
+    .mb {
       position: absolute; inset: -6%;
       background-size: cover; background-position: center;
       opacity: 0;
@@ -276,20 +313,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
       will-change: opacity, transform;
       animation: mb-drift 38s ease-in-out infinite alternate;
     }
-    #media-bg .mb.on { opacity: 0.22; }
-    /* Un voile assombrit la projection : le cadre garde son contraste. */
-    #media-bg::after {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse at center,
-                  color-mix(in srgb, var(--bg-app) 55%, transparent) 0%,
-                  var(--bg-app) 78%);
-    }
+    /* Assez presente pour se lire, assez discrete pour rester un fond. */
+    .mb.on { opacity: 0.55; }
     @keyframes mb-drift {
-      from { transform: scale(1.04) translate3d(-1.2%, -0.8%, 0); }
-      to   { transform: scale(1.12) translate3d(1.2%, 0.8%, 0); }
+      from { transform: scale(1.04) translate3d(0, -1.5%, 0); }
+      to   { transform: scale(1.12) translate3d(0, 1.5%, 0); }
     }
     @media (prefers-reduced-motion: reduce) {
-      #media-bg .mb { animation: none; transition: opacity 0.4s ease; }
+      .mb { animation: none; transition: opacity 0.4s ease; }
     }
 
     /* Hauteur occupee par le player, exposee aux pages pour qu'elles se reservent
@@ -900,10 +931,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.60 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.61 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.60');
+  console.log('🐱 fx_jam_v1.61');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2165,7 +2196,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
     //    fait defiler lentement derriere le cadre. Deux calques alternent pour
     //    que le fondu reste propre.
     const mediaBg = document.getElementById('media-bg') as HTMLElement | null;
-    let mbLayers: HTMLElement[] = [];
+    // Deux bandes symetriques (gauche/droite du cadre), chacune avec deux
+    // calques qui se relaient pour que le fondu reste propre. mbSlot dit
+    // lequel des deux recoit la prochaine image.
+    let mbBands: HTMLElement[][] = [];
+    let mbSlot = 0;
     let mbTimer: number | null = null;
     let mbList: string[] = [];
     let mbAt = 0;
@@ -2174,33 +2209,47 @@ const facetHrefs = visibleFacets().map(f => f.href);
     const MEDIA_BASE = 'https://media.hamcat.live/media';
 
     function mbEnsure() {
-      if (!mediaBg || mbLayers.length) return;
-      for (let i = 0; i < 2; i++) {
-        const d = document.createElement('div');
-        d.className = 'mb';
-        mediaBg.appendChild(d);
-        mbLayers.push(d);
+      if (!mediaBg || mbBands.length) return;
+      for (const side of ['l', 'r']) {
+        const band = document.createElement('div');
+        band.className = `mb-band mb-band--${side}`;
+        const layers: HTMLElement[] = [];
+        for (let i = 0; i < 2; i++) {
+          const d = document.createElement('div');
+          d.className = 'mb';
+          // Decalage de la derive : les deux cotes ne bougent pas au meme
+          // rythme, sinon l'ensemble respire comme un seul bloc.
+          d.style.animationDelay = side === 'r' ? '-19s' : '0s';
+          band.appendChild(d);
+          layers.push(d);
+        }
+        mediaBg.appendChild(band);
+        mbBands.push(layers);
       }
     }
 
     function mbShow(url: string) {
       mbEnsure();
-      if (!mbLayers.length) return;
+      if (!mbBands.length) return;
       // Precharger avant d'afficher : sans ca le calque s'allume sur du vide.
       const img = new Image();
       img.onload = () => {
-        const next = mbLayers[0];
-        next.style.backgroundImage = `url("${url}")`;
-        next.classList.add('on');
-        mbLayers[1].classList.remove('on');
-        mbLayers.reverse();
+        const cur = mbSlot, prev = 1 - mbSlot;
+        mbBands.forEach(layers => {
+          layers[cur].style.backgroundImage = `url("${url}")`;
+          layers[cur].classList.add('on');
+          layers[prev].classList.remove('on');
+        });
+        mbSlot = prev;
+        if (mediaBg) mediaBg.dataset.on = 'true';
       };
       img.src = url;
     }
 
     function mbStop() {
       if (mbTimer) { clearInterval(mbTimer); mbTimer = null; }
-      mbLayers.forEach(l => l.classList.remove('on'));
+      if (mediaBg) mediaBg.dataset.on = 'false';
+      mbBands.forEach(layers => layers.forEach(l => l.classList.remove('on')));
       mbList = []; mbKey = '';
     }
 
@@ -2850,7 +2899,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.60';
+    _vt.textContent = 'fx_jam_v1.61';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
