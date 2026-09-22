@@ -1,3 +1,123 @@
+## v1.65 → v1.67 — Le graphe s'ouvre : styles, lieux, atelier — 2026-09-22 (soir)
+
+### Décision de fond : un graphe d'entités, quatre lectures
+
+Fx énonce ce qu'il veut du site : **vitrine** pour qui ne le connaît pas et
+pourrait travailler avec lui, **archive** pour qui le connaît, **outil de
+découverte musicale**, et **hub de jeu/mix** pour lui-même.
+
+Constat qui structure tout : ce ne sont pas quatre sections à construire, mais
+quatre lectures des mêmes données. L'agenda le prouve déjà. Or **une seule chose
+était une entité de premier rang : la date**. Le lieu, le style, l'artiste
+n'existaient que comme chaînes de caractères — impossible de les ouvrir, de
+partir d'eux, de circuler entre eux.
+
+Séquencement par coût réel de saisie :
+
+| Entité | Coût | État |
+|---|---|---|
+| Styles | zéro, `genre` est rempli partout | **livré (v1.65)** |
+| Lieux | zéro en saisie, un référentiel à établir | **livré (v1.66)** |
+| Artistes | dépend de `lineup`, vide sur 81/81 | plus tard |
+| Morceaux | énorme en manuel | seulement si semi-automatisable |
+
+> **Conséquence pour la saisie de Fx : le line-up prime sur la description.**
+> Une description est un texte lu une fois ; un line-up est un lien, il crée le
+> graphe et fait exister les artistes. À temps égal, il rapporte beaucoup plus.
+
+Détail complet : `claude/direction-graphe-entites.md`.
+
+### Données — la règle de partage
+
+Posée à l'usage et à conserver : **ce qui est mécanique se résout sans question,
+ce qui demande du jugement devient une question.** Sans ça, une file d'assistance
+se remplit de bruit et on décroche au bout de trois.
+
+- **Styles** : 9 valeurs hors vocabulaire sur 10 dates. Six rabattues sans
+  demander (`hitech`→`hi-tech`, `psy`→`psytrance`, `live psybient`→`psybient`,
+  `groovy psy` et `funky psyprog`→`psyprog`, `hi-tech mashup`→`hi-tech` +
+  `mashup-multigenre`). Deux nouveaux jetons décidés par Fx : **`acidcore`**
+  (hue 32) et **`j-core`** (hue 86), glissés à leur place dans la progression.
+  Vocabulaire à 24 jetons. `magic music` laissé tel quel sur décision de Fx.
+- **Lieux** : 63 chaînes → 56. Neuf groupes de variantes purement typographiques
+  fusionnés sans demander (`DRAK'ART`/`DRAK''ART`/`Drak'Art` = 7 dates ;
+  `HADRA FESTIVAL`/`Hadra Trance Festival` = 6). La double apostrophe était une
+  séquelle d'échappement YAML. Forme canonique retenue : accentuée, non
+  capitalisée — si le design veut des majuscules, c'est le CSS qui décide.
+  Deux cas posés en question : `venue: "38"` (free parties en Isère, on laisse)
+  et `Canberra` (bar grenoblois, la ville était déjà juste).
+
+### v1.65 — Pages de style
+
+`/styles` classe les 24 styles **par fréquence** avec barre de proportion, compte
+et période — l'ordre le plus honnête pour qui arrive sans rien connaître.
+`/styles/<slug>` : sets écoutables d'abord, puis les dates, puis les voisins.
+Les voisins sont calculés **par co-occurrence réelle**, pas écrits à la main :
+ce sont les styles que Fx associe, pas ceux qu'une taxonomie prédirait.
+
+La couleur du style ne teinte que le liseré et les puces — une page entière à
+son ambiance ferait perdre l'unité de l'ensemble.
+
+Au passage, `styleSlug` existait **en double** dans `son.astro` et
+`library.json.ts` et allait l'être une troisième fois : extrait dans
+`src/lib/styles.ts`, avec `recordingsOf` / `waveformUrl` / `isDirectAudio` dans
+`src/lib/gigs.ts`. **Les couleurs restent exclusivement dans BaseLayout.**
+
+### v1.66 — Pages de lieu
+
+`/lieux` sépare les 12 lieux récurrents (Drak'Art 7 dates, Hadra 6) des 38 d'un
+soir, ces derniers en grille sans barre ni classement — les comparer n'aurait
+aucun sens. `/lieux/<slug>` donne dates, ville, période, médias, **ce qu'on y
+joue** en puces de style, les sets, toutes les dates. JSON-LD `Place`.
+
+`isPlaceholderVenue` écarte les valeurs purement numériques : pas de fiche « 38 »
+vide, qui desservirait la vitrine. Liens croisés styles ↔ lieux ↔ agenda.
+
+### v1.63 — Descriptions
+
+`description` était au schéma et écrit par l'outil local mais **rendu nulle
+part** : Fx allait saisir dans le vide. `.gig-desc`, repliée sur deux lignes,
+un clic déplie.
+
+### v1.67 — L'atelier
+
+`/atelier` : le système détecte ses propres trous et les pose en questions.
+**370 questions générées**, dont **153 répondables d'un seul tap** et 10 arrivant
+avec la réponse proposée (ville déduite quand le lieu n'en a jamais eu qu'une —
+on ne propose rien s'il y en a plusieurs, deviner salirait la donnée).
+
+Trois parcours pour choisir selon le temps disponible : **Rapide** (212),
+**Line-up** (79, celui qui construit le graphe), **Récits** (79). Réponses
+gardées en localStorage. `noindex` et hors sitemap.
+
+### Cloudflare Access
+
+Authentification vérifiée de bout en bout. Équipe `felix-jambon20`, One-time PIN,
+**deux applications aux tags AUD distincts** (page et API). `verifyAccess()` dans
+le Worker contrôle signature RS256, `aud`, `iss`, `exp`, `nbf`, et **échoue
+fermée**. Route de contrôle `GET /api/atelier/whoami`.
+
+> **Deux pannes silencieuses traversées**, documentées dans
+> `claude/atelier-cloudflare-access.md` : aucun PIN reçu parce qu'aucune
+> politique n'était attachée (Cloudflare n'envoie le code que si l'adresse est
+> autorisée, et la page affiche le même message dans les deux cas) ; puis
+> `access_bad_aud` parce que les deux applications ont deux tags. Diagnostic
+> sans tableau de bord : le paramètre `kid` de l'URL de redirection Access porte
+> le tag de l'application qui protège le chemin.
+
+### Reste en cours
+
+- **Chemin d'écriture de l'atelier** — décidé : le Worker ne patche pas le
+  frontmatter, il transmet à l'agent VPS qui patche et lance
+  `/deploy {"check": true}`. Patcher du YAML est ce qui a cassé 27 fiches, et le
+  seul endroit où l'on vérifie un build en conditions réelles est le VPS.
+- Saisie de Fx, étalée sur plusieurs sessions (line-up en priorité).
+- 41 dates sans média, 14 sans cover désignée, 11 groupes non rattachés.
+- Clé API Immich à faire tourner.
+- Désequilibre des facettes : /son très en avance sur les cinq autres.
+
+---
+
 ## v1.60 → v1.64 — Les medias arrivent sur les dates — 2026-09-22
 
 ### Contexte
