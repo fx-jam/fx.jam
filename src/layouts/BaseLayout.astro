@@ -260,6 +260,38 @@ const facetHrefs = visibleFacets().map(f => f.href);
       50%       { opacity: 0.5; transform: scale(0.85); }
     }
 
+    /* ── Projection des medias ──────────────────────────────────────
+       Deux calques qui alternent : l'un s'efface pendant que l'autre apparait,
+       ce qui donne un fondu sans a-coup meme si une image met du temps a
+       charger. La derive tres lente evite l'effet diaporama. */
+    #media-bg {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none; overflow: hidden;
+    }
+    #media-bg .mb {
+      position: absolute; inset: -6%;
+      background-size: cover; background-position: center;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+      will-change: opacity, transform;
+      animation: mb-drift 38s ease-in-out infinite alternate;
+    }
+    #media-bg .mb.on { opacity: 0.22; }
+    /* Un voile assombrit la projection : le cadre garde son contraste. */
+    #media-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center,
+                  color-mix(in srgb, var(--bg-app) 55%, transparent) 0%,
+                  var(--bg-app) 78%);
+    }
+    @keyframes mb-drift {
+      from { transform: scale(1.04) translate3d(-1.2%, -0.8%, 0); }
+      to   { transform: scale(1.12) translate3d(1.2%, 0.8%, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #media-bg .mb { animation: none; transition: opacity 0.4s ease; }
+    }
+
     /* Hauteur occupee par le player, exposee aux pages pour qu'elles se reservent
        la place : sans ca, la barre reduite passe par-dessus le disque d'accueil. */
     :root { --player-pad: 0px; }
@@ -773,6 +805,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <!-- Player UI — 2 états -->
   <div id="hamcat-player" data-active="false" data-expanded="false" data-library="false" transition:persist>
 
+    <!-- Projection : les photos de la date survolee ou en cours de lecture se
+         fondent au fond de la page, derriere le cadre de la facette. Le fond
+         etait jusqu'ici purement decoratif ; il porte maintenant la memoire de
+         la soiree, sans jamais disputer la lisibilite au premier plan. -->
+    <div id="media-bg" aria-hidden="true"></div>
+
     <!-- Bibliotheque — accessible depuis n'importe quelle page parce qu'elle vit
          dans le player, seul element qui survit aux navigations. Son contenu
          vient de /library.json, telecharge a la premiere ouverture. -->
@@ -862,10 +900,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.59 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.60 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.59');
+  console.log('🐱 fx_jam_v1.60');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -932,7 +970,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     if (_embedded) {
       console.log('[HMC] embedded mode → player délégué au parent');
       // Les commandes montent vers le player du parent...
-      ['hamcat:play', 'hamcat:toggle'].forEach(evt => {
+      ['hamcat:play', 'hamcat:toggle', 'hamcat:media'].forEach(evt => {
         document.addEventListener(evt, (e: any) => {
           try { window.parent.document.dispatchEvent(new CustomEvent(evt, { detail: e.detail })); } catch (_) {}
         });
@@ -2122,6 +2160,74 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else if (type === 'spotify')    playSpotify(playlistId, lbl);
     }, { signal });
 
+    // ── Projection des medias en fond ──────────────────────────────────────
+    //    Une date annonce ses photos par l'evenement `hamcat:media` ; on les
+    //    fait defiler lentement derriere le cadre. Deux calques alternent pour
+    //    que le fondu reste propre.
+    const mediaBg = document.getElementById('media-bg') as HTMLElement | null;
+    let mbLayers: HTMLElement[] = [];
+    let mbTimer: number | null = null;
+    let mbList: string[] = [];
+    let mbAt = 0;
+    let mbKey = '';
+
+    const MEDIA_BASE = 'https://media.hamcat.live/media';
+
+    function mbEnsure() {
+      if (!mediaBg || mbLayers.length) return;
+      for (let i = 0; i < 2; i++) {
+        const d = document.createElement('div');
+        d.className = 'mb';
+        mediaBg.appendChild(d);
+        mbLayers.push(d);
+      }
+    }
+
+    function mbShow(url: string) {
+      mbEnsure();
+      if (!mbLayers.length) return;
+      // Precharger avant d'afficher : sans ca le calque s'allume sur du vide.
+      const img = new Image();
+      img.onload = () => {
+        const next = mbLayers[0];
+        next.style.backgroundImage = `url("${url}")`;
+        next.classList.add('on');
+        mbLayers[1].classList.remove('on');
+        mbLayers.reverse();
+      };
+      img.src = url;
+    }
+
+    function mbStop() {
+      if (mbTimer) { clearInterval(mbTimer); mbTimer = null; }
+      mbLayers.forEach(l => l.classList.remove('on'));
+      mbList = []; mbKey = '';
+    }
+
+    /** Lance la projection des photos d'une date. */
+    function mbPlay(key: string, media: { id: string; kind: string }[], date: string) {
+      if (key === mbKey) return;                 // deja a l'ecran
+      if (!media || !media.length) { mbStop(); return; }
+      mbKey = key;
+      // Les videos ont une affiche ; on projette des images fixes uniquement.
+      mbList = media.map(m => `${MEDIA_BASE}/${date}/${m.id}${m.kind === 'video' ? '-p' : '-f'}.webp`);
+      mbAt = 0;
+      mbShow(mbList[0]);
+      if (mbTimer) clearInterval(mbTimer);
+      if (mbList.length > 1) {
+        mbTimer = window.setInterval(() => {
+          mbAt = (mbAt + 1) % mbList.length;
+          mbShow(mbList[mbAt]);
+        }, 7000);
+      }
+    }
+
+    document.addEventListener('hamcat:media', (e: any) => {
+      const d = e.detail || {};
+      if (!d.media || !d.media.length) mbStop();
+      else mbPlay(d.key || d.date, d.media, d.date);
+    }, { signal });
+
     /** Diffuse la position de lecture aux waveforms des pages, quelle que soit
      *  la source. Les facettes ouvertes en modale sont des iframes : elles ont
      *  leur propre document, d'ou le relais par postMessage. */
@@ -2744,7 +2850,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.59';
+    _vt.textContent = 'fx_jam_v1.60';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

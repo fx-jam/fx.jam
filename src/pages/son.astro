@@ -216,7 +216,10 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                   const wave = r ? waveformUrl(r.url) : null;
                   const lbl  = r?.label ? `${g.data.title} — ${r.label}` : g.data.title;
                   return (
-                  <li class="gig-row">
+                  <li class="gig-row"
+                      data-media={(g.data.media ?? []).length
+                        ? JSON.stringify(g.data.media) : undefined}
+                      data-mdate={g.data.date.toISOString().slice(0, 10)}>
                     <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
                     <span class="c-title">
                       {g.data.title}
@@ -224,6 +227,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                     </span>
                     <span class="c-rec">
                       <span class="c-tags">{tags}</span>
+                      {i === 0 && (g.data.media ?? []).length > 0 && (
+                        <button class="c-media" title="Voir les photos de cette date"
+                                aria-label={`${(g.data.media ?? []).length} médias`}
+                        >{(g.data.media ?? []).length}</button>
+                      )}
                       {r ? (
                         <>
                           <button
@@ -442,20 +450,21 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .c-rec {
     display: grid;
-    grid-template-columns: 8.2em 28px minmax(0, 1fr) 7.4em 22px;
+    grid-template-columns: 8.2em 22px 28px minmax(0, 1fr) 7.4em 22px;
     align-items: center;
     column-gap: 0.45rem;
     min-width: 0;
   }
   .c-rec > .c-tags   { grid-column: 1; }
-  .c-rec > .rec-play { grid-column: 2; }
-  .c-rec > .wave     { grid-column: 3; }
-  .c-rec > .wave-time { grid-column: 4; }
-  .c-rec > .dl       { grid-column: 5; }
+  .c-rec > .c-media  { grid-column: 2; }
+  .c-rec > .rec-play { grid-column: 3; }
+  .c-rec > .wave     { grid-column: 4; }
+  .c-rec > .wave-time { grid-column: 5; }
+  .c-rec > .dl       { grid-column: 6; }
   /* Une mention sans lecteur (set non enregistre) occupe toute la zone ;
      une mention qui accompagne un bouton se range dans la colonne waveform. */
-  .c-rec > .rec-note { grid-column: 2 / -1; }
-  .c-rec > .rec-note--link { grid-column: 3; }
+  .c-rec > .rec-note { grid-column: 3 / -1; }
+  .c-rec > .rec-note--link { grid-column: 4; }
   /* Details complementaires : n'apparaissent que si le CMS les renseigne. */
   .gig-det {
     grid-column: 2 / -1;
@@ -491,6 +500,18 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     transition: color 0.15s ease, background 0.15s ease;
   }
   .dl:hover { color: var(--facet-son); background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
+  /* Pastille du nombre de medias : presente sans peser, elle allume la
+     projection au survol et ouvre la visionneuse au clic. */
+  .c-media {
+    font-family: var(--font-mono); font-size: 0.56rem;
+    line-height: 1; padding: 0; width: 18px; height: 18px;
+    border-radius: 50%; cursor: pointer;
+    background: transparent; color: var(--text-tertiary);
+    border: 1px solid var(--border);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .c-media:hover { color: var(--facet-son); border-color: var(--facet-son); }
+
   .wave-time {
     font-family: var(--font-mono);
     font-size: 0.58rem;
@@ -902,7 +923,41 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  function initSon() { attachPlayerButtons(); attachWaveforms(); attachTagFilter(); }
+  // ── Projection : la ligne survolee annonce ses photos ─────────────────────
+  //    L'evenement remonte au player, seul endroit qui survit aux navigations
+  //    et qui vit hors du cadre de la facette.
+  function attachMediaHover() {
+    const list = document.querySelector('.panel-agenda');
+    if (!list || (list as HTMLElement).dataset.mediaReady) return;
+    (list as HTMLElement).dataset.mediaReady = '1';
+
+    const emit = (row: HTMLElement | null) => {
+      if (!row || !row.dataset.media) {
+        document.dispatchEvent(new CustomEvent('hamcat:media', { detail: {} }));
+        return;
+      }
+      let media: unknown = [];
+      try { media = JSON.parse(row.dataset.media); } catch (_) { return; }
+      document.dispatchEvent(new CustomEvent('hamcat:media', {
+        detail: { key: row.dataset.mdate, date: row.dataset.mdate, media },
+      }));
+    };
+
+    let leaveTimer: number | null = null;
+    list.addEventListener('pointerover', e => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.gig-row');
+      if (!row) return;
+      if (leaveTimer) { clearTimeout(leaveTimer); leaveTimer = null; }
+      emit(row);
+    });
+    // On laisse un instant avant d'eteindre : passer d'une ligne a l'autre ne
+    // doit pas faire clignoter le fond.
+    list.addEventListener('pointerleave', () => {
+      leaveTimer = window.setTimeout(() => emit(null), 900);
+    });
+  }
+
+  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>
