@@ -41,6 +41,94 @@ def safe_path(rel):
         return None, "path traversal denied"
     return full, None
 
+
+# ── Atelier : application des reponses ───────────────────────────────────────
+#  Patcher du frontmatter est ce qui a casse 27 fiches en septembre. Trois
+#  garde-fous, dans cet ordre :
+#    1. liste blanche de champs — rien d'autre ne peut etre ecrit ;
+#    2. build propre APRES ecriture, dans les conditions de la CI ;
+#    3. restauration integrale si le build echoue — on ne laisse jamais le
+#       depot dans un etat casse, et rien n'est pousse.
+ATELIER_FIELDS = {"cover", "city", "role", "duration", "description", "lineup",
+                  "recordState", "eventUrl", "tracklist", "featured", "notes"}
+# Valeurs fermees : un champ enumere au schema n'accepte pas n'importe quoi, et
+# une valeur hors liste ferait echouer le build de TOUTES les fiches.
+ATELIER_ENUM = {"recordState": {"none", "soon", "tracklist"}}
+ATELIER_BOOL = {"featured"}
+ATELIER_DIR  = "src/content/gigs"
+
+def _yq(s):
+    """Scalaire YAML entre apostrophes, la convention du depot."""
+    return "'" + str(s).replace("'", "''") + "'"
+
+def _yval(field, value):
+    if field in ATELIER_BOOL:
+        return "true" if str(value).strip().lower() in ("true", "oui", "1", "yes") else "false"
+    if field == "lineup":
+        # Saisie libre : un nom par ligne, ou separes par des virgules.
+        parts = [x.strip() for x in re.split(r"[\n,;]+", str(value)) if x.strip()]
+        return json.dumps(parts, ensure_ascii=False)
+    return _yq(" ".join(str(value).split()))
+
+def patch_frontmatter(text, field, value):
+    if not text.startswith("---"):
+        raise ValueError("frontmatter absent")
+    end = text.index("\n---", 3)
+    head, rest = text[:end], text[end:]
+    line = "%s: %s" % (field, _yval(field, value))
+    pat  = re.compile(r"^%s:.*$" % re.escape(field), re.M)
+    if pat.search(head):
+        head = pat.sub(lambda _: line, head, count=1)
+    else:
+        head = head.rstrip("\n") + "\n" + line
+    return head + rest
+
+def atelier_apply(answers, message):
+    changed, skipped, backups = [], [], {}
+    for a in answers:
+        gig   = str(a.get("gig", "")).strip()
+        field = str(a.get("field", "")).strip()
+        value = a.get("value", "")
+        if field not in ATELIER_FIELDS:
+            skipped.append({"gig": gig, "field": field, "why": "champ non autorise"}); continue
+        if field in ATELIER_ENUM and str(value).strip() not in ATELIER_ENUM[field]:
+            skipped.append({"gig": gig, "field": field, "why": "valeur hors vocabulaire"}); continue
+        if not gig or "/" in gig or ".." in gig:
+            skipped.append({"gig": gig, "field": field, "why": "identifiant invalide"}); continue
+        if not str(value).strip():
+            skipped.append({"gig": gig, "field": field, "why": "reponse vide"}); continue
+        rel = "%s/%s.md" % (ATELIER_DIR, gig)
+        full, err = safe_path(rel)
+        if err or not os.path.isfile(full):
+            skipped.append({"gig": gig, "field": field, "why": "fiche introuvable"}); continue
+        try:
+            with open(full, encoding="utf-8") as f: original = f.read()
+            if rel not in backups: backups[rel] = original
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(patch_frontmatter(original, field, value))
+            changed.append({"gig": gig, "field": field})
+        except Exception as e:
+            skipped.append({"gig": gig, "field": field, "why": str(e)})
+
+    if not changed:
+        return {"ok": False, "error": "aucune reponse applicable",
+                "changed": [], "skipped": skipped}
+
+    steps = build_steps(clean=True)
+    if steps["build"].get("code") != 0:
+        for rel, original in backups.items():
+            full, _ = safe_path(rel)
+            with open(full, "w", encoding="utf-8") as f: f.write(original)
+        return {"ok": False, "error": "build en echec — fiches restaurees, rien pousse",
+                "changed": [], "skipped": skipped, "steps": steps}
+
+    steps.update({"add":    run(["git", "add", "-A"]),
+                  "commit": run(["git", "commit", "-m", message or
+                                 "atelier: %d reponses appliquees" % len(changed)]),
+                  "push":   run(["git", "push", "origin", "main"])})
+    ok = all(steps[k].get("code", 1) in (0, 1) for k in ("add", "commit", "push"))
+    return {"ok": ok, "changed": changed, "skipped": skipped, "steps": steps}
+
 class Agent(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args): pass
 
@@ -129,6 +217,13 @@ class Agent(BaseHTTPRequestHandler):
                           "push":   run(["git","push","origin","main"])})
             ok = all(steps[k].get("code",1) in (0,1) for k in ("add","commit","push"))
             self._json({"ok": ok, "steps":steps})
+        elif p.path == "/atelier/apply":
+            answers = body.get("answers") or []
+            if not isinstance(answers, list) or not answers:
+                return self._json({"error": "param answers requis"}, 400)
+            if len(answers) > 500:
+                return self._json({"error": "lot trop grand (500 max)"}, 400)
+            self._json(atelier_apply(answers, body.get("message", "")))
         elif p.path == "/deploy-worker":
             # Depannage quand GitHub Actions est indisponible. Le projet tourne
             # en npm : l'ancienne version appelait pnpm, absent de la machine.
