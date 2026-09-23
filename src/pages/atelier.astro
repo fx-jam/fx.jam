@@ -31,6 +31,15 @@ import { TRACKS } from '../lib/atelier';
       <a class="home" href="/son">← Agenda</a>
     </header>
 
+    <!-- Session Access expiree : le navigateur ne peut pas la renouveler tout
+         seul depuis un fetch (la redirection part vers un autre domaine). On
+         dit quoi faire, en un lien. -->
+    <p class="auth" id="auth" hidden>
+      <span id="auth-t">Session expirée — les réponses restent en attente.</span>
+      <a class="auth-a" id="auth-go" href="/api/atelier/whoami" target="_blank" rel="noopener">Se reconnecter</a>
+      <button class="auth-b" id="auth-retry">Reprendre l’envoi</button>
+    </p>
+
     <!-- Choix du parcours : on repond selon le temps qu'on a, pas selon un
          ordre impose. -->
     <nav class="tracks" id="tracks">
@@ -63,10 +72,10 @@ import { TRACKS } from '../lib/atelier';
     <section class="done" id="done" hidden>
       <p class="done-t" id="done-t"></p>
       <div class="q-actions">
-        <button class="btn btn--ok" id="send">Envoyer</button>
+        <button class="btn btn--ok" id="send">Publier maintenant</button>
         <button class="btn" id="copy">Copier</button>
       </div>
-      <p class="done-h">Envoyer applique directement aux fiches. Copier sert de repli.</p>
+      <p class="done-h">Chaque réponse part déjà toute seule ; publier n’attend pas les 20 s. Copier sert de repli.</p>
     </section>
 
   </main>
@@ -103,6 +112,22 @@ import { TRACKS } from '../lib/atelier';
     color: var(--text-secondary); text-decoration: none;
   }
   .home:hover { color: var(--facet-outils); }
+
+  .auth {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+    max-width: 760px; margin: 0 auto; width: 100%;
+    padding: 0.6rem 1.5rem;
+    font-family: var(--font-mono); font-size: 0.72rem;
+    color: var(--facet-cours);
+  }
+  .auth[hidden] { display: none; }
+  .auth-a, .auth-b {
+    font: inherit; cursor: pointer;
+    color: var(--bg-app); background: var(--facet-cours);
+    border: 0; border-radius: 3px; padding: 0.25rem 0.6rem;
+    text-decoration: none;
+  }
+  .auth-b { background: transparent; color: var(--facet-cours); border: 1px solid currentColor; }
 
   .tracks {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
@@ -322,17 +347,56 @@ import { TRACKS } from '../lib/atelier';
 
   function dire(s: string) { etat = s; counts(); }
 
+  //  La page et l'API sont deux applications Access distinctes : voir la page
+  //  ne garantit pas que l'API soit ouverte. Quand elle ne l'est pas, Access
+  //  repond 302 vers cloudflareaccess.com — un autre domaine, donc un fetch
+  //  qui suit la redirection echoue sans rien dire d'utile ("Failed to fetch"
+  //  = ce qu'on affichait comme « hors ligne », alors que le reseau va bien).
+  //  `redirect: 'manual'` rend la redirection visible : status 0 / type
+  //  'opaqueredirect'. On la traite pour ce qu'elle est — une reconnexion a
+  //  faire — au lieu de la confondre avec une panne reseau.
+  type Rep = { ok: true; d: any } | { ok: false; auth: boolean; msg: string };
+
+  async function poste(url: string, body?: unknown): Promise<Rep> {
+    let r: Response;
+    try {
+      r = await fetch(url, {
+        method: 'POST', redirect: 'manual', credentials: 'same-origin',
+        ...(body === undefined ? {} : {
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }),
+      });
+    } catch {
+      return { ok: false, auth: false, msg: 'hors ligne — reprise auto' };
+    }
+    if (r.type === 'opaqueredirect' || r.status === 0 || (r.status >= 300 && r.status < 400)) {
+      return { ok: false, auth: true, msg: 'reconnexion nécessaire' };
+    }
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 401 || r.status === 403) return { ok: false, auth: true, msg: 'reconnexion nécessaire' };
+    if (!r.ok || !d.ok) return { ok: false, auth: false, msg: `échec : ${d.error || r.status}` };
+    return { ok: true, d };
+  }
+
+  let besoinAuth = false;
+  function authBanner(on: boolean) {
+    besoinAuth = on;
+    const el = document.getElementById('auth');
+    if (el) el.hidden = !on;
+  }
+
   async function vider() {
-    if (envoiEnCours || !enAttente.length) return;
+    if (envoiEnCours || besoinAuth || !enAttente.length) return;
     envoiEnCours = true;
     const lot = enAttente.slice(0, 20);
     try {
-      const r = await fetch('/api/atelier/quick', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: lot.map(({ gig, field, value }) => ({ gig, field, value })) }),
+      const rep = await poste('/api/atelier/quick', {
+        answers: lot.map(({ gig, field, value }) => ({ gig, field, value })),
       });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok && d.ok) {
+      if (rep.ok) {
+        authBanner(false);
+        const d = rep.d;
         const envoyes = new Set(lot.map(x => `${x.gig}:${x.field}`));
         enAttente = enAttente.filter(x => !envoyes.has(`${x.gig}:${x.field}`));
         saveQ();
@@ -342,33 +406,35 @@ import { TRACKS } from '../lib/atelier';
         dire(enAttente.length ? `${enAttente.length} en cours…` : 'enregistré');
         planifierPush();
       } else {
-        dire(`échec : ${d.error || r.status}`);
+        // Une reconnexion demande un geste humain : on arrete de reessayer en
+        // boucle, « Reprendre l'envoi » relance.
+        authBanner(rep.auth);
+        dire(rep.msg);
       }
-    } catch {
-      dire('hors ligne — reprise auto');
     } finally {
       envoiEnCours = false;
-      if (enAttente.length) setTimeout(vider, 1500);
+      if (enAttente.length && !besoinAuth) setTimeout(vider, 1500);
     }
   }
 
-  function planifierPush() {
+  function planifierPush(delai = 20000) {
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = window.setTimeout(async () => {
-      if (enAttente.length) return planifierPush();
+      if (enAttente.length || besoinAuth) return planifierPush();
       dire('publication…');
-      try {
-        const r = await fetch('/api/atelier/push', { method: 'POST' });
-        const d = await r.json().catch(() => ({}));
-        dire(r.ok && d.ok
-          ? (d.pushed ? `publié (${d.pushed})` : 'à jour')
-          : `publication refusée : ${d.error || r.status}`);
-      } catch { dire('publication différée'); }
-    }, 20000);
+      const rep = await poste('/api/atelier/push');
+      if (rep.ok) dire(rep.d.pushed ? `publié (${rep.d.pushed})` : 'à jour');
+      else { authBanner(rep.auth); dire(rep.msg); }
+    }, delai);
   }
 
-  // Une salve en attente d'un chargement precedent repart toute seule.
-  if (enAttente.length) setTimeout(vider, 800);
+  //  Sonde au chargement : mieux vaut apprendre que la session est fermee
+  //  avant d'avoir repondu a trente questions qu'apres.
+  (async () => {
+    const r = await poste('/api/atelier/whoami').catch(() => null);
+    if (r && !r.ok && r.auth) authBanner(true);
+    else if (enAttente.length) vider();
+  })();
 
   const $ = (id: string) => document.getElementById(id)!;
 
@@ -405,10 +471,13 @@ import { TRACKS } from '../lib/atelier';
     const q = queue[at];
     if (!q) {
       $('card').hidden = true;
-      $('done').hidden = Object.keys(answers).length === 0;
-      $('done-t').textContent = Object.keys(answers).length
-        ? `${Object.keys(answers).length} réponses prêtes.`
-        : 'Rien à faire ici.';
+      $('done').hidden = false;
+      const reste = enAttente.length;
+      $('done-t').textContent = reste
+        ? `${reste} réponse${reste > 1 ? 's' : ''} en cours d’envoi.`
+        : sessionDone
+          ? `${sessionDone} réponses envoyées. Le reste du parcours est fait.`
+          : 'Rien à faire ici.';
       counts();
       return;
     }
@@ -570,40 +639,25 @@ import { TRACKS } from '../lib/atelier';
     counts(); render();
   };
 
-  // Envoi direct quand Access est branche ; repli copier-coller sinon, pour
-  // que des reponses deja donnees ne soient jamais perdues.
+  //  Il n'y a plus qu'un chemin d'ecriture : la file. Chaque reponse part deja
+  //  seule ; ce bouton ne fait qu'en avancer la fin — vider ce qui traine et
+  //  publier sans attendre les 20 s. Deux chemins d'ecriture, c'etait deux
+  //  facons de se tromper.
   $('send').onclick = async () => {
     const btn = $('send') as HTMLButtonElement;
-    const list = Object.entries(answers).flatMap(([id, value]) => {
-      const q = all.find(x => x.id === id);
-      if (q) return (q.targets ?? [q.gig]).map(gig => ({ gig, field: q.field, value }));
-      // Repli pour une reponse donnee avant que la file ne soit rechargee.
-      const i = id.lastIndexOf(':');
-      return [{ gig: id.slice(0, i), field: id.slice(i + 1), value }];
-    });
-    if (!list.length) return;
-    btn.disabled = true; btn.textContent = 'Envoi…';
-    try {
-      const r = await fetch('/api/atelier/answers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: list }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok && d.ok) {
-        // Le lot est ecrit : on vide, sinon il repartirait au prochain envoi.
-        answers = {}; save(answers);
-        btn.textContent = `${d.changed?.length ?? list.length} appliquées`;
-        all = all.filter(q => !(q.id in answers));
-        counts(); pick(track);
-      } else {
-        btn.disabled = false;
-        btn.textContent = `Échec : ${d.error || r.status} — utilise Copier`;
-      }
-    } catch (e) {
-      btn.disabled = false;
-      btn.textContent = 'Hors ligne — utilise Copier';
-    }
+    btn.disabled = true;
+    await vider();
+    if (!besoinAuth && !enAttente.length) planifierPush(0);
+    btn.disabled = false;
+    counts();
+  };
+
+  $('auth-retry').onclick = async () => {
+    authBanner(false);
+    dire('reprise…');
+    const r = await poste('/api/atelier/whoami');
+    if (!r.ok && r.auth) { authBanner(true); dire('toujours déconnecté'); return; }
+    if (enAttente.length) vider(); else dire('reconnecté');
   };
 
   $('copy').onclick = async () => {
