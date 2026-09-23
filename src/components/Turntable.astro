@@ -1281,7 +1281,11 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   /* ─── Modal état 3 ───────────────────────────────────────────── */
   .modal-overlay {
     position: fixed;
-    inset: 0;
+    /* La zone de centrage s'arrete au-dessus de la barre de lecture. C'est ici
+       que se jouait le chevauchement : les pages reservaient bien leur place,
+       mais ce qu'on voit depuis l'accueil est la MODALE, qui se centrait dans
+       tout l'ecran et passait donc sous le player. */
+    inset: 0 0 var(--player-pad, 0px) 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1304,7 +1308,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   .modal-inner {
     position: relative;
     width: min(820px, 92vw);
-    height: 88dvh;
+    height: min(88dvh, calc(100dvh - var(--player-pad, 0px) - 2.5rem));
     background: var(--bg-app);
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
@@ -1900,6 +1904,9 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (e.source !== modalIframe.contentWindow) return;
       if ((e.data as any)?.hamcat !== 'modal-close') return;
       if (modalOverlay.classList.contains('is-open')) closeModal();
+      // « Echap ramene a l'accueil » : fermer la modale ne suffisait pas, on
+      // restait dans l'etat intermediaire et il fallait un second appui.
+      setState(0);
     }, { signal: sig });
 
     // Fermer modal (× ou clic hors modal-inner)
