@@ -572,7 +572,10 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   /* ─── Fond coloré (états 1 + 2) ─────────────────────────────── */
   .bg-stage {
     position: absolute;
-    inset: 0;
+    /* Deborde vers le bas de la valeur exacte de la respiration ajoutee sous
+       les pages. Sans ca, cette bande montrait le fond etoile a sa luminosite
+       d'accueil, non assombrie, entre la page et la barre de lecture. */
+    inset: 0 0 calc(-1 * var(--player-gap, 0px)) 0;
     background: radial-gradient(
       ellipse 80% 80% at center,
       color-mix(in srgb, var(--stage-c, var(--bg-app)) 30%, var(--bg-app)) 0%,
@@ -1281,11 +1284,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   /* ─── Modal état 3 ───────────────────────────────────────────── */
   .modal-overlay {
     position: fixed;
-    /* La zone de centrage s'arrete au-dessus de la barre de lecture. C'est ici
-       que se jouait le chevauchement : les pages reservaient bien leur place,
-       mais ce qu'on voit depuis l'accueil est la MODALE, qui se centrait dans
-       tout l'ecran et passait donc sous le player. */
-    inset: 0 0 var(--player-pad, 0px) 0;
+    /* Le voile couvre tout l'ecran — sinon la bande laissee libre sous lui
+       montrait le fond non assombri. C'est le PADDING qui reduit la zone de
+       centrage, pour que la carte ne passe pas sous la barre de lecture. */
+    inset: 0;
+    padding-bottom: var(--player-pad, 0px);
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;

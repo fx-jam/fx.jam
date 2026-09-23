@@ -998,10 +998,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.87 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.88 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.87');
+  console.log('🐱 fx_jam_v1.88');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2488,6 +2488,31 @@ const facetHrefs = visibleFacets().map(f => f.href);
       observeLibWaves();
     }
 
+    //  MESURE du 24/09, glissement de 40 pas sur la poignee : mediane 16,6 ms
+    //  mais 42 images sur 130 au-dessus de 32 ms, avec des pointes a 438 ms.
+    //  Ce n'etait donc pas un cout diffus de mise en page — c'etaient des
+    //  bouffees de travail. Origine trouvee : en grandissant, le panneau fait
+    //  entrer de nouvelles lignes dans le champ, l'observateur declenche le
+    //  chargement de leurs waveforms, et chacune construit un SVG de plusieurs
+    //  centaines de rectangles pendant le geste.
+    //  On met donc les chargements en attente le temps du glissement, et on les
+    //  reprend apres, etales sur plusieurs images.
+    let libDrag = false;
+    const libEnAttente = new Set<HTMLElement>();
+
+    export_libSetDrag = (on: boolean) => {
+      libDrag = on;
+      if (on || !libEnAttente.size) return;
+      const file = [...libEnAttente];
+      libEnAttente.clear();
+      // Deux par image : la reprise ne remplace pas une saccade par une autre.
+      const suite = () => {
+        for (let i = 0; i < 2 && file.length; i++) loadLibWave(file.shift()!);
+        if (file.length) requestAnimationFrame(suite);
+      };
+      requestAnimationFrame(suite);
+    };
+
     let libIO: IntersectionObserver | null = null;
     function observeLibWaves() {
       if (!libIO) {
@@ -2495,6 +2520,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           ents.forEach(en => {
             if (!en.isIntersecting) return;
             obs.unobserve(en.target);
+            if (libDrag) { libEnAttente.add(en.target as HTMLElement); return; }
             loadLibWave(en.target as HTMLElement);
           });
         }, { root: libList, rootMargin: '250px' });
@@ -2673,6 +2699,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     //    seuil bas vaut fermeture. Les deux poignees — celle du panneau et
     //    celle du bord haut du player — partagent le meme code, si bien qu'on
     //    rouvre la bibliotheque en tirant vers le haut sans passer par le menu.
+    let export_libSetDrag: (on: boolean) => void = () => {};
     const LIB_H_KEY = 'hamcat-lib-height';
     const libMax = () => (window.visualViewport?.height || window.innerHeight) - 56;
     const libMin = () => Math.round(libMax() * 0.22);
@@ -2705,6 +2732,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         libPanel.style.setProperty('--lib-fix',
           Math.max(80, Math.round(libMax() * 0.9)) + 'px');
         libPanel.dataset.drag = '1';
+        export_libSetDrag(true);
         try { el.setPointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = 'none';
         e.preventDefault();
@@ -2726,6 +2754,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (prevu) { cancelAnimationFrame(prevu); prevu = 0; }
         el.removeAttribute('data-drag');
         delete libPanel.dataset.drag;
+        export_libSetDrag(false);
         try { el.releasePointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = '';
         const h = libPanel.getBoundingClientRect().height;
@@ -2996,7 +3025,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.87';
+    _vt.textContent = 'fx_jam_v1.88';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
