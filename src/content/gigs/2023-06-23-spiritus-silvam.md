@@ -7,7 +7,7 @@ venue: "Les Conciliabules"
 city: "38"
 country: "France"
 genre: ["psybient"]
-duration: ""
+duration: '2h'
 lineup: []
 image: ""
 media: [{"id": "e50e8776-e7f9-4b6e-abff-1a42ba89ede5", "kind": "image"}]

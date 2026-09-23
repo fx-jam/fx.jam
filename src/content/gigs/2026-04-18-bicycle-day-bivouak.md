@@ -6,4 +6,7 @@ venue: 'Bivouak'
 country: 'France'
 genre: ["psyprog"]
 draft: false
+role: 'closing'
+city: 'Grenoble'
+duration: '1h30'
 ---

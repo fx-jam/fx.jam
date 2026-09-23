@@ -11,4 +11,6 @@ cover: "974ba0c2-1539-465c-9407-5581d273b664"
 recording: "https://media.hamcat.live/sets/2025-07-13-adn-closing-new.mp3"
 draft: false
 notes: "25/07/13 - ADN MUSIC FESTIVAL (CLOSING MASHUP)"
+role: 'chill floor'
+duration: '1h30'
 ---

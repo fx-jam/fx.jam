@@ -7,4 +7,7 @@ country: 'France'
 genre: ["chillgressive", "psytrance"]
 draft: false
 notes: '21/10/29 - TOI-TOI, LYON (MULTI MASHUP)'
+city: 'Lyon'
+role: 'closing'
+duration: '2h'
 ---

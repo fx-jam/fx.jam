@@ -6,4 +6,7 @@ venue: 'Jungle Café'
 country: 'France'
 genre: ["psyprog"]
 draft: false
+role: 'dancefloor'
+city: 'Grenoble'
+duration: '1h'
 ---

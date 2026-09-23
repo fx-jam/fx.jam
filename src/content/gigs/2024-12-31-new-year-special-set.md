@@ -7,4 +7,7 @@ country: 'France'
 genre: ["mashup-multigenre"]
 draft: false
 notes: '24/12/31 - NEW YEAR SPECIAL SET (MULTI MASHUP)'
+role: 'dancefloor'
+city: '38'
+duration: '4h'
 ---

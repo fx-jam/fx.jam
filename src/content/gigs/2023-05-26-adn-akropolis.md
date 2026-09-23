@@ -10,4 +10,7 @@ cover: "d685040e-98bf-4259-8639-67a8f973cdb3"
 recording: "https://media.hamcat.live/sets/rescue-hitech.mp3"
 draft: false
 notes: "23/05/26 - ADN AKROPOLIS @ DRAK (HI-TECH)"
+city: 'Grenoble'
+role: 'dancefloor'
+duration: '1h30'
 ---

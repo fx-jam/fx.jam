@@ -2,15 +2,15 @@
 title: DRAK — DARKPSY / MENTALCORE
 date: 2026-09-05
 format: dj
-role: ''
+role: 'dancefloor'
 venue: Drak
-city: ''
+city: 'Grenoble'
 country: France
 genre: ["mentalcore", "darkpsy"]
-duration: ''
+duration: '1h'
 lineup: []
 image: ''
-recordState: soon
+recordState: 'soon'
 recording: ''
 recordings: []
 eventUrl: ''

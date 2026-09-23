@@ -2,17 +2,17 @@
 title: "EASY RIDER"
 date: "2025-03-13"
 format: "dj"
-role: ""
+role: 'warm-up'
 venue: "EASY RIDER"
-city: ""
+city: 'Chamrousse'
 country: "France"
 genre: ["tech-house"]
-duration: ""
+duration: '1h'
 lineup: []
 image: ""
 media: [{"id": "d6834dea-2460-48fb-bde3-c8fe6263b161", "kind": "video"}]
-cover: ""
-recordState: "soon"
+cover: 'd6834dea-2460-48fb-bde3-c8fe6263b161'
+recordState: 'soon'
 recording: ""
 recordings: []
 eventUrl: ""

@@ -10,4 +10,6 @@ media: [{"id": "d9dbd798-4c13-4a12-8518-1b71d32e6bc7", "kind": "video"}, {"id": 
 cover: "307193fb-8a36-46af-8af4-28a183fa5a5c"
 recording: "https://media.hamcat.live/sets/2025-08-hadra-25-bulle.mp3"
 draft: false
+city: 'Vieure'
+duration: '1h'
 ---

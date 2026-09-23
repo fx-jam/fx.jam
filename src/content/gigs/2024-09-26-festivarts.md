@@ -7,4 +7,6 @@ country: 'France'
 genre: ["psyprog"]
 draft: false
 notes: '24/09/26 - FESTIV''ARTS @ EVE (FUNKY PSYPROG)'
+duration: '1h30'
+city: 'SMH'
 ---

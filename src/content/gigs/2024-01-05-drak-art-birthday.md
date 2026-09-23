@@ -9,4 +9,7 @@ media: [{"id": "12ab6104-f866-4d84-85f8-719f1cecb6ca", "kind": "image"}, {"id": 
 cover: "12ab6104-f866-4d84-85f8-719f1cecb6ca"
 draft: false
 notes: "24/01/05 - DRAK-ART BIRTHDAY (GOA TRANCE)"
+role: 'dancefloor'
+city: 'Grenoble'
+duration: '1h'
 ---

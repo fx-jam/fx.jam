@@ -10,4 +10,6 @@ cover: "b7cd01f9-5174-46b2-8459-0f47ed884835"
 draft: false
 notes: "24/11/16 - LA BELLE ELECTRIQUE (HITECH / DISCO)"
 city: 'Grenoble'
+role: 'closing'
+duration: '45min'
 ---

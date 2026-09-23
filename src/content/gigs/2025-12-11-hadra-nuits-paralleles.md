@@ -9,4 +9,7 @@ media: [{"id": "7bd7314e-4c91-4a4a-b652-df70056b9174", "kind": "image"}, {"id": 
 cover: "7bd7314e-4c91-4a4a-b652-df70056b9174"
 recording: "https://media.hamcat.live/sets/2025-12-11-hadra-nuits-paralleles.mp3"
 draft: false
+role: 'dancefloor'
+city: 'Grenoble'
+duration: '1h30'
 ---

@@ -10,4 +10,7 @@ cover: "838912b1-8e32-4214-91f7-40a41dc2993d"
 recording: "https://media.hamcat.live/sets/hadra-25-main.mp3"
 draft: false
 notes: "2025/08/31 - HADRA TRANCE FESTIVAL (HI-TECH)"
+role: 'dancefloor'
+city: 'Vieure'
+duration: '1h'
 ---

@@ -10,4 +10,7 @@ cover: "5311ab61-12da-47a5-8500-1260691901e5"
 recording: "https://media.hamcat.live/sets/2022-08-27-hadra-cocon-hamcat-vs-lowfilter.mp3"
 draft: false
 notes: "22/08/27 - HADRA FESTIVAL (CHILLGRESSIVE)"
+city: 'Vieure'
+role: 'B2B'
+duration: '4h'
 ---

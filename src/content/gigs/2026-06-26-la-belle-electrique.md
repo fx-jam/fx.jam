@@ -2,13 +2,13 @@
 title: LA BELLE ELECTRIQUE
 date: 2026-06-26
 format: dj
-role: ''
+role: 'closing'
 venue: La Belle Électrique
 city: Grenoble
 country: France
 genre:
   - hi-tech
-duration: ''
+duration: '1h30'
 lineup: []
 image: ''
 recordState: none

@@ -6,4 +6,7 @@ venue: 'Loto Teknoël'
 country: 'France'
 genre: ["mashup-multigenre"]
 draft: false
+role: 'closing'
+city: 'Toulouse'
+duration: '1h30'
 ---

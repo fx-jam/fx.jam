@@ -4,7 +4,7 @@ date: 2025-01-23
 format: dj
 role: ''
 venue: FESTIV'ARTS
-city: ''
+city: 'SMH'
 country: France
 genre: ["psyprog"]
 duration: ''

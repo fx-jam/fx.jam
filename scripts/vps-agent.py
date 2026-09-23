@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, os, subprocess
+import json, os, re, subprocess
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -104,10 +104,21 @@ def atelier_apply(answers, message):
         try:
             with open(full, encoding="utf-8") as f: original = f.read()
             if rel not in backups: backups[rel] = original
+            # Calcul AVANT ouverture : ouvrir en "w" tronque immediatement, et
+            # une exception ensuite laissait le fichier vide. C'est ce qui a
+            # vide 71 fiches le 23/09.
+            nouveau = patch_frontmatter(original, field, value)
+            if not nouveau.strip():
+                raise ValueError("resultat vide — ecriture refusee")
             with open(full, "w", encoding="utf-8") as f:
-                f.write(patch_frontmatter(original, field, value))
+                f.write(nouveau)
             changed.append({"gig": gig, "field": field})
         except Exception as e:
+            # Filet : si quoi que ce soit a touche le fichier, on remet l'original.
+            try:
+                with open(full, "w", encoding="utf-8") as f: f.write(backups[rel])
+            except Exception:
+                pass
             skipped.append({"gig": gig, "field": field, "why": str(e)})
 
     if not changed:

@@ -4,14 +4,14 @@ date: 2026-09-03
 format: dj
 role: "B2B"
 venue: Minimistan
-city: ''
+city: 'Grenoble'
 country: France
 genre:
   - hi-tech
-duration: ''
+duration: '1h30'
 lineup: []
 image: ''
-recordState: soon
+recordState: 'tracklist'
 recording: ''
 recordings: []
 eventUrl: ''

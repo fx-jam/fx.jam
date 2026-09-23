@@ -7,4 +7,7 @@ country: 'France'
 genre: ["mashup-multigenre"]
 draft: false
 notes: '25/03/30 - CARNAVAL D''YGRANDE (MULTI)'
+role: 'char parade'
+city: 'Ygrande'
+duration: '4h'
 ---

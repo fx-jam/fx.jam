@@ -8,4 +8,5 @@ city: 'Grenoble'
 country: 'France'
 genre: ["hi-tech"]
 draft: false
+duration: '1h30'
 ---

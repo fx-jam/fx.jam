@@ -9,4 +9,7 @@ media: [{"id": "27ad4fa5-cb92-4df9-93d8-db3462e46644", "kind": "image"}, {"id": 
 cover: "27ad4fa5-cb92-4df9-93d8-db3462e46644"
 draft: false
 notes: "23/08/24 - HADRA FESTIVAL (LIVE PSYBIENT)"
+role: 'warm-up'
+city: 'Vieure'
+duration: '4h'
 ---

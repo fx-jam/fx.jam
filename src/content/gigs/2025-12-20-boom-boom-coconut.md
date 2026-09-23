@@ -7,4 +7,7 @@ country: 'France'
 genre: ["mashup-multigenre"]
 recording: 'https://media.hamcat.live/sets/2025-12-20-boom-boom-coconut.mp3'
 draft: false
+role: 'closing'
+city: 'Lyon'
+duration: '1h30'
 ---

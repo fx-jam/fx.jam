@@ -11,4 +11,7 @@ recordings:
     label: 'Cocon 2'
 draft: false
 notes: '23/08/25 - HADRA FESTIVAL (CHILLGRESSIVE / PSY)'
+role: 'warm-up'
+city: 'Vieure'
+duration: '1h30'
 ---

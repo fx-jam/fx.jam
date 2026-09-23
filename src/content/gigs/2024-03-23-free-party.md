@@ -9,4 +9,7 @@ media: [{"id": "dfa90eae-b41d-490c-afb7-bac311600cfe", "kind": "image"}, {"id": 
 cover: "dfa90eae-b41d-490c-afb7-bac311600cfe"
 draft: false
 notes: "24/03/23 - FREE PARTY @ 38 (HITECH / ACIDCORE)"
+role: 'dancefloor'
+city: '38'
+duration: '2h'
 ---

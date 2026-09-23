@@ -7,4 +7,7 @@ country: 'France'
 genre: ["psyprog"]
 draft: false
 notes: '23/10/21 - PIZZA PLAYGROUND (PSYPROG)'
+role: 'DJ set'
+city: '38'
+duration: '4h'
 ---

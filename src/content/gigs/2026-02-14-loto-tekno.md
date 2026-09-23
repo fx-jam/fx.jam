@@ -9,4 +9,7 @@ media: [{"id": "f65d3b74-399b-46e0-848c-3b2468b3a199", "kind": "image"}, {"id": 
 cover: "f65d3b74-399b-46e0-848c-3b2468b3a199"
 recording: "https://media.hamcat.live/sets/2026-02-14-loto-tekno.mp3"
 draft: false
+role: 'closing'
+city: 'Toulouse'
+duration: '1h30'
 ---
