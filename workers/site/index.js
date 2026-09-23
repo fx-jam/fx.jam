@@ -311,7 +311,15 @@ export default {
     if (path === '/api/atelier/whoami') {
       try {
         const who = await verifyAccess(request, env);
-        return okJson({ ok: true, email: who.email });
+        // Diagnostic de cablage : uniquement des NOMS de liaisons et un booleen,
+        // jamais une valeur. Derriere Access, et c'est ce qui permet de dire en
+        // un coup d'oeil si un secret est pose, mal nomme, ou absent.
+        return okJson({
+          ok: true,
+          email: who.email,
+          vps_token: Boolean(env.VPS_TOKEN),
+          bindings: Object.keys(env).sort(),
+        });
       } catch (e) {
         const m = e && e.message || 'access_error';
         return errJson(m, m === 'access_not_configured' ? 503 : 401);
