@@ -6,10 +6,11 @@
 //  gardees dans le navigateur et reprises telles quelles a la session suivante :
 //  on peut en faire dix et fermer.
 //
-//  L'ECRITURE n'est pas branchee. Elle demandera un appel authentifie au Worker
-//  (le jeton de l'API VPS ne doit jamais partir dans du JS client), donc
-//  Cloudflare Access d'abord. En attendant, les reponses s'exportent d'un bouton
-//  et sont appliquees par l'architecte — meme boucle, un relais de plus.
+//  ENVOI EN DIRECT (v1.75). Chaque reponse part seule : le serveur valide le
+//  frontmatter et commite sans construire (0,4 s mesure, contre 89 s pour un
+//  build propre). La publication est differee de 20 s apres la derniere
+//  reponse — une seule execution CI par salve. La file d'envoi survit a la
+//  fermeture de l'onglet, donc on peut s'arreter n'importe quand.
 //
 //  Page volontairement absente du sitemap et des liens publics : ce n'est pas
 //  un secret, mais ca n'a rien a faire dans les resultats de recherche.
@@ -302,6 +303,73 @@ import { TRACKS } from '../lib/atelier';
   let undoStack: Q[] = [];
   let sessionDone = 0;
 
+  // ── Envoi en direct ──────────────────────────────────────────────────────
+  //  Chaque reponse part seule (0,4 s cote serveur : validation + commit, sans
+  //  build). La publication est differee de 20 s apres la derniere reponse :
+  //  une seule execution CI par salve au lieu d'une par reponse.
+  //  `enAttente` survit a la fermeture : couper le reseau ne perd rien.
+  const KEYQ = 'hamcat-atelier-envoi';
+  type Env = { gig: string; field: string; value: string; id: string };
+  const loadQ = (): Env[] => {
+    try { return JSON.parse(localStorage.getItem(KEYQ) || '[]'); } catch { return []; }
+  };
+  let enAttente: Env[] = loadQ();
+  const saveQ = () => { try { localStorage.setItem(KEYQ, JSON.stringify(enAttente)); } catch {} };
+
+  let envoiEnCours = false;
+  let pushTimer: number | null = null;
+  let etat = '';
+
+  function dire(s: string) { etat = s; counts(); }
+
+  async function vider() {
+    if (envoiEnCours || !enAttente.length) return;
+    envoiEnCours = true;
+    const lot = enAttente.slice(0, 20);
+    try {
+      const r = await fetch('/api/atelier/quick', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: lot.map(({ gig, field, value }) => ({ gig, field, value })) }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        const envoyes = new Set(lot.map(x => `${x.gig}:${x.field}`));
+        enAttente = enAttente.filter(x => !envoyes.has(`${x.gig}:${x.field}`));
+        saveQ();
+        // Les reponses acquises n'ont plus a etre gardees comme « en attente ».
+        for (const x of lot) { delete answers[x.id]; }
+        save(answers);
+        dire(enAttente.length ? `${enAttente.length} en cours…` : 'enregistré');
+        planifierPush();
+      } else {
+        dire(`échec : ${d.error || r.status}`);
+      }
+    } catch {
+      dire('hors ligne — reprise auto');
+    } finally {
+      envoiEnCours = false;
+      if (enAttente.length) setTimeout(vider, 1500);
+    }
+  }
+
+  function planifierPush() {
+    if (pushTimer) clearTimeout(pushTimer);
+    pushTimer = window.setTimeout(async () => {
+      if (enAttente.length) return planifierPush();
+      dire('publication…');
+      try {
+        const r = await fetch('/api/atelier/push', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        dire(r.ok && d.ok
+          ? (d.pushed ? `publié (${d.pushed})` : 'à jour')
+          : `publication refusée : ${d.error || r.status}`);
+      } catch { dire('publication différée'); }
+    }, 20000);
+  }
+
+  // Une salve en attente d'un chargement precedent repart toute seule.
+  if (enAttente.length) setTimeout(vider, 800);
+
   const $ = (id: string) => document.getElementById(id)!;
 
   function counts() {
@@ -311,7 +379,9 @@ import { TRACKS } from '../lib/atelier';
       if (el) el.textContent = String(n);
     }
     const done = Object.keys(answers).length;
-    $('at-sub').textContent = `${all.length - done} questions · ${done} réponse${done > 1 ? 's' : ''} en attente`
+    const q = all.length - done;
+    $('at-sub').textContent = `${q} question${q > 1 ? 's' : ''}`
+      + (etat ? ` · ${etat}` : '')
       + ` · build ${typeof __COMMIT__ !== 'undefined' ? __COMMIT__ : '?'}`;
   }
 
@@ -446,8 +516,16 @@ import { TRACKS } from '../lib/atelier';
   function commit() {
     const q = queue[at];
     if (!q || !value.trim()) return;
-    answers[q.id] = value.trim();
+    const val = value.trim();
+    answers[q.id] = val;
     save(answers);
+    // Mise en file d'envoi : une entree par fiche visee.
+    for (const gig of (q.targets ?? [q.gig])) {
+      enAttente = enAttente.filter(x => !(x.gig === gig && x.field === q.field));
+      enAttente.push({ gig, field: q.field, value: val, id: q.id });
+    }
+    saveQ();
+    vider();
     undoStack.push(q);
     queue.splice(at, 1);
     if (at >= queue.length) at = Math.max(0, queue.length - 1);

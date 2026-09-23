@@ -140,6 +140,84 @@ def atelier_apply(answers, message):
     ok = all(steps[k].get("code", 1) in (0, 1) for k in ("add", "commit", "push"))
     return {"ok": ok, "changed": changed, "skipped": skipped, "steps": steps}
 
+
+# ── Ecriture eclair : valider sans construire ────────────────────────────────
+#  Mesure du 23/09 : build propre 89 s, build tiede 32 s. Payer ca a chaque
+#  reponse est impensable. Or pour un champ issu de la liste blanche, verifier
+#  ne demande pas Astro : il suffit de relire le frontmatter obtenu.
+#
+#  La verification ci-dessous attrape exactement la panne de septembre — des
+#  restes de listes en bloc orphelines apres une reecriture. Chaque ligne du
+#  frontmatter doit etre un `cle: valeur`. Rien d'autre n'est tolere, puisque
+#  rien d'autre n'est produit.
+def validate_frontmatter(text):
+    if not text.startswith("---"):
+        return "frontmatter absent"
+    try:
+        end = text.index("\n---", 3)
+    except ValueError:
+        return "frontmatter non ferme"
+    head = text[4:end]
+    for i, line in enumerate(head.split("\n"), start=2):
+        if not line.strip():
+            continue
+        if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*\s*:", line):
+            return "ligne %d invalide: %s" % (i, line[:60])
+    return None
+
+def atelier_quick(answers):
+    """Patche et commite SANS build. Chaque reponse est acquise en <1 s ;
+    la publication est differee a /atelier/push."""
+    changed, skipped = [], []
+    for a in answers:
+        gig   = str(a.get("gig", "")).strip()
+        field = str(a.get("field", "")).strip()
+        value = a.get("value", "")
+        if field not in ATELIER_FIELDS:
+            skipped.append({"gig": gig, "field": field, "why": "champ non autorise"}); continue
+        if field in ATELIER_ENUM and str(value).strip() not in ATELIER_ENUM[field]:
+            skipped.append({"gig": gig, "field": field, "why": "valeur hors vocabulaire"}); continue
+        if not gig or "/" in gig or ".." in gig or not str(value).strip():
+            skipped.append({"gig": gig, "field": field, "why": "entree invalide"}); continue
+        rel = "%s/%s.md" % (ATELIER_DIR, gig)
+        full, err = safe_path(rel)
+        if err or not os.path.isfile(full):
+            skipped.append({"gig": gig, "field": field, "why": "fiche introuvable"}); continue
+        try:
+            with open(full, encoding="utf-8") as f: original = f.read()
+            nouveau = patch_frontmatter(original, field, value)
+            probleme = validate_frontmatter(nouveau)
+            if probleme or not nouveau.strip():
+                raise ValueError(probleme or "resultat vide")
+            with open(full, "w", encoding="utf-8") as f: f.write(nouveau)
+            changed.append({"gig": gig, "field": field})
+        except Exception as e:
+            skipped.append({"gig": gig, "field": field, "why": str(e)})
+
+    if not changed:
+        return {"ok": False, "changed": [], "skipped": skipped, "commit": None}
+    # Commit local immediat : la reponse est sauvee avant d'etre publiee.
+    msg = "atelier: %s" % ", ".join("%s/%s" % (c["gig"], c["field"]) for c in changed[:3])
+    if len(changed) > 3: msg += " (+%d)" % (len(changed) - 3)
+    add = run(["git", "add", "--", ATELIER_DIR])
+    com = run(["git", "commit", "-m", msg])
+    return {"ok": True, "changed": changed, "skipped": skipped,
+            "commit": com.get("code") in (0, 1)}
+
+def atelier_push():
+    """Publie les commits en attente. Un build tiede sert de porte : s'il
+    echoue, rien ne part et les commits restent locaux, reparables."""
+    en_attente = run(["git", "rev-list", "--count", "origin/main..HEAD"])
+    n = (en_attente.get("stdout") or "0").strip()
+    if n in ("", "0"):
+        return {"ok": True, "pushed": 0, "message": "rien en attente"}
+    steps = build_steps(clean=False)
+    if steps["build"].get("code") != 0:
+        return {"ok": False, "pushed": 0, "error": "build en echec — rien pousse",
+                "en_attente": n, "steps": steps}
+    push = run(["git", "push", "origin", "main"])
+    return {"ok": push.get("code") == 0, "pushed": int(n), "steps": {"push": push}}
+
 class Agent(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args): pass
 
@@ -228,6 +306,15 @@ class Agent(BaseHTTPRequestHandler):
                           "push":   run(["git","push","origin","main"])})
             ok = all(steps[k].get("code",1) in (0,1) for k in ("add","commit","push"))
             self._json({"ok": ok, "steps":steps})
+        elif p.path == "/atelier/quick":
+            answers = body.get("answers") or []
+            if not isinstance(answers, list) or not answers:
+                return self._json({"error": "param answers requis"}, 400)
+            if len(answers) > 50:
+                return self._json({"error": "lot trop grand pour /quick"}, 400)
+            self._json(atelier_quick(answers))
+        elif p.path == "/atelier/push":
+            self._json(atelier_push())
         elif p.path == "/atelier/apply":
             answers = body.get("answers") or []
             if not isinstance(answers, list) or not answers:

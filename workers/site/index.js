@@ -229,6 +229,45 @@ export default {
     }
 
 
+    // /api/atelier/quick et /push — ecriture eclair. `quick` valide et commite
+    // sans construire (0,4 s mesure) ; `push` publie la salve, protege par un
+    // build tiede (34 s), une seule fois par salve et non par reponse.
+    if ((path === '/api/atelier/quick' || path === '/api/atelier/push')
+        && request.method === 'POST') {
+      let who;
+      try {
+        who = await verifyAccess(request, env);
+      } catch (e) {
+        const m = (e && e.message) || 'access_error';
+        return errJson(m, m === 'access_not_configured' ? 503 : 401);
+      }
+      if (!env.VPS_TOKEN) return errJson('vps_token_absent', 503);
+      const route = path.slice('/api/atelier'.length);
+      let body = {};
+      if (route === '/quick') {
+        try { body = await request.json(); } catch { return errJson('json_invalide', 400); }
+        if (!Array.isArray(body.answers) || !body.answers.length) {
+          return errJson('aucune_reponse', 400);
+        }
+      }
+      try {
+        const res = await fetch(`${VPS_AGENT}/atelier${route}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.VPS_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+        return new Response(await res.text(), {
+          status: res.status,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        return errJson(`agent_injoignable: ${e && e.message}`, 502);
+      }
+    }
+
     // /api/atelier/answers — applique un lot de reponses. Le Worker ne patche
     // RIEN lui-meme : il authentifie, puis transmet a l'agent VPS, seul endroit
     // ou l'on sait verifier un build en conditions reelles avant de pousser.
