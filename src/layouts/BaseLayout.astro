@@ -338,7 +338,13 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     /* Hauteur occupee par le player, exposee aux pages pour qu'elles se reservent
        la place : sans ca, la barre reduite passe par-dessus le disque d'accueil. */
-    :root { --player-pad: 0px; }
+    :root {
+      --player-pad: 0px;
+      /* Respiration entre la barre de lecture et le bas des pages pleines.
+         Elle entre dans --player-pad, donc les huit pages en heritent sans
+         qu'aucune ait a la connaitre. */
+      --player-gap: 14px;
+    }
     #hamcat-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; pointer-events: none; }
     #hamcat-player[data-active="true"] { pointer-events: auto; }
 
@@ -801,12 +807,29 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const prevHref = hrefs[(idx - 1 + hrefs.length) % hrefs.length];
       const nextHref = hrefs[(idx + 1) % hrefs.length];
 
+      // Cette page peut etre servie DANS l'iframe de l'accueil (?modal=1).
+      // Dans ce cas, « Echap → aller a l'accueil » chargeait l'accueil a
+      // l'interieur du cadre : une platine dans une platine, avec sa propre
+      // iframe, donc un encadrement qui s'empile a chaque fois. Depuis le
+      // cadre, Echap demande au parent de fermer ; il ne navigue pas.
+      const dansCadre = window.self !== window.top;
+      const garderCadre = (href: string) =>
+        dansCadre && !href.includes('?') ? href + '?modal=1' : href;
+
       ctrl = new AbortController();
       window.addEventListener('keydown', (e) => {
         if ((e.target as Element).closest('input, textarea, [contenteditable]')) return;
-        if      (e.key === 'ArrowLeft')  { e.preventDefault(); navigate(prevHref); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); navigate(nextHref); }
-        else if (e.key === 'Escape')     { navigate('/'); }
+        if      (e.key === 'ArrowLeft')  { e.preventDefault(); navigate(garderCadre(prevHref)); }
+        else if (e.key === 'ArrowRight') { e.preventDefault(); navigate(garderCadre(nextHref)); }
+        else if (e.key === 'Escape')     {
+          e.preventDefault();
+          if (dansCadre) {
+            try { window.parent.postMessage({ hamcat: 'modal-close' }, window.location.origin); }
+            catch { /* origine differente : on ne fait rien plutot que de s'imbriquer */ }
+          } else {
+            navigate('/');
+          }
+        }
       }, { signal: ctrl.signal });
     });
   </script>
@@ -944,10 +967,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.83 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.84 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.83');
+  console.log('🐱 fx_jam_v1.84');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2589,8 +2612,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       // rangees, et le disque d'accueil doit se reserver la bonne hauteur.
       const bar = playerDiv.querySelector('.player-full') as HTMLElement | null;
       const h = active && bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+      const gap = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--player-gap')) || 14;
       document.documentElement.style.setProperty('--player-pad',
-        (active ? (h || 56) : 62) + 'px');
+        ((active ? (h || 56) : 62) + gap) + 'px');
     }
 
     function openLibrary(open: boolean) {
@@ -2927,7 +2952,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.83';
+    _vt.textContent = 'fx_jam_v1.84';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';

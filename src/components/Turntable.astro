@@ -1893,6 +1893,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       if (appState === 2 && activeFacetIdx >= 0) openModal(activeFacetIdx);
     }, { signal: sig });
 
+    // La page chargee dans l'iframe demande la fermeture (Echap depuis le cadre).
+    // On verifie l'origine : un message venu d'ailleurs ne pilote pas l'accueil.
+    window.addEventListener('message', (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.source !== modalIframe.contentWindow) return;
+      if ((e.data as any)?.hamcat !== 'modal-close') return;
+      if (modalOverlay.classList.contains('is-open')) closeModal();
+    }, { signal: sig });
+
     // Fermer modal (× ou clic hors modal-inner)
     modalOverlay.querySelector('.modal-close')?.addEventListener('click', () => {
       closeModal();
