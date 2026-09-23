@@ -646,7 +646,7 @@
       "id": "6eqHuP56CzwHHCZfXFXL6p",
       "spotify_title": "Bien chill",
       "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e0202bb6a69975cf69ec7432019ab67616d00001e0275133efd17465c8a18d8c4a2ab67616d00001e0279baeba451612590781e8109ab67616d00001e02e6d6be974d99119db2d112b0",
-      "spotify_tracks": 37,
+      "spotify_tracks": 38,
       "visible": false,
       "category": "",
       "description": ""
@@ -1042,7 +1042,7 @@
       "id": "4xwvjqeAplocvKzTeXg6D7",
       "spotify_title": "melodic tech",
       "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e021677f484125173d96fd1f4fdab67616d00001e0243e3a85bb94d4927fc0ec6c4ab67616d00001e0260aecf1bfc11fddc0147f0dfab67616d00001e02a66e7de3ebceb60ecb45202d",
-      "spotify_tracks": 4,
+      "spotify_tracks": 5,
       "visible": false,
       "category": "",
       "description": ""
@@ -1266,8 +1266,8 @@
     {
       "id": "0rDL2m48NQ63QCBhHjmlzp",
       "spotify_title": "Relax",
-      "spotify_cover": "https://i.scdn.co/image/ab67616d00001e02ec9176f0b98678a011948ff3",
-      "spotify_tracks": 1,
+      "spotify_cover": "https://mosaic.scdn.co/640/ab67616d00001e023708414686db50c93df14765ab67616d00001e029785faa525608f9d9b6571e0ab67616d00001e02c8ac509ac96449263a351d03ab67616d00001e02ec9176f0b98678a011948ff3",
+      "spotify_tracks": 4,
       "visible": false,
       "category": "",
       "description": ""
