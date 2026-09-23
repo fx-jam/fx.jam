@@ -1,10 +1,10 @@
 ---
-title: "MOUTONS ELECTRIQUES"
+title: "L'anniversaire Surprise de M. Le Maire"
 date: "2026-08-22"
 format: "dj"
 role: 'mashup'
-venue: "Moutons Électriques"
-city: 'Avranches'
+venue: "Festival des Moutons Électriques"
+city: "Normandie"
 country: "France"
 genre: ["mashup-multigenre"]
 duration: '1h30'
