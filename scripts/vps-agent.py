@@ -218,6 +218,272 @@ def atelier_push():
     push = run(["git", "push", "origin", "main"])
     return {"ok": push.get("code") == 0, "pushed": int(n), "steps": {"push": push}}
 
+# ── Edition complete d'une fiche ─────────────────────────────────────────────
+#  Le patch ligne a ligne suffisait tant qu'on ne remplissait qu'un trou. Editer
+#  une fiche entiere demande autre chose, et la tentation serait de reserialiser
+#  tout le frontmatter. C'est exactement ce qu'il ne faut pas faire : trois
+#  fiches portent encore des listes en bloc YAML (`genre:` puis `  - psydub`),
+#  et une reecriture globale les normaliserait sans qu'on l'ait demande — donc
+#  toucherait des donnees qu'on n'edite pas.
+#
+#  La regle retenue : le frontmatter est lu comme une SUITE DE BLOCS, un par
+#  cle, gardes tels quels. Enregistrer ne reecrit que les blocs des champs
+#  effectivement modifies. Tout le reste ressort octet pour octet.
+
+FICHE_TYPES = {
+    "title": "str", "date": "date", "format": "enum", "role": "str",
+    "venue": "str", "city": "str", "country": "str",
+    "description": "text", "genre": "list", "duration": "str",
+    "lineup": "list", "image": "str", "media": "media", "cover": "str",
+    "recordState": "enum", "tracklist": "str", "recording": "str",
+    "recordings": "recordings", "eventUrl": "str",
+    "featured": "bool", "draft": "bool", "notes": "text",
+}
+FICHE_ENUM = {
+    "format": {"dj", "live", "hybride"},
+    "recordState": {"none", "soon", "tracklist"},
+}
+FICHE_REQUIS = ("title", "date", "format", "venue")
+
+
+def parse_fm(text):
+    """Rend (blocs, corps). `blocs` est une liste de (cle, lignes brutes) dans
+    l'ordre du fichier — les lignes de continuation d'une liste en bloc restent
+    attachees a leur cle."""
+    if not text.startswith("---"):
+        raise ValueError("frontmatter absent")
+    i = text.find("\n---", 3)
+    if i < 0:
+        raise ValueError("frontmatter non ferme")
+    head, body = text[4:i], text[i + 4:]
+    blocs, cle, buf = [], None, []
+    for line in head.split("\n"):
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):(.*)$", line)
+        if m:
+            if cle is not None:
+                blocs.append((cle, buf))
+            cle, buf = m.group(1), [line]
+        elif cle is not None:
+            buf.append(line)                      # continuation (liste en bloc)
+        elif line.strip():
+            raise ValueError("ligne orpheline: " + line[:60])
+    if cle is not None:
+        blocs.append((cle, buf))
+    return blocs, body
+
+
+def render_fm(blocs, body):
+    lignes = []
+    for _, buf in blocs:
+        lignes.extend(buf)
+    return "---\n" + "\n".join(lignes) + "\n---" + body
+
+
+def decode_bloc(buf):
+    """Valeur exploitable par l'interface, quelle que soit la forme ecrite."""
+    tete = buf[0]
+    brut = tete.split(":", 1)[1].strip()
+    suite = [l for l in buf[1:] if l.strip()]
+    if not brut and suite:                        # liste en bloc
+        out = []
+        for l in suite:
+            s = l.strip()
+            if s.startswith("- "):
+                item = s[2:].strip()
+                m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$", item)
+                # « - url: '...' » ouvre un objet ; « - psydub » est un scalaire.
+                out.append({m.group(1): m.group(2).strip().strip("'\"")} if m
+                           else item.strip("'\""))
+            elif out and isinstance(out[-1], dict) and ":" in s:
+                k, v = s.split(":", 1)
+                out[-1][k.strip()] = v.strip().strip("'\"")
+        return out
+    if brut in ("true", "false"):
+        return brut == "true"
+    if brut[:1] in ("[", "{", '"'):
+        try:
+            return json.loads(brut)
+        except ValueError:
+            pass
+    return brut.strip("'\"").replace("''", "'")
+
+
+def encode_champ(champ, valeur):
+    """Une seule serialisation, JSON — qui est un sous-ensemble de YAML 1.2.
+    C'est deja la forme employee dans le depot pour `media` et `genre`, et elle
+    echappe les retours a la ligne d'une description sans cas particulier."""
+    t = FICHE_TYPES[champ]
+    if t == "bool":
+        if isinstance(valeur, bool):
+            v = valeur
+        else:
+            v = str(valeur).strip().lower() in ("true", "oui", "1", "yes")
+        return "%s: %s" % (champ, "true" if v else "false")
+    if t == "list":
+        if isinstance(valeur, list):
+            items = [str(x).strip() for x in valeur if str(x).strip()]
+        else:
+            items = [x.strip() for x in re.split(r"[\n,;]+", str(valeur)) if x.strip()]
+        return "%s: %s" % (champ, json.dumps(items, ensure_ascii=False))
+    if t == "media":
+        items = []
+        for m in (valeur or []):
+            mid = str(m.get("id", "")).strip()
+            kind = str(m.get("kind", "image")).strip()
+            if not mid:
+                continue
+            if kind not in ("image", "video"):
+                raise ValueError("media.kind hors vocabulaire: " + kind)
+            items.append({"id": mid, "kind": kind})
+        return "%s: %s" % (champ, json.dumps(items, ensure_ascii=False))
+    if t == "recordings":
+        items = []
+        for r in (valeur or []):
+            url = str(r.get("url", "")).strip()
+            if not url:
+                continue
+            o = {"url": url}
+            if str(r.get("label", "")).strip():
+                o["label"] = str(r["label"]).strip()
+            items.append(o)
+        return "%s: %s" % (champ, json.dumps(items, ensure_ascii=False))
+    s = str(valeur)
+    if t != "text":
+        s = " ".join(s.split())                   # un scalaire n'a pas de retours
+    else:
+        s = s.replace("\r\n", "\n").strip()
+    if champ in FICHE_ENUM and s not in FICHE_ENUM[champ]:
+        raise ValueError("%s hors vocabulaire: %s" % (champ, s[:40]))
+    if t == "date" and not re.match(r"^\d{4}-\d{2}-\d{2}$", s):
+        raise ValueError("date attendue au format AAAA-MM-JJ")
+    return "%s: %s" % (champ, json.dumps(s, ensure_ascii=False))
+
+
+def valider_blocs(blocs):
+    """La panne de septembre, en une phrase : une valeur ecrite sur la ligne de
+    la cle par-dessus une ancienne liste en bloc, laissant les `  - item`
+    orphelins dessous. Rejouer ce cas ici coute une boucle et l'attrape."""
+    for cle, buf in blocs:
+        tete = buf[0].split(":", 1)
+        if len(tete) != 2:
+            return "bloc sans cle: " + buf[0][:60]
+        inline = tete[1].strip()
+        suite = [l for l in buf[1:] if l.strip()]
+        if inline and suite:
+            return "cle %s : valeur en ligne ET lignes de suite" % cle
+        if not inline and not suite:
+            continue                              # champ vide, tolere
+        for l in suite:
+            if not l.startswith((" ", "\t")):
+                return "cle %s : ligne de suite non indentee" % cle
+    return None
+
+
+def lire_fiche(gig):
+    rel = "%s/%s.md" % (ATELIER_DIR, gig)
+    full, err = safe_path(rel)
+    if err or not os.path.isfile(full):
+        return None
+    with open(full, encoding="utf-8") as f:
+        text = f.read()
+    blocs, _ = parse_fm(text)
+    return {k: decode_bloc(buf) for k, buf in blocs}
+
+
+def lister_fiches():
+    d, _ = safe_path(ATELIER_DIR)
+    out = []
+    for fn in sorted(os.listdir(d)):
+        if not fn.endswith(".md"):
+            continue
+        try:
+            f = lire_fiche(fn[:-3])
+        except Exception as e:
+            out.append({"id": fn[:-3], "erreur": str(e)}); continue
+        if f is not None:
+            f["id"] = fn[:-3]
+            out.append(f)
+    return out
+
+
+def enregistrer_fiche(gig, champs, creer=False):
+    """Ecrit plusieurs champs d'un coup. Les blocs non touches ressortent
+    inchanges ; le corps du document est preserve."""
+    if not gig or "/" in gig or ".." in gig or not re.match(r"^[a-z0-9\-]+$", gig):
+        return {"ok": False, "error": "identifiant invalide"}
+    inconnus = [c for c in champs if c not in FICHE_TYPES]
+    if inconnus:
+        return {"ok": False, "error": "champ non autorise: " + ", ".join(inconnus[:3])}
+
+    rel = "%s/%s.md" % (ATELIER_DIR, gig)
+    full, err = safe_path(rel)
+    if err:
+        return {"ok": False, "error": "chemin refuse"}
+    existe = os.path.isfile(full)
+    if creer and existe:
+        return {"ok": False, "error": "une fiche porte deja cet identifiant"}
+    if not creer and not existe:
+        return {"ok": False, "error": "fiche introuvable"}
+
+    if existe:
+        with open(full, encoding="utf-8") as f:
+            original = f.read()
+        blocs, body = parse_fm(original)
+    else:
+        original, body = None, "\n"
+        manquants = [c for c in FICHE_REQUIS if not str(champs.get(c, "")).strip()]
+        if manquants:
+            return {"ok": False, "error": "champs requis manquants: " + ", ".join(manquants)}
+        blocs = []
+
+    try:
+        for champ, valeur in champs.items():
+            ligne = encode_champ(champ, valeur)
+            pose = False
+            for i, (k, _) in enumerate(blocs):
+                if k == champ:
+                    blocs[i] = (champ, [ligne]); pose = True; break
+            if not pose:
+                blocs.append((champ, [ligne]))
+        nouveau = render_fm(blocs, body)
+        probleme = valider_blocs(blocs) if nouveau.strip() else "resultat vide"
+        if probleme:
+            raise ValueError(probleme)
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    try:
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(nouveau)
+    except Exception as e:
+        if original is not None:
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(original)
+        return {"ok": False, "error": str(e)}
+
+    msg = ("atelier: fiche %s creee" if creer else "atelier: %s (%d champs)")
+    msg = msg % ((gig,) if creer else (gig, len(champs)))
+    steps = {"add": run(["git", "add", "-A"]), "commit": run(["git", "commit", "-m", msg])}
+    return {"ok": True, "gig": gig, "champs": sorted(champs), "steps": steps}
+
+
+def supprimer_fiche(gig):
+    """Suppression franche. Le brouillon (`draft: true`) est le geste courant et
+    passe par `enregistrer_fiche` ; celle-ci sert quand la fiche n'aurait jamais
+    du exister. Git garde l'historique, rien n'est perdu pour de bon."""
+    if not gig or "/" in gig or ".." in gig:
+        return {"ok": False, "error": "identifiant invalide"}
+    rel = "%s/%s.md" % (ATELIER_DIR, gig)
+    full, err = safe_path(rel)
+    if err or not os.path.isfile(full):
+        return {"ok": False, "error": "fiche introuvable"}
+    r = run(["git", "rm", "-f", rel])
+    if r.get("code") != 0:
+        return {"ok": False, "error": (r.get("stderr") or "git rm en echec").strip()}
+    return {"ok": True, "gig": gig,
+            "steps": {"commit": run(["git", "commit", "-m", "atelier: fiche %s supprimee" % gig])}}
+
+
 class Agent(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args): pass
 
@@ -313,6 +579,18 @@ class Agent(BaseHTTPRequestHandler):
             if len(answers) > 50:
                 return self._json({"error": "lot trop grand pour /quick"}, 400)
             self._json(atelier_quick(answers))
+        elif p.path == "/atelier/fiches":
+            self._json({"ok": True, "fiches": lister_fiches()})
+        elif p.path == "/atelier/save":
+            champs = body.get("champs") or {}
+            if not isinstance(champs, dict) or not champs:
+                return self._json({"error": "champs requis"}, 400)
+            if len(champs) > 30:
+                return self._json({"error": "trop de champs"}, 400)
+            self._json(enregistrer_fiche(str(body.get("gig", "")).strip(), champs,
+                                         creer=bool(body.get("creer"))))
+        elif p.path == "/atelier/delete":
+            self._json(supprimer_fiche(str(body.get("gig", "")).strip()))
         elif p.path == "/atelier/push":
             self._json(atelier_push())
         elif p.path == "/atelier/apply":
