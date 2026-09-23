@@ -11,4 +11,5 @@ recording: "https://media.hamcat.live/sets/edc-2024-stg3-20-hamcat.flac"
 draft: false
 role: 'warm-up'
 duration: '1h30'
+city: 'Normandie'
 ---

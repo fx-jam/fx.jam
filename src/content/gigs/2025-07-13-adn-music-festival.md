@@ -13,4 +13,5 @@ draft: false
 notes: "25/07/13 - ADN MUSIC FESTIVAL (CLOSING MASHUP)"
 role: 'chill floor'
 duration: '1h30'
+city: 'Grenoble'
 ---

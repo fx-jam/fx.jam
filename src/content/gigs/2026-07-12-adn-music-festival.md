@@ -4,7 +4,7 @@ date: "2026-07-12"
 format: "dj"
 role: 'closing'
 venue: "ADN Music Festival"
-city: ""
+city: 'Grenoble'
 country: "France"
 genre: ["mashup-multigenre"]
 duration: '1h30'
