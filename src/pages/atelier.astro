@@ -150,25 +150,25 @@ import { TRACKS } from '../lib/atelier';
   .q-why { margin: 0; font-size: 0.75rem; color: var(--text-secondary); }
 
   .q-input { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0; width: 100%; }
-  .opt {
+  :global(.opt) {
     padding: 0.4rem 0.8rem; border-radius: 8px;
     border: 1px solid var(--border); background: transparent;
     font-family: var(--font-mono); font-size: 0.78rem;
     color: var(--text-secondary); cursor: pointer;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
-  .opt:hover, .opt[aria-pressed="true"] {
+  :global(.opt:hover), :global(.opt[aria-pressed="true"]) {
     color: var(--facet-outils); border-color: var(--facet-outils);
     background: color-mix(in srgb, var(--facet-outils) 10%, transparent);
   }
-  .fld {
+  :global(.fld) {
     flex: 1 1 100%; padding: 0.55rem 0.7rem;
     border: 1px solid var(--border); border-radius: 8px;
     background: var(--bg-surface); color: var(--text-primary);
     font-family: var(--font-mono); font-size: 0.85rem;
   }
-  .fld:focus { outline: none; border-color: var(--facet-outils); }
-  textarea.fld { min-height: 5.5rem; resize: vertical; line-height: 1.45; }
+  :global(.fld:focus) { outline: none; border-color: var(--facet-outils); }
+  :global(textarea.fld) { min-height: 5.5rem; resize: vertical; line-height: 1.45; }
 
   /* Choix de cover : les vignettes sont la reponse, on ne lit rien. */
   /* Grille : en flex les vignettes s'empilaient en colonne des qu'elles
@@ -181,13 +181,13 @@ import { TRACKS } from '../lib/atelier';
      retrecissent plutot que de deborder — `auto-fit` + `minmax` les repartit
      sur la largeur, et la variable --thumb, posee en JS selon leur nombre,
      borne leur taille pour que tout tienne d'un coup d'oeil. */
-  .thumbs {
+  :global(.thumbs) {
     flex: 1 1 100%; min-width: 0;
     display: grid; gap: 0.45rem;
     grid-template-columns: repeat(auto-fit, minmax(var(--thumb, 84px), 1fr));
     justify-content: start;
   }
-  .th {
+  :global(.th) {
     width: 100%; aspect-ratio: 1; padding: 0; overflow: hidden;
     /* Bordure et non box-shadow : une ombre se fait rogner par le moindre
        conteneur, une bordure fait partie de la boite. */
@@ -196,17 +196,17 @@ import { TRACKS } from '../lib/atelier';
     border-radius: 7px;
     background: var(--bg-surface); cursor: pointer;
   }
-  .th img {
+  :global(.th img) {
     width: 100%; height: 100%; object-fit: cover; display: block;
     opacity: 0.55; transition: opacity 0.12s ease;
   }
-  .th:hover img { opacity: 1; }
+  :global(.th:hover img) { opacity: 1; }
   /* Selection franche : un liseré fin sur fond sombre ne se voyait pas. */
-  .th[aria-pressed="true"] {
+  :global(.th[aria-pressed="true"]) {
     border-color: var(--facet-outils);
     outline-color: var(--facet-outils);
   }
-  .th[aria-pressed="true"] img { opacity: 1; }
+  :global(.th[aria-pressed="true"] img) { opacity: 1; }
 
 
   /* Collees en bas : toujours atteignables, quel que soit le nombre de
@@ -266,6 +266,7 @@ import { TRACKS } from '../lib/atelier';
     media?: { id: string; kind: string }[];
   };
 
+  declare const __COMMIT__: string;
   const MEDIA_BASE = 'https://media.hamcat.live/media';
   const KEY  = 'hamcat-atelier';
   const KEYD = 'hamcat-atelier-ecartees';
@@ -310,7 +311,8 @@ import { TRACKS } from '../lib/atelier';
       if (el) el.textContent = String(n);
     }
     const done = Object.keys(answers).length;
-    $('at-sub').textContent = `${all.length - done} questions · ${done} réponse${done > 1 ? 's' : ''} en attente d’envoi`;
+    $('at-sub').textContent = `${all.length - done} questions · ${done} réponse${done > 1 ? 's' : ''} en attente`
+      + ` · build ${typeof __COMMIT__ !== 'undefined' ? __COMMIT__ : '?'}`;
   }
 
   function pick(t: string) {
@@ -399,10 +401,24 @@ import { TRACKS } from '../lib/atelier';
         const b = document.createElement('button');
         b.className = 'opt'; b.textContent = o;
         b.setAttribute('aria-pressed', String(o === value));
-        // Un choix ferme vaut validation : pas de second geste pour confirmer.
+        // Un choix propose vaut validation : pas de second geste pour confirmer.
         b.onclick = () => { value = o; commit(); };
         box.appendChild(b);
       });
+      // Aucun vocabulaire n'est complet : les propositions viennent de ce qui a
+      // deja ete saisi, pas d'une liste fermee decidee a l'avance. Entree =
+      // valider, et la valeur inedite servira de proposition aux suivantes.
+      const libre = document.createElement('input') as HTMLInputElement;
+      libre.className = 'fld';
+      libre.placeholder = 'Autre valeur…';
+      libre.oninput = () => {
+        value = libre.value;
+        box.querySelectorAll('.opt').forEach(x => x.setAttribute('aria-pressed', 'false'));
+      };
+      libre.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      };
+      box.appendChild(libre);
       return;
     }
 
