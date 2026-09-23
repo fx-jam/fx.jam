@@ -8,4 +8,5 @@ genre: ["psytrance"]
 draft: false
 role: "concept set"
 city: 'Vieure'
+duration: '1h30'
 ---

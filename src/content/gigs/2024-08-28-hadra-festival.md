@@ -11,4 +11,5 @@ recording: "https://media.hamcat.live/sets/2024-08-28-hadra-cocon.mp3"
 draft: false
 role: 'closing'
 city: 'Vieure'
+duration: '4h'
 ---
