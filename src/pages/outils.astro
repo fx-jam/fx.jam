@@ -72,15 +72,22 @@ const toolCats = Object.keys(toolsByCat);
 </BaseLayout>
 
 <style>
+  /* Le contenu etait colle en haut : 64 px au-dessus, plus de 500 en dessous.
+     `justify-content: center` seul rogne le haut quand ca deborde ; les marges
+     automatiques centrent quand il y a de la place et s'effacent sinon.
+     Le rembourrage redevient symetrique — 4 rem en haut et 3 en bas etait deja
+     un decentrage en soi. */
   .outils {
     height: calc(100dvh - var(--player-pad, 0px));
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 4rem 2rem 3rem;
+    padding: 4rem 2rem;
     gap: 3rem;
   }
+  .outils > :first-child { margin-block-start: auto; }
+  .outils > :last-child  { margin-block-end: auto; }
 
   .cover-hero {
     width: 100%;

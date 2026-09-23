@@ -269,6 +269,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                             data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
                             data-url={r.url}
                             data-lbl={lbl}
+                            data-teinte={waveColor(g.data.genre ?? []).split(':')[1]?.trim()}
                           >▶</button>
                           {wave
                             ? <div class="wave" data-wave={wave} data-url={r.url} data-lbl={lbl}
@@ -1045,11 +1046,12 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
         if (type === 'audio' || type === 'soundcloud') {
           const url = btn.dataset.url ?? '';
           const art = btn.dataset.art ?? '';
+          const teinte = btn.dataset.teinte ?? '';
           if (!url) return;
           // `toggle` : si c'est deja ce set qui joue, le player met en pause au lieu
           // de le relancer. La decision lui revient — cette page peut etre en iframe.
           document.dispatchEvent(new CustomEvent('hamcat:play',
-            { detail: { type, url, lbl, art, toggle: true } }));
+            { detail: { type, url, lbl, art, teinte, toggle: true } }));
         } else if (type === 'spotify') {
           const playlistId = btn.dataset.playlistId ?? '';
           if (playlistId) document.dispatchEvent(new CustomEvent('hamcat:play', { detail: { type, playlistId, lbl } }));
