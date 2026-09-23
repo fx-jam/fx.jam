@@ -31,6 +31,9 @@ export type Question = {
   suggestion?: string;    // reponse proposee : la question devient un oui/non
   why?: string;           // ce que la reponse debloque, quand ce n'est pas evident
   media?: { id: string; kind: string }[];
+  /** Une seule reponse peut renseigner plusieurs fiches : la ville d'un lieu
+   *  vaut pour toutes ses dates. Absent = la question ne vise que `gig`. */
+  targets?: string[];
   weight: number;         // plus petit = pose plus tot
 };
 
@@ -93,7 +96,7 @@ export function buildQueue(gigs: Gig[]): Question[] {
 
     // 2. Ville — confirmation quand elle est deduite du lieu, sinon saisie
     //    assistee par les villes deja connues.
-    if (!d.city && d.venue) {
+    if (!d.city && d.venue && knownCity(d.venue)) {
       const sug = knownCity(d.venue);
       push({
         id: `${g.id}:city`, track: 'rapide', field: 'city',
@@ -140,6 +143,47 @@ export function buildQueue(gigs: Gig[]): Question[] {
         input: 'text', weight: 80,
       }, g);
     }
+  }
+
+  // ── Sondes transverses ────────────────────────────────────────────────
+  // Une question posee une fois pour un LIEU renseigne toutes ses dates :
+  // 33 lieux sans aucune ville couvrent 47 dates. Poser la question date par
+  // date serait 47 fois le meme effort de memoire pour la meme information.
+  const byVenue = new Map<string, Gig[]>();
+  for (const g of live) {
+    const v = (g.data.venue ?? '').trim();
+    if (!v || /^\d+$/.test(v)) continue;          // « 38 » n'est pas un lieu
+    (byVenue.get(v) ?? byVenue.set(v, []).get(v)!).push(g);
+  }
+  for (const [venue, gs] of byVenue) {
+    if (gs.some(g => g.data.city)) continue;      // deja connue quelque part
+    const first = gs[0];
+    out.push({
+      id: `venue:${venue}:city`, track: 'rapide', field: 'city',
+      gig: first.id, title: venue, date: iso(first.data.date),
+      prompt: `Dans quelle ville se trouve ${venue} ?`,
+      input: 'text', options: cities, weight: 15,
+      targets: gs.map(g => g.id),
+      why: gs.length > 1
+        ? `Une seule réponse renseigne les ${gs.length} dates de ce lieu.`
+        : undefined,
+    });
+  }
+
+  // Un enregistrement annonce « bientot » sur une date passee depuis longtemps
+  // finit par mentir a qui lit l'agenda.
+  const today = iso(new Date());
+  for (const g of live) {
+    if ((g.data as any).recordState !== 'soon') continue;
+    if (iso(g.data.date) >= today) continue;
+    push({
+      id: `${g.id}:recordState`, track: 'rapide', field: 'recordState',
+      prompt: 'L’enregistrement de cette date est-il arrivé ?',
+      input: 'choice',
+      options: ['tracklist', 'none', 'soon'],
+      weight: 25,
+      why: 'Annoncé « bientôt » alors que la date est passée — « none » s’il n’y en aura pas.',
+    }, g);
   }
 
   // A poids egal, les dates recentes d'abord : la memoire est plus fraiche et

@@ -263,7 +263,7 @@ import { TRACKS } from '../lib/atelier';
     id: string; track: string; gig: string; title: string; date: string;
     field: string; prompt: string; input: 'choice' | 'text' | 'media';
     options?: string[]; suggestion?: string; why?: string;
-    media?: { id: string; kind: string }[];
+    media?: { id: string; kind: string }[]; targets?: string[];
   };
 
   declare const __COMMIT__: string;
@@ -496,9 +496,12 @@ import { TRACKS } from '../lib/atelier';
   // que des reponses deja donnees ne soient jamais perdues.
   $('send').onclick = async () => {
     const btn = $('send') as HTMLButtonElement;
-    const list = Object.entries(answers).map(([id, value]) => {
+    const list = Object.entries(answers).flatMap(([id, value]) => {
+      const q = all.find(x => x.id === id);
+      if (q) return (q.targets ?? [q.gig]).map(gig => ({ gig, field: q.field, value }));
+      // Repli pour une reponse donnee avant que la file ne soit rechargee.
       const i = id.lastIndexOf(':');
-      return { gig: id.slice(0, i), field: id.slice(i + 1), value };
+      return [{ gig: id.slice(0, i), field: id.slice(i + 1), value }];
     });
     if (!list.length) return;
     btn.disabled = true; btn.textContent = 'Envoi…';
@@ -513,7 +516,7 @@ import { TRACKS } from '../lib/atelier';
         // Le lot est ecrit : on vide, sinon il repartirait au prochain envoi.
         answers = {}; save(answers);
         btn.textContent = `${d.changed?.length ?? list.length} appliquées`;
-        all = all.filter(q => !list.some(a => `${a.gig}:${a.field}` === q.id));
+        all = all.filter(q => !(q.id in answers));
         counts(); pick(track);
       } else {
         btn.disabled = false;
@@ -528,9 +531,11 @@ import { TRACKS } from '../lib/atelier';
   $('copy').onclick = async () => {
     // Le format porte le champ et la fiche : lisible par un humain comme par
     // l'architecte, sans table de correspondance.
-    const lines = Object.entries(answers).map(([id, v]) => {
-      const [gig, field] = id.split(':');
-      return `${gig}\t${field}\t${v.replace(/\n/g, ' | ')}`;
+    const lines = Object.entries(answers).flatMap(([id, v]) => {
+      const q = all.find(x => x.id === id);
+      const gigs = q ? (q.targets ?? [q.gig]) : [id.slice(0, id.lastIndexOf(':'))];
+      const field = q ? q.field : id.slice(id.lastIndexOf(':') + 1);
+      return gigs.map(g => `${g}\t${field}\t${v.replace(/\n/g, ' | ')}`);
     });
     const txt = lines.join('\n');
     try {
