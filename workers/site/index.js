@@ -7,10 +7,54 @@ const SC_TOKEN_URL = `${SC_API}/oauth2/token`;
 const SC_REDIRECT  = 'https://hamcat.live';
 const VPS_AGENT    = 'https://api-vps.hamcat.live';
 
+
+// ── En-tetes de securite ─────────────────────────────────────────────────────
+//  Ajoutes en sortie, sur toutes les reponses. Trois choix assumes :
+//
+//  - `frame-ancestors 'self'` et non DENY : les facettes du site s'ouvrent en
+//    iframe depuis la platine. Interdire tout cadrage casserait la navigation.
+//  - HSTS a une semaine pour commencer. L'en-tete est collant : un navigateur
+//    qui l'a vu refusera le HTTP pendant toute la duree annoncee. On monte a
+//    six mois une fois qu'on est sur que tout passe en HTTPS.
+//  - CSP en mode RAPPORT SEUL. Une politique posee d'emblee casserait les
+//    embeds SoundCloud et Spotify sans prevenir ; en rapport seul, les
+//    violations s'affichent dans la console sans rien bloquer. On bascule en
+//    application une fois la liste stabilisee.
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "img-src 'self' data: blob: https://media.hamcat.live https://i.scdn.co https://*.sndcdn.com",
+  "media-src 'self' blob: https://media.hamcat.live",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://w.soundcloud.com https://sdk.scdn.co https://open.spotify.com",
+  "connect-src 'self' https://media.hamcat.live https://api.soundcloud.com https://api.spotify.com",
+  "frame-src https://w.soundcloud.com https://open.spotify.com",
+].join('; ');
+
+function withSecurity(res) {
+  const h = new Headers(res.headers);
+  h.set('Strict-Transport-Security', 'max-age=604800');
+  h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  h.set('X-Content-Type-Options', 'nosniff');
+  h.set('X-Frame-Options', 'SAMEORIGIN');
+  h.set('Content-Security-Policy-Report-Only', CSP);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+}
+
 export default {
   async fetch(request, env) {
     const url  = new URL(request.url);
     const path = url.pathname;
+
+    // Le site repondait 200 en clair sur http:// — le trafic pouvait etre lu
+    // et modifie en chemin. Redirection permanente avant tout le reste.
+    if (url.protocol === 'http:') {
+      url.protocol = 'https:';
+      return Response.redirect(url.toString(), 301);
+    }
 
     // OPTIONS preflight pour /api/*
     if (request.method === 'OPTIONS' && path.startsWith('/api/')) {
@@ -236,7 +280,7 @@ export default {
     }
 
     // Toutes les autres routes → assets statiques Astro (build dist/)
-    return env.ASSETS.fetch(request);
+    return withSecurity(await env.ASSETS.fetch(request));
   },
 };
 
