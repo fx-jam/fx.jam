@@ -1,13 +1,12 @@
 ---
-title: ZIB — MINIMISTAN
+title: "Vernissage Bal'Con (avec Zibbibovic)"
 date: 2026-09-03
-format: dj
+format: "hybride"
 role: "B2B"
 venue: Minimistan
 city: 'Grenoble'
 country: France
-genre:
-  - hi-tech
+genre: ["Tech House", "Funky", "Bouncy", "Balkan"]
 duration: '1h30'
 lineup: []
 image: ''
