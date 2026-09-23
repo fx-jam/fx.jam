@@ -232,8 +232,11 @@ export default {
     // /api/atelier/quick et /push — ecriture eclair. `quick` valide et commite
     // sans construire (0,4 s mesure) ; `push` publie la salve, protege par un
     // build tiede (34 s), une seule fois par salve et non par reponse.
-    if ((path === '/api/atelier/quick' || path === '/api/atelier/push')
-        && request.method === 'POST') {
+    const ATELIER_ROUTES = new Set([
+      '/api/atelier/quick', '/api/atelier/push',
+      '/api/atelier/fiches', '/api/atelier/save', '/api/atelier/delete',
+    ]);
+    if (ATELIER_ROUTES.has(path) && request.method === 'POST') {
       let who;
       try {
         who = await verifyAccess(request, env);
@@ -244,11 +247,14 @@ export default {
       if (!env.VPS_TOKEN) return errJson('vps_token_absent', 503);
       const route = path.slice('/api/atelier'.length);
       let body = {};
-      if (route === '/quick') {
+      if (route !== '/push' && route !== '/fiches') {
         try { body = await request.json(); } catch { return errJson('json_invalide', 400); }
-        if (!Array.isArray(body.answers) || !body.answers.length) {
-          return errJson('aucune_reponse', 400);
-        }
+      }
+      if (route === '/quick' && (!Array.isArray(body.answers) || !body.answers.length)) {
+        return errJson('aucune_reponse', 400);
+      }
+      if (route === '/save' || route === '/delete') {
+        if (!body.gig || typeof body.gig !== 'string') return errJson('gig_requis', 400);
       }
       try {
         const res = await fetch(`${VPS_AGENT}/atelier${route}`, {

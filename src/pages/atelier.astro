@@ -40,6 +40,15 @@ import { TRACKS } from '../lib/atelier';
       <button class="auth-b" id="auth-retry">Reprendre l’envoi</button>
     </p>
 
+    <!-- Une seule division, en deux : repondre aux trous, ou ouvrir une fiche
+         et la corriger de bout en bout. -->
+    <nav class="modes">
+      <button class="md" id="md-q" aria-current="true">Questions</button>
+      <button class="md" id="md-f" aria-current="false">Fiches</button>
+    </nav>
+
+    <div id="mode-q">
+
     <!-- Choix du parcours : on repond selon le temps qu'on a, pas selon un
          ordre impose. -->
     <nav class="tracks" id="tracks">
@@ -77,6 +86,19 @@ import { TRACKS } from '../lib/atelier';
       </div>
       <p class="done-state" id="done-state"></p>
       <p class="done-h">Chaque réponse part déjà toute seule ; publier n’attend pas les 20 s. Copier sert de repli.</p>
+    </section>
+
+    </div><!-- /mode-q -->
+
+    <section class="fiches" id="mode-f" hidden>
+      <div class="f-bar">
+        <input class="f-search" id="f-search" type="search"
+               placeholder="Chercher une date, un lieu, un style…" autocomplete="off" />
+        <button class="btn btn--ok" id="f-new">Nouvelle date</button>
+      </div>
+      <p class="f-state" id="f-state">chargement…</p>
+      <div class="f-list" id="f-list"></div>
+      <div class="f-edit" id="f-edit" hidden></div>
     </section>
 
   </main>
@@ -129,6 +151,97 @@ import { TRACKS } from '../lib/atelier';
     text-decoration: none;
   }
   .auth-b { background: transparent; color: var(--facet-cours); border: 1px solid currentColor; }
+
+  .modes {
+    display: flex; gap: 0.5rem;
+    padding: 0.8rem 1.5rem 0; max-width: 760px; margin: 0 auto; width: 100%;
+  }
+  .md {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+    padding: 0.35rem 0.9rem; border-radius: 999px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-secondary);
+  }
+  .md[aria-current="true"] {
+    border-color: var(--facet-outils); color: var(--facet-outils);
+    background: color-mix(in srgb, var(--facet-outils) 10%, transparent);
+  }
+
+  /* ── Mode Fiches ────────────────────────────────────────────────────────
+     Tout ce qui suit est cree en JavaScript. Les regles scopees d'Astro sont
+     eliminees du bundle quand aucun element du gabarit ne les porte : sans
+     :global, ces styles n'arriveraient jamais dans la page. C'est la panne
+     qu'on a mis trois essais a comprendre le 22/09. */
+  .fiches {
+    display: flex; flex-direction: column; gap: 0.8rem;
+    max-width: 760px; margin: 0 auto; width: 100%; padding: 1rem 1.5rem 2rem;
+  }
+  .fiches[hidden] { display: none; }
+  .f-bar { display: flex; gap: 0.5rem; }
+  .f-search {
+    flex: 1; font: inherit; font-size: 0.85rem;
+    padding: 0.5rem 0.7rem; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg-elevated, transparent);
+    color: var(--text-primary);
+  }
+  .f-state {
+    margin: 0; font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--facet-outils); min-height: 1rem;
+  }
+  .f-list { display: flex; flex-direction: column; gap: 0.3rem; }
+  .f-list[hidden] { display: none; }
+  :global(.f-row) {
+    display: grid; grid-template-columns: 6.2rem 1fr auto; gap: 0.6rem;
+    align-items: baseline; text-align: left; cursor: pointer;
+    padding: 0.45rem 0.6rem; border-radius: 6px;
+    border: 1px solid transparent; background: transparent;
+  }
+  :global(.f-row:hover) { border-color: var(--facet-outils); }
+  :global(.f-d) { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-tertiary); }
+  :global(.f-t) { font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+  :global(.f-v) { font-size: 0.7rem; color: var(--text-secondary); }
+  :global(.f-gap) { font-family: var(--font-mono); font-size: 0.62rem; color: var(--facet-cours); }
+  :global(.f-draft) { color: var(--text-tertiary); font-style: italic; }
+
+  .f-edit { display: flex; flex-direction: column; gap: 0.7rem; }
+  .f-edit[hidden] { display: none; }
+  :global(.fe-head) {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+    border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
+  }
+  :global(.fe-id) { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-tertiary); }
+  :global(.fe-f) { display: flex; flex-direction: column; gap: 0.2rem; }
+  :global(.fe-l) {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-tertiary);
+  }
+  :global(.fe-i), :global(.fe-ta), :global(.fe-sel) {
+    font: inherit; font-size: 0.85rem; width: 100%;
+    padding: 0.45rem 0.6rem; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-primary);
+  }
+  :global(.fe-ta) { min-height: 5rem; resize: vertical; font-family: inherit; }
+  :global(.fe-ch) { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: var(--text-secondary); }
+  :global(.fe-med) { display: flex; flex-direction: column; gap: 0.35rem; }
+  :global(.fe-m) {
+    display: grid; grid-template-columns: 44px 1fr auto auto auto; gap: 0.45rem;
+    align-items: center;
+  }
+  :global(.fe-th) { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; background: var(--border); }
+  :global(.fe-mid) { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; }
+  :global(.fe-b) {
+    font-family: var(--font-mono); font-size: 0.68rem; cursor: pointer;
+    padding: 0.25rem 0.55rem; border-radius: 4px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+  }
+  :global(.fe-b[aria-pressed="true"]) { border-color: var(--facet-son); color: var(--facet-son); }
+  :global(.fe-b--danger) { color: var(--facet-son); border-color: color-mix(in srgb, var(--facet-son) 40%, transparent); }
+  :global(.fe-actions) {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+    padding-top: 0.6rem; border-top: 1px solid var(--border);
+  }
+  :global(.fe-note) { margin: 0; font-size: 0.66rem; color: var(--text-tertiary); }
 
   .tracks {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
@@ -707,4 +820,327 @@ import { TRACKS } from '../lib/atelier';
     .then(r => r.json())
     .then(d => { all = d.questions ?? []; counts(); pick('rapide'); })
     .catch(() => { $('at-sub').textContent = 'file indisponible'; });
+  // ── Mode Fiches ────────────────────────────────────────────────────────────
+  //  La file de questions ne sait que remplir un trou. Ici on ouvre une date et
+  //  on la corrige de bout en bout — y compris ce qui etait deja rempli, ce que
+  //  la file ne proposera jamais.
+  //
+  //  Le serveur ne reserialise pas le frontmatter entier : il remplace le bloc
+  //  des seuls champs envoyes. On n'envoie donc QUE ce qui a change, et les
+  //  champs qu'on n'affiche pas ici (`recordings`, listes de plusieurs
+  //  enregistrements) ressortent du fichier octet pour octet.
+  type Fiche = Record<string, any> & { id: string };
+  type Champ = { k: string; l: string; t: string; o?: string[] };
+
+  const CHAMPS: Champ[] = [
+    { k: 'title',       l: 'Titre',                t: 'str'  },
+    { k: 'date',        l: 'Date',                 t: 'date' },
+    { k: 'format',      l: 'Format',               t: 'enum', o: ['dj', 'live', 'hybride'] },
+    { k: 'role',        l: 'Type de set',          t: 'str',
+      o: ['DJ set', 'warm-up', 'closing', 'peak-time', 'dancefloor', 'live', 'concept set', 'B2B'] },
+    { k: 'venue',       l: 'Lieu',                 t: 'str'  },
+    { k: 'city',        l: 'Ville',                t: 'str'  },
+    { k: 'country',     l: 'Pays',                 t: 'str'  },
+    { k: 'genre',       l: 'Styles',               t: 'list' },
+    { k: 'duration',    l: 'Durée',                t: 'str',
+      o: ['45min', '1h', '1h30', '2h', '3h', '4h'] },
+    { k: 'lineup',      l: 'Line-up',              t: 'list' },
+    { k: 'description', l: 'Description',          t: 'text' },
+    { k: 'media',       l: 'Médias',               t: 'media' },
+    { k: 'recordState', l: 'État enregistrement',  t: 'enum', o: ['none', 'soon', 'tracklist'] },
+    { k: 'recording',   l: 'URL enregistrement',   t: 'str'  },
+    { k: 'tracklist',   l: 'Tracklist / playlist', t: 'str'  },
+    { k: 'eventUrl',    l: 'Lien événement',       t: 'str'  },
+    { k: 'notes',       l: 'Notes privées',        t: 'text' },
+    { k: 'featured',    l: 'Mise en avant',        t: 'bool' },
+    { k: 'draft',       l: 'Brouillon',            t: 'bool' },
+  ];
+
+  let fiches: Fiche[] = [];
+  let fichesChargees = false;
+  let ouverte: Fiche | null = null;
+  let brouillon: Record<string, any> = {};   // uniquement les champs modifies
+  let creation = false;
+
+  const fdire = (s: string) => { const e = $('f-state'); if (e) e.textContent = s; };
+  const txt = (v: any) => (v === undefined || v === null ? '' : String(v));
+  const arr = (v: any) => (Array.isArray(v) ? v : []);
+
+  async function chargerFiches(force = false) {
+    if (fichesChargees && !force) return;
+    fdire('chargement…');
+    const rep = await poste('/api/atelier/fiches');
+    if (!rep.ok) { authBanner(rep.auth); fdire(rep.msg); return; }
+    fiches = rep.d.fiches || [];
+    fichesChargees = true;
+    fdire(`${fiches.length} fiches`);
+    listeFiches();
+  }
+
+  /** Ce qui manque a une fiche, dit en un mot — c'est ce qui rend la liste
+   *  utile : on voit ou aller sans ouvrir. */
+  function trous(f: Fiche): string {
+    const m: string[] = [];
+    if (!txt(f.city)) m.push('ville');
+    if (!txt(f.role)) m.push('rôle');
+    if (!txt(f.duration)) m.push('durée');
+    if (!arr(f.lineup).length) m.push('line-up');
+    if (!txt(f.description)) m.push('récit');
+    if (!arr(f.media).length) m.push('média');
+    return m.length ? m.join(' · ') : '';
+  }
+
+  function listeFiches() {
+    const q = (($('f-search') as HTMLInputElement).value || '').trim().toLowerCase();
+    const el = $('f-list');
+    el.textContent = '';
+    const vus = fiches
+      .filter(f => !q || [f.id, f.title, f.venue, f.city, ...arr(f.genre), ...arr(f.lineup)]
+        .some(x => txt(x).toLowerCase().includes(q)))
+      .sort((a, b) => txt(b.date).localeCompare(txt(a.date)));
+    for (const f of vus) {
+      const b = document.createElement('button');
+      b.className = 'f-row';
+      const d = document.createElement('span'); d.className = 'f-d'; d.textContent = txt(f.date);
+      const t = document.createElement('span');
+      t.className = 'f-t' + (f.draft ? ' f-draft' : '');
+      t.textContent = txt(f.title) + (f.draft ? ' — brouillon' : '');
+      const v = document.createElement('span'); v.className = 'f-v'; v.textContent = txt(f.venue);
+      const g = document.createElement('span'); g.className = 'f-gap'; g.textContent = trous(f);
+      const mid = document.createElement('span'); mid.append(t, document.createTextNode(' '), v);
+      b.append(d, mid, g);
+      b.onclick = () => ouvrir(f);
+      el.appendChild(b);
+    }
+    if (!vus.length) fdire(q ? 'aucune fiche ne correspond' : `${fiches.length} fiches`);
+    else fdire(`${vus.length} fiche${vus.length > 1 ? 's' : ''}`);
+  }
+
+  function ouvrir(f: Fiche) {
+    ouverte = JSON.parse(JSON.stringify(f));
+    brouillon = {};
+    creation = false;
+    rendreEditeur();
+  }
+
+  function nouvelle() {
+    const today = new Date().toISOString().slice(0, 10);
+    ouverte = { id: '', title: '', date: today, format: 'dj', venue: '', country: 'France', draft: true };
+    brouillon = { ...ouverte };
+    delete brouillon.id;
+    creation = true;
+    rendreEditeur();
+  }
+
+  /** Identifiant derive de la date et du titre, comme les 81 fiches existantes. */
+  function idPropose(): string {
+    const d = txt(ouverte?.date).slice(0, 10);
+    const t = txt(ouverte?.title).toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return [d, t].filter(Boolean).join('-');
+  }
+
+  function set(k: string, v: any) {
+    if (!ouverte) return;
+    ouverte[k] = v;
+    brouillon[k] = v;
+    const s = $('fe-save') as HTMLButtonElement | null;
+    if (s) s.textContent = `Enregistrer (${Object.keys(brouillon).length})`;
+  }
+
+  function champEl(c: Champ): HTMLElement {
+    const wrap = document.createElement('div'); wrap.className = 'fe-f';
+    const lab = document.createElement('span'); lab.className = 'fe-l'; lab.textContent = c.l;
+    const v = ouverte ? ouverte[c.k] : undefined;
+
+    if (c.t === 'bool') {
+      const l = document.createElement('label'); l.className = 'fe-ch';
+      const i = document.createElement('input'); i.type = 'checkbox'; i.checked = v === true;
+      i.onchange = () => set(c.k, i.checked);
+      l.append(i, document.createTextNode(c.l));
+      wrap.appendChild(l);
+      return wrap;
+    }
+    if (c.t === 'media') { wrap.append(lab, mediaEl()); return wrap; }
+
+    let inp: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    if (c.t === 'enum') {
+      const sel = document.createElement('select'); sel.className = 'fe-sel';
+      for (const o of c.o!) {
+        const op = document.createElement('option'); op.value = o; op.textContent = o;
+        if (txt(v) === o) op.selected = true;
+        sel.appendChild(op);
+      }
+      sel.onchange = () => set(c.k, sel.value);
+      inp = sel;
+    } else if (c.t === 'text') {
+      const ta = document.createElement('textarea'); ta.className = 'fe-ta';
+      ta.value = txt(v);
+      ta.oninput = () => set(c.k, ta.value);
+      inp = ta;
+    } else {
+      const i = document.createElement('input'); i.className = 'fe-i';
+      i.type = c.t === 'date' ? 'date' : 'text';
+      i.value = c.t === 'list' ? arr(v).join(', ') : txt(v);
+      if (c.o) {
+        const lid = 'dl-' + c.k;
+        let dl = document.getElementById(lid) as HTMLDataListElement | null;
+        if (!dl) {
+          dl = document.createElement('datalist'); dl.id = lid;
+          for (const o of c.o) { const op = document.createElement('option'); op.value = o; dl.appendChild(op); }
+          document.body.appendChild(dl);
+        }
+        i.setAttribute('list', lid);
+      }
+      i.oninput = () => set(c.k, c.t === 'list'
+        ? i.value.split(',').map(x => x.trim()).filter(Boolean)
+        : i.value);
+      inp = i;
+    }
+    wrap.append(lab, inp);
+    return wrap;
+  }
+
+  /** Les medias sont le champ le plus penible a corriger a la main : une liste
+   *  d'identifiants opaques dont on ne voit pas ce qu'ils representent. */
+  function mediaEl(): HTMLElement {
+    const box = document.createElement('div'); box.className = 'fe-med';
+    const liste = arr(ouverte?.media) as { id: string; kind: string }[];
+    liste.forEach((m, i) => {
+      const row = document.createElement('div'); row.className = 'fe-m';
+      const th = document.createElement('img'); th.className = 'fe-th'; th.loading = 'lazy';
+      th.src = `${MEDIA_BASE}/${m.id}${m.kind === 'video' ? '/thumb' : ''}`;
+      th.alt = '';
+      const id = document.createElement('span'); id.className = 'fe-mid'; id.textContent = m.id;
+      const kind = document.createElement('button'); kind.className = 'fe-b';
+      kind.textContent = m.kind;
+      kind.onclick = () => {
+        const l = arr(ouverte?.media).slice();
+        l[i] = { ...l[i], kind: l[i].kind === 'video' ? 'image' : 'video' };
+        set('media', l); rendreEditeur();
+      };
+      const cov = document.createElement('button'); cov.className = 'fe-b';
+      cov.textContent = 'cover';
+      cov.setAttribute('aria-pressed', String(txt(ouverte?.cover) === m.id));
+      cov.onclick = () => { set('cover', txt(ouverte?.cover) === m.id ? '' : m.id); rendreEditeur(); };
+      const del = document.createElement('button'); del.className = 'fe-b fe-b--danger';
+      del.textContent = 'retirer';
+      del.onclick = () => {
+        const l = arr(ouverte?.media).filter((_, j) => j !== i);
+        set('media', l);
+        if (txt(ouverte?.cover) === m.id) set('cover', '');
+        rendreEditeur();
+      };
+      row.append(th, id, kind, cov, del);
+      box.appendChild(row);
+    });
+    const add = document.createElement('div'); add.className = 'fe-m';
+    const sp = document.createElement('span');
+    const inp = document.createElement('input'); inp.className = 'fe-i';
+    inp.placeholder = 'identifiant du média à ajouter';
+    const go = document.createElement('button'); go.className = 'fe-b'; go.textContent = 'ajouter';
+    go.onclick = () => {
+      const v = inp.value.trim();
+      if (!v) return;
+      set('media', [...arr(ouverte?.media), { id: v, kind: 'image' }]);
+      rendreEditeur();
+    };
+    add.append(sp, inp, go, document.createElement('span'), document.createElement('span'));
+    box.appendChild(add);
+    return box;
+  }
+
+  function rendreEditeur() {
+    const el = $('f-edit');
+    el.textContent = '';
+    el.hidden = false;
+    $('f-list').hidden = true;
+    if (!ouverte) return;
+
+    const head = document.createElement('div'); head.className = 'fe-head';
+    const h = document.createElement('strong');
+    h.textContent = creation ? 'Nouvelle date' : txt(ouverte.title);
+    const idl = document.createElement('span'); idl.className = 'fe-id';
+    idl.textContent = creation ? idPropose() || '…' : ouverte.id;
+    head.append(h, idl);
+    el.appendChild(head);
+
+    for (const c of CHAMPS) el.appendChild(champEl(c));
+
+    const act = document.createElement('div'); act.className = 'fe-actions';
+    const save = document.createElement('button');
+    save.className = 'btn btn--ok'; save.id = 'fe-save';
+    save.textContent = creation ? 'Créer la fiche' : 'Enregistrer';
+    save.onclick = enregistrer;
+    const back = document.createElement('button');
+    back.className = 'btn'; back.textContent = 'Retour';
+    back.onclick = () => { ouverte = null; brouillon = {}; el.hidden = true; $('f-list').hidden = false; listeFiches(); };
+    act.append(save, back);
+    if (!creation) {
+      const sup = document.createElement('button');
+      sup.className = 'btn'; sup.textContent = 'Supprimer';
+      sup.onclick = supprimer;
+      act.appendChild(sup);
+    }
+    el.appendChild(act);
+
+    const note = document.createElement('p'); note.className = 'fe-note';
+    note.textContent = 'Seuls les champs modifiés sont envoyés. Les enregistrements multiples '
+      + '(recordings) ne sont pas éditables ici et restent intacts.';
+    el.appendChild(note);
+  }
+
+  async function enregistrer() {
+    if (!ouverte) return;
+    const gig = creation ? idPropose() : ouverte.id;
+    if (!gig) { fdire('il faut une date et un titre'); return; }
+    if (!creation && !Object.keys(brouillon).length) { fdire('rien à enregistrer'); return; }
+    fdire(creation ? 'création…' : 'enregistrement…');
+    const rep = await poste('/api/atelier/save', { gig, champs: brouillon, creer: creation });
+    if (!rep.ok) { authBanner(rep.auth); fdire(rep.msg); return; }
+    if (rep.d.error) { fdire(rep.d.error); return; }
+    fdire(creation ? `fiche ${gig} créée` : `${gig} enregistrée`);
+    planifierPush();
+    await chargerFiches(true);
+    const maj = fiches.find(f => f.id === gig);
+    if (maj) ouvrir(maj); else { ouverte = null; $('f-edit').hidden = true; $('f-list').hidden = false; }
+  }
+
+  async function supprimer() {
+    if (!ouverte || creation) return;
+    const gig = ouverte.id;
+    // Deux temps : le premier clic previent, le second agit. Une confirmation
+    // native bloquerait la page dans certains contextes.
+    const b = $('f-edit').querySelectorAll('.btn');
+    const sup = b[b.length - 1] as HTMLButtonElement;
+    if (sup.dataset.sur !== '1') {
+      sup.dataset.sur = '1';
+      sup.textContent = 'Confirmer la suppression';
+      fdire('la fiche restera dans l’historique git — « Brouillon » suffit souvent');
+      return;
+    }
+    fdire('suppression…');
+    const rep = await poste('/api/atelier/delete', { gig });
+    if (!rep.ok) { authBanner(rep.auth); fdire(rep.msg); return; }
+    if (rep.d.error) { fdire(rep.d.error); return; }
+    fdire(`${gig} supprimée`);
+    planifierPush();
+    ouverte = null; $('f-edit').hidden = true; $('f-list').hidden = false;
+    await chargerFiches(true);
+  }
+
+  function mode(f: boolean) {
+    $('md-q').setAttribute('aria-current', String(!f));
+    $('md-f').setAttribute('aria-current', String(f));
+    $('mode-q').hidden = f;
+    $('mode-f').hidden = !f;
+    $('at-title').textContent = f ? 'Fiches' : 'Questions';
+    if (f) chargerFiches();
+  }
+  $('md-q').onclick = () => mode(false);
+  $('md-f').onclick = () => mode(true);
+  $('f-new').onclick = () => { mode(true); nouvelle(); };
+  ($('f-search') as HTMLInputElement).oninput = () => { if (fichesChargees) listeFiches(); };
+
 </script>
