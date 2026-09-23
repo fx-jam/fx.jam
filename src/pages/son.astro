@@ -215,6 +215,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                 return rows.map((r, i) => {
                   const wave = r ? waveformUrl(r.url) : null;
                   const lbl  = r?.label ? `${g.data.title} — ${r.label}` : g.data.title;
+                  const nrm  = (x = '') => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  const venueRedit = !!g.data.venue
+                    && (nrm(g.data.venue) === nrm(g.data.title)
+                        || nrm(g.data.title).includes(nrm(g.data.venue))
+                        || nrm(g.data.venue).includes(nrm(g.data.title)));
                   return (
                   <li class="gig-row"
                       data-media={(g.data.media ?? []).length
@@ -240,8 +245,13 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       <span class="c-sub"> · {r?.label ?? g.data.formation}</span>
                     )}</span>
 
-                    <span class="c-place" title={[g.data.venue, g.data.city].filter(Boolean).join(" · ")}>{g.data.venue}{g.data.city && (
-                      <span class="c-city"> · {g.data.city}</span>
+                    {/* Le lieu redit le titre sur 32 dates sur 81 — « SENOI
+                        GATHERING » chez « Senoi ». Dans ce cas on ne garde que
+                        la ville : la colonne cesse d'etre la plus gourmande de
+                        la ligne pour rien. */}
+                    <span class="c-place" title={[g.data.venue, g.data.city].filter(Boolean).join(" · ")}>{
+                      !venueRedit && g.data.venue}{!venueRedit && g.data.city && ' · '}{g.data.city && (
+                      <span class="c-city">{g.data.city}</span>
                     )}</span>
 
                     <span class="c-set">{g.data.role ?? ''}</span>
@@ -498,12 +508,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      lisible comme forme et comme position. Un seul nombre a bouger si on veut
      rearbitrer. */
   .gig-list {
+    /* Les parts ne sont plus estimees : elles sortent de la mesure des 81
+       fiches. Longueur au 80e centile — titre 19 signes, lieu 21, type de set
+       10, styles 20 — convertie en largeur pour la police de chaque colonne.
+       Le titre est en display etroit, les deux dernieres en mono. */
     --ecoute: 2.05fr;          /* face a 3,05fr de texte : 40 % de la largeur souple */
     list-style: none; padding: 0; margin: 0;
     display: grid;
     grid-template-columns:
-      18px 82px minmax(0, 1.25fr) minmax(0, 0.85fr)
-      minmax(0, 0.45fr) minmax(0, 0.5fr) minmax(0, var(--ecoute));
+      18px 82px minmax(0, 0.95fr) minmax(0, 0.75fr)
+      minmax(0, 0.5fr) minmax(0, 0.85fr) minmax(0, var(--ecoute));
     column-gap: 0.6rem;
   }
   .gig-row {
@@ -576,7 +590,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--text-tertiary); margin-right: 0.5rem;
   }
-  .p-med { display: flex; flex-wrap: wrap; gap: 4px; }
+  /* Jamais de retour a la ligne : une galerie qui se replie fait varier la
+     hauteur du panneau selon le nombre de medias. Elle defile lateralement. */
+  .p-med {
+    display: flex; flex-wrap: nowrap; gap: 4px;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .p-med .c-th { scroll-snap-align: start; }
 
   .det {
     font-family: var(--font-mono); font-size: 0.56rem;
