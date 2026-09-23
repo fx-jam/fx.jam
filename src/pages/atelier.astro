@@ -75,6 +75,7 @@ import { TRACKS } from '../lib/atelier';
         <button class="btn btn--ok" id="send">Publier maintenant</button>
         <button class="btn" id="copy">Copier</button>
       </div>
+      <p class="done-state" id="done-state"></p>
       <p class="done-h">Chaque réponse part déjà toute seule ; publier n’attend pas les 20 s. Copier sert de repli.</p>
     </section>
 
@@ -276,6 +277,11 @@ import { TRACKS } from '../lib/atelier';
     font-size: 1.3rem; color: var(--text-primary);
   }
   .done-h { margin: 0; font-size: 0.72rem; color: var(--text-tertiary); }
+  .done-state {
+    margin: 0; min-height: 1.1rem;
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--facet-outils);
+  }
 
   @media (max-width: 640px) {
     .at-head { padding: 0.85rem 1rem; }
@@ -345,7 +351,16 @@ import { TRACKS } from '../lib/atelier';
   let pushTimer: number | null = null;
   let etat = '';
 
-  function dire(s: string) { etat = s; counts(); }
+  //  L'etat s'ecrit sous le titre, tout en haut. Quand on est en bas du
+  //  parcours, sur le bouton, on ne le voit pas : il s'ecrit donc aux deux
+  //  endroits. Une action sans retour visible la ou on regarde est une action
+  //  qu'on croit cassee.
+  function dire(s: string) {
+    etat = s;
+    const e = document.getElementById('done-state');
+    if (e) e.textContent = s;
+    counts();
+  }
 
   //  La page et l'API sont deux applications Access distinctes : voir la page
   //  ne garantit pas que l'API soit ouverte. Quand elle ne l'est pas, Access
@@ -645,11 +660,15 @@ import { TRACKS } from '../lib/atelier';
   //  facons de se tromper.
   $('send').onclick = async () => {
     const btn = $('send') as HTMLButtonElement;
-    btn.disabled = true;
-    await vider();
-    if (!besoinAuth && !enAttente.length) planifierPush(0);
-    btn.disabled = false;
-    counts();
+    btn.disabled = true; btn.textContent = 'Publication…';
+    dire('publication…');
+    if (enAttente.length) await vider();
+    if (besoinAuth) { btn.disabled = false; btn.textContent = 'Publier maintenant'; return; }
+    if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+    const rep = await poste('/api/atelier/push');
+    if (rep.ok) dire(rep.d.pushed ? `publié (${rep.d.pushed})` : 'déjà à jour');
+    else { authBanner(rep.auth); dire(rep.msg); }
+    btn.disabled = false; btn.textContent = 'Publier maintenant';
   };
 
   $('auth-retry').onclick = async () => {
