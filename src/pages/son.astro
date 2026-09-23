@@ -316,14 +316,18 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                           <p class="p-line"><span class="p-lab">Line-up</span>{(g.data.lineup ?? []).join(' · ')}</p>
                         )}
                         {(g.data.media ?? []).length > 0 && (
-                          <div class="p-med">
-                            {(g.data.media ?? []).map((m, mi) => (
-                              <button class="c-th" data-mi={mi} aria-label={`Média ${mi + 1}`}>
-                                <img src={`${MEDIA_BASE}/${g.data.date.toISOString().slice(0, 10)}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`}
-                                     alt="" loading="lazy" decoding="async" />
-                                {m.kind === 'video' && <span class="c-th-v">▶</span>}
-                              </button>
-                            ))}
+                          <div class="p-gal">
+                            <button class="p-arw p-arw--p" type="button" aria-label="Médias précédents">‹</button>
+                            <div class="p-med">
+                              {(g.data.media ?? []).map((m, mi) => (
+                                <button class="c-th" data-mi={mi} aria-label={`Média ${mi + 1}`}>
+                                  <img src={`${MEDIA_BASE}/${g.data.date.toISOString().slice(0, 10)}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`}
+                                       alt="" loading="lazy" decoding="async" />
+                                  {m.kind === 'video' && <span class="c-th-v">▶</span>}
+                                </button>
+                              ))}
+                            </div>
+                            <button class="p-arw p-arw--n" type="button" aria-label="Médias suivants">›</button>
                           </div>
                         )}
                         {g.data.eventUrl && (
@@ -590,16 +594,42 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--text-tertiary); margin-right: 0.5rem;
   }
-  /* Jamais de retour a la ligne : une galerie qui se replie fait varier la
-     hauteur du panneau selon le nombre de medias. Elle defile lateralement. */
+  /* Jamais de retour a la ligne : une galerie qui se replie ferait varier la
+     hauteur du panneau selon le nombre de medias. Elle defile lateralement —
+     mais sans barre : une barre grise pleine largeur sous les vignettes dit
+     « composant de formulaire », pas « galerie ». Ce sont les bords fondus qui
+     annoncent qu'il y a une suite, et deux fleches qui la parcourent. */
+  .p-gal { position: relative; display: flex; align-items: center; gap: 0.3rem; }
   .p-med {
     display: flex; flex-wrap: nowrap; gap: 4px;
     overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .p-med::-webkit-scrollbar { display: none; }
   .p-med .c-th { scroll-snap-align: start; }
+  /* Le fondu n'apparait que du cote ou il reste quelque chose a voir. */
+  .p-gal[data-deb="1"][data-fin="1"] .p-med {
+    mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
+  }
+  .p-gal[data-deb="1"]:not([data-fin="1"]) .p-med {
+    mask-image: linear-gradient(90deg, transparent 0, #000 22px);
+  }
+  .p-gal:not([data-deb="1"])[data-fin="1"] .p-med {
+    mask-image: linear-gradient(90deg, #000 calc(100% - 22px), transparent 100%);
+  }
+  .p-arw {
+    flex: 0 0 auto; width: 20px; height: 34px; padding: 0;
+    display: none; align-items: center; justify-content: center;
+    font-size: 0.95rem; line-height: 1; cursor: pointer;
+    border: 0; background: transparent; color: var(--text-tertiary);
+    transition: color 0.15s;
+  }
+  .p-arw:hover { color: var(--facet-son); }
+  .p-gal[data-ov="1"] .p-arw { display: flex; }
+  .p-arw[disabled] { opacity: 0.25; pointer-events: none; }
 
   .det {
     font-family: var(--font-mono); font-size: 0.56rem;
@@ -1298,7 +1328,40 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       list.querySelectorAll<HTMLElement>('.c-more').forEach(x => x.setAttribute('aria-expanded', 'false'));
       panel.hidden = ouvert;
       b.setAttribute('aria-expanded', String(!ouvert));
+      if (!panel.hidden) panel.querySelectorAll<HTMLElement>('.p-gal').forEach(armeGalerie);
     });
+
+    list.addEventListener('click', e => {
+      const a = (e.target as HTMLElement).closest<HTMLElement>('.p-arw');
+      if (!a) return;
+      const med = a.parentElement?.querySelector<HTMLElement>('.p-med');
+      if (!med) return;
+      med.scrollBy({ left: (a.classList.contains('p-arw--n') ? 1 : -1) * med.clientWidth * 0.7 });
+    });
+  }
+
+  /** Dit au conteneur ce qu'il reste a voir de chaque cote : c'est ce qui
+   *  allume les fondus et desactive une fleche en bout de course. */
+  function armeGalerie(gal: HTMLElement) {
+    const med = gal.querySelector<HTMLElement>('.p-med');
+    if (!med) return;
+    const etat = () => {
+      const trop = med.scrollWidth - med.clientWidth > 2;
+      gal.dataset.ov = trop ? '1' : '0';
+      const deb = med.scrollLeft > 2;
+      const fin = trop && med.scrollLeft < med.scrollWidth - med.clientWidth - 2;
+      gal.dataset.deb = deb ? '1' : '0';
+      gal.dataset.fin = fin ? '1' : '0';
+      gal.querySelector('.p-arw--p')?.toggleAttribute('disabled', !deb);
+      gal.querySelector('.p-arw--n')?.toggleAttribute('disabled', !fin);
+    };
+    if (!med.dataset.galReady) {
+      med.dataset.galReady = '1';
+      med.addEventListener('scroll', etat, { passive: true });
+      // Les vignettes arrivent en differe : la largeur n'est juste qu'apres.
+      med.querySelectorAll('img').forEach(im => im.addEventListener('load', etat, { once: true }));
+    }
+    etat();
   }
 
   function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); attachPanels(); }
