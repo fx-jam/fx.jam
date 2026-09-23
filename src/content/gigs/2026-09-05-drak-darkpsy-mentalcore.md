@@ -1,12 +1,12 @@
 ---
-title: DRAK — DARKPSY / MENTALCORE
+title: "Rentrée du Drak"
 date: 2026-09-05
 format: dj
 role: 'dancefloor'
-venue: Drak
+venue: "Drak'Art"
 city: 'Grenoble'
 country: France
-genre: ["mentalcore", "darkpsy"]
+genre: ["Darkpsy", "Mentalcore"]
 duration: '1h'
 lineup: []
 image: ''
@@ -17,4 +17,5 @@ eventUrl: ''
 featured: false
 draft: false
 notes: ''
+description: "Darkpsy to Mentalcore"
 ---
