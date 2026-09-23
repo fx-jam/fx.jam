@@ -225,7 +225,7 @@ import { TRACKS } from '../lib/atelier';
   :global(.fe-ch) { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: var(--text-secondary); }
   :global(.fe-med) { display: flex; flex-direction: column; gap: 0.35rem; }
   :global(.fe-m) {
-    display: grid; grid-template-columns: 44px 1fr auto auto auto; gap: 0.45rem;
+    display: grid; grid-template-columns: 44px 1fr auto auto auto auto auto; gap: 0.4rem;
     align-items: center;
   }
   :global(.fe-th) { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; background: var(--border); }
@@ -236,6 +236,7 @@ import { TRACKS } from '../lib/atelier';
     border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
   }
   :global(.fe-b[aria-pressed="true"]) { border-color: var(--facet-son); color: var(--facet-son); }
+  :global(.fe-b[disabled]) { opacity: 0.3; pointer-events: none; }
   :global(.fe-b--danger) { color: var(--facet-son); border-color: color-mix(in srgb, var(--facet-son) 40%, transparent); }
   :global(.fe-actions) {
     display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
@@ -1010,12 +1011,27 @@ import { TRACKS } from '../lib/atelier';
   function mediaEl(): HTMLElement {
     const box = document.createElement('div'); box.className = 'fe-med';
     const liste = arr(ouverte?.media) as { id: string; kind: string }[];
+    const permuter = (a: number, b: number) => {
+      const l = liste.slice();
+      if (b < 0 || b >= l.length) return;
+      [l[a], l[b]] = [l[b], l[a]];
+      set('media', l); rendreEditeur();
+    };
     liste.forEach((m, i) => {
       const row = document.createElement('div'); row.className = 'fe-m';
       const th = document.createElement('img'); th.className = 'fe-th'; th.loading = 'lazy';
       th.src = `${MEDIA_BASE}/${m.id}${m.kind === 'video' ? '/thumb' : ''}`;
       th.alt = '';
-      const id = document.createElement('span'); id.className = 'fe-mid'; id.textContent = m.id;
+      const id = document.createElement('span'); id.className = 'fe-mid';
+      // L'ordre de cette liste EST l'ordre de la projection : un media sur deux
+      // part a gauche, l'autre a droite. Le dire ici evite d'avoir a le deviner.
+      id.textContent = (i % 2 === 0 ? '← gauche  ' : '→ droite  ') + m.id.slice(0, 8);
+      const haut = document.createElement('button'); haut.className = 'fe-b';
+      haut.textContent = '↑'; haut.disabled = i === 0;
+      haut.onclick = () => { permuter(i, i - 1); };
+      const bas = document.createElement('button'); bas.className = 'fe-b';
+      bas.textContent = '↓'; bas.disabled = i === liste.length - 1;
+      bas.onclick = () => { permuter(i, i + 1); };
       const kind = document.createElement('button'); kind.className = 'fe-b';
       kind.textContent = m.kind;
       kind.onclick = () => {
@@ -1035,7 +1051,7 @@ import { TRACKS } from '../lib/atelier';
         if (txt(ouverte?.cover) === m.id) set('cover', '');
         rendreEditeur();
       };
-      row.append(th, id, kind, cov, del);
+      row.append(th, id, haut, bas, kind, cov, del);
       box.appendChild(row);
     });
     const add = document.createElement('div'); add.className = 'fe-m';
@@ -1049,7 +1065,8 @@ import { TRACKS } from '../lib/atelier';
       set('media', [...arr(ouverte?.media), { id: v, kind: 'image' }]);
       rendreEditeur();
     };
-    add.append(sp, inp, go, document.createElement('span'), document.createElement('span'));
+    add.append(sp, inp, go, document.createElement('span'), document.createElement('span'),
+               document.createElement('span'), document.createElement('span'));
     box.appendChild(add);
     return box;
   }

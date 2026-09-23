@@ -538,8 +538,14 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   .c-title, .c-place, .c-set, .c-tags {
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .gig-row:hover .c-title { color: var(--text-primary); }
+  .gig-row:has(.is-playing) .c-title,
+  .gig-row.is-playing .c-title { color: var(--facet-son); }
   .c-sub, .c-city { color: var(--text-tertiary); font-weight: 400; }
-  .c-place { font-size: 0.78rem; color: var(--text-secondary); }
+  .c-place { font-size: 0.8rem; color: var(--text-secondary); }
+  /* Les deux colonnes en mono gagnent un cran : a 0,6 rem elles etaient sous le
+     seuil de lecture confortable une fois grisees. */
+  .c-set, .c-tags { font-size: 0.64rem; }
   /* Le mono porte ce qui est technique et temporel, le display ce qui est nom
      propre. C'est ce qui distingue les types d'information ici — pas la
      couleur, deja prise par les 24 jetons de style. */
@@ -776,11 +782,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     overflow: hidden;
   }
   .gig-upcoming .c-date { color: var(--text-secondary); }
+  /* Le blanc pur sur fond tres sombre vibre et fatigue sur 81 lignes. Un blanc
+     legerement retenu se lit mieux, et laisse le vrai blanc disponible pour la
+     ligne survolee ou en lecture — la hierarchie devient utilisable. */
   .c-title {
     font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 0.88rem;
-    color: var(--text-primary);
+    font-weight: 650;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--text-primary) 88%, transparent);
+    transition: color 0.15s;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -938,7 +949,30 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     margin-top: 0.35rem;
     padding-left: 0.2rem;
   }
-  .rec-play { flex: 0 0 auto; }
+  /* Dans une ligne d'agenda, le bouton n'a pas a se comporter comme un appel a
+     l'action : il y en a 25 sur la page. Le cadre et le fond teinte disparaissent,
+     il ne reste que le triangle, centre dans sa colonne, qui s'allume au survol
+     de la ligne. C'est la waveform qui porte la couleur du style ; deux rouges
+     cote a cote se disputaient le regard. */
+  .c-rec > .rec-play {
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 26px; height: 26px; padding: 0;
+    border: 0; border-radius: 50%;
+    background: transparent;
+    color: color-mix(in srgb, var(--facet-son) 70%, var(--text-tertiary));
+    font-size: 0.62rem; line-height: 1;
+    transition: color 0.15s, background 0.15s, transform 0.15s;
+  }
+  .gig-row:hover .c-rec > .rec-play { color: var(--facet-son); }
+  .c-rec > .rec-play:hover {
+    color: var(--facet-son);
+    background: color-mix(in srgb, var(--facet-son) 14%, transparent);
+    transform: scale(1.12);
+  }
+  .c-rec > .rec-play:focus-visible {
+    outline: 1px solid var(--facet-son); outline-offset: 1px;
+  }
   .rec-label {
     font-family: var(--font-mono);
     font-size: 0.62rem;
