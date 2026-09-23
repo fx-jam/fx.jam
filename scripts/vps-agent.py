@@ -50,7 +50,8 @@ def safe_path(rel):
 #    3. restauration integrale si le build echoue — on ne laisse jamais le
 #       depot dans un etat casse, et rien n'est pousse.
 ATELIER_FIELDS = {"cover", "city", "role", "duration", "description", "lineup",
-                  "recordState", "eventUrl", "tracklist", "featured", "notes"}
+                  "recordState", "eventUrl", "tracklist", "featured", "notes",
+                  "organizer", "formation"}
 # Valeurs fermees : un champ enumere au schema n'accepte pas n'importe quoi, et
 # une valeur hors liste ferait echouer le build de TOUTES les fiches.
 ATELIER_ENUM = {"recordState": {"none", "soon", "tracklist"}}
@@ -232,6 +233,7 @@ def atelier_push():
 
 FICHE_TYPES = {
     "title": "str", "date": "date", "format": "enum", "role": "str",
+    "organizer": "str", "formation": "str",
     "venue": "str", "city": "str", "country": "str",
     "description": "text", "genre": "list", "duration": "str",
     "lineup": "list", "image": "str", "media": "media", "cover": "str",

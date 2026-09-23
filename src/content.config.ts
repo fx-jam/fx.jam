@@ -29,7 +29,13 @@ const gigs = defineCollection({
     date: z.coerce.date(),                       // Date du gig
     // Format & rôle
     format: z.enum(['dj', 'live', 'hybride']),   // Type de set
-    role: z.string().optional(),                 // Ex: "DJ set", "Warm-up", "B2B avec X", "Live Sylphyo"
+    role: z.string().optional(),                 // Ex: "DJ set", "warm-up", "dancefloor", "closing"
+    // Qui programme. Distinct du lieu : une meme salle accueille plusieurs
+    // collectifs, et c'est l'organisateur qu'on retrouve d'une date a l'autre.
+    organizer: z.string().optional(),
+    // La forme du set, pas ses participants : "solo", "b2b", "b3b", "live band".
+    // Les noms des partenaires vont dans `lineup`, qui fera exister les artistes.
+    formation: z.string().optional(),
     // Lieu
     venue: z.string(),                           // Nom du lieu / festival
     city: z.string().optional(),

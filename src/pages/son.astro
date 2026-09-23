@@ -181,7 +181,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
           {upcoming.length === 0 ? (
             <p class="empty">Prochaines dates bientôt annoncées.</p>
           ) : (
-            <ul class="gig-list">
+            <ul class="gig-list gig-list--next">
               {upcoming.map(g => (
                 <li class="gig-row gig-upcoming">
                   <div class="gig-line">
@@ -220,36 +220,40 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                       data-media={(g.data.media ?? []).length
                         ? JSON.stringify(g.data.media) : undefined}
                       data-mdate={g.data.date.toISOString().slice(0, 10)}>
+
+                    {/* Une seule ligne, une colonne par information. Ce qui se
+                        compare d'une date a l'autre — quand, quoi, chez qui, ou,
+                        dans quel style — reste en surface ; ce qui se lit une
+                        fois (recit, line-up, medias) descend dans le panneau.
+                        C'est ce partage qui rend les hauteurs egales sans rien
+                        perdre, et qui libere la moitie de la largeur pour
+                        l'ecoute. */}
+                    <button class="c-more" type="button" aria-expanded="false"
+                            hidden={!(i === 0 && (g.data.description || (g.data.lineup ?? []).length
+                                      || (g.data.media ?? []).length || g.data.eventUrl))}
+                            aria-label="Voir le détail de cette date"
+                    >{(i === 0 && (g.data.media ?? []).length) ? (g.data.media ?? []).length : '+'}</button>
+
                     <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
-                    <span class="c-title">
-                      {g.data.title}
-                      {(r?.label || g.data.role) && <span class="c-sub"> · {r?.label ?? g.data.role}</span>}
-                    </span>
+
+                    <span class="c-title">{g.data.title}{(r?.label || g.data.formation) && (
+                      <span class="c-sub"> · {r?.label ?? g.data.formation}</span>
+                    )}</span>
+
+                    <span class="c-org">{g.data.organizer ?? ''}</span>
+
+                    <span class="c-place">{g.data.venue}{g.data.city && (
+                      <span class="c-city"> · {g.data.city}</span>
+                    )}</span>
+
+                    <span class="c-set">{g.data.role ?? ''}</span>
+                    <span class="c-tags">{tags}</span>
+
+                    {/* Bloc d'ecoute. Il occupe la moitie de la ligne, et garde la
+                        meme structure qu'il y ait une waveform, une tracklist ou
+                        rien du tout : sans ca les hauteurs redeviendraient
+                        inegales sur les 56 dates sans enregistrement. */}
                     <span class="c-rec">
-                      <span class="c-tags">{tags}</span>
-                      {i === 0 && (g.data.media ?? []).length > 0 && (
-                        <span class="c-mediabox">
-                          {/* Desktop : une pastille discrete. Mobile : de vraies
-                              vignettes, puisqu'il n'y a pas de projection en fond
-                              pour dire qu'il y a quelque chose a voir. */}
-                          <button class="c-media" title="Voir les médias de cette date"
-                                  aria-label={`${(g.data.media ?? []).length} médias`}
-                          >{(g.data.media ?? []).length}</button>
-                          <span class="c-thumbs">
-                            {(g.data.media ?? []).slice(0, 3).map((m, mi) => (
-                              <button class="c-th" data-mi={mi} aria-label={`Média ${mi + 1}`}>
-                                <img src={`${MEDIA_BASE}/${g.data.date.toISOString().slice(0, 10)}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`}
-                                     alt="" loading="lazy" decoding="async" />
-                                {m.kind === 'video' && <span class="c-th-v">▶</span>}
-                              </button>
-                            ))}
-                            {(g.data.media ?? []).length > 3 && (
-                              <button class="c-th c-th--more" data-mi="3"
-                              >+{(g.data.media ?? []).length - 3}</button>
-                            )}
-                          </span>
-                        </span>
-                      )}
                       {r ? (
                         <>
                           <button
@@ -263,7 +267,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                                    data-type={isDirectAudio(r.url) ? 'audio' : 'soundcloud'}
                                    style={waveColor(g.data.genre ?? [])}></div>
                             : <span class="rec-note rec-note--link">écoute externe</span>}
-                          {wave && <span class="wave-time" data-time-for={r.url}></span>}
+                          <span class="c-dur">{g.data.duration ?? ''}</span>
                           {isDirectAudio(r.url)
                             ? <a class="dl" href={r.url} download title="Télécharger le set"
                                  aria-label="Télécharger le set">↓</a>
@@ -279,31 +283,42 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                             data-lbl={g.data.title}
                           >▶</button>
                           <span class="rec-note rec-note--link">tracklist</span>
+                          <span class="c-dur">{g.data.duration ?? ''}</span>
                         </>
                       ) : (
-                        <span class:list={['rec-note', g.data.recordState === 'soon' && 'rec-note--soon']}>
-                          {g.data.recordState === 'soon' ? 'enregistré · bientôt en ligne' : 'set non enregistré'}
-                        </span>
+                        <>
+                          <span class:list={['rec-note', g.data.recordState === 'soon' && 'rec-note--soon']}>
+                            {g.data.recordState === 'soon' ? 'enregistré · bientôt en ligne' : 'set non enregistré'}
+                          </span>
+                          <span class="c-dur">{g.data.duration ?? ''}</span>
+                        </>
                       )}
                     </span>
-                    {/* Recit de la date. Replie sur deux lignes : une date
-                        racontee ne doit pas repousser les dix suivantes hors
-                        de l'ecran. Un clic deplie. */}
-                    {i === 0 && g.data.description && (
-                      <p class="gig-desc" tabindex="0" role="button"
-                         aria-label="Déplier la description">{g.data.description}</p>
-                    )}
-                    {i === 0 && (g.data.city || g.data.duration || (g.data.lineup ?? []).length || g.data.eventUrl) && (
-                      <span class="gig-det">
-                        {g.data.city && <span class="det">{g.data.city}</span>}
-                        {g.data.duration && <span class="det">{g.data.duration}</span>}
+
+                    {/* Le detail. Un seul ouvert a la fois : il peut donc etre
+                        genereux sans allonger la page. */}
+                    {i === 0 && (g.data.description || (g.data.lineup ?? []).length
+                                 || (g.data.media ?? []).length || g.data.eventUrl) && (
+                      <div class="c-panel" hidden>
+                        {g.data.description && <p class="p-desc">{g.data.description}</p>}
                         {(g.data.lineup ?? []).length > 0 && (
-                          <span class="det">avec {(g.data.lineup ?? []).join(', ')}</span>
+                          <p class="p-line"><span class="p-lab">Line-up</span>{(g.data.lineup ?? []).join(' · ')}</p>
+                        )}
+                        {(g.data.media ?? []).length > 0 && (
+                          <div class="p-med">
+                            {(g.data.media ?? []).map((m, mi) => (
+                              <button class="c-th" data-mi={mi} aria-label={`Média ${mi + 1}`}>
+                                <img src={`${MEDIA_BASE}/${g.data.date.toISOString().slice(0, 10)}/${m.id}${m.kind === 'video' ? '-p' : '-t'}.webp`}
+                                     alt="" loading="lazy" decoding="async" />
+                                {m.kind === 'video' && <span class="c-th-v">▶</span>}
+                              </button>
+                            ))}
+                          </div>
                         )}
                         {g.data.eventUrl && (
                           <a class="det det--link" href={g.data.eventUrl} target="_blank" rel="noopener">événement ↗</a>
                         )}
-                      </span>
+                      </div>
                     )}
                   </li>
                 );});
@@ -466,77 +481,93 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   details[open] .arrow { transform: rotate(180deg); }
 
   /* ── Lignes gig — 4 colonnes compactes : date | titre | venue | format ── */
-  .gig-list { list-style: none; padding: 0; margin: 0; }
-  /* Une rangee unique, meme hauteur avec ou sans enregistrement : les colonnes
-     du bloc lecture restent en place et simplement vides quand il n'y a rien. */
-  .gig-row {
+  /* La grille vit sur la LISTE, pas sur la ligne : chaque ligne reprend ses
+     pistes avec `subgrid`, et les colonnes s'alignent donc reellement d'une
+     date a l'autre. Sans ca chaque ligne calculerait ses largeurs pour elle
+     seule, et le balayage vertical — descendre la colonne des styles, ou celle
+     des villes — n'existerait pas.
+     Le partage des `fr` est volontaire : les cinq colonnes d'information pesent
+     3,1 au total, l'ecoute 3,1 a elle seule. Elle occupe donc la moitie. */
+  .gig-list {
+    list-style: none; padding: 0; margin: 0;
     display: grid;
-    grid-template-columns: 82px minmax(0, 1fr) minmax(380px, 2.6fr);
-    align-items: center;
+    grid-template-columns:
+      18px 82px minmax(0, 0.95fr) minmax(0, 0.6fr) minmax(0, 0.75fr)
+      minmax(0, 0.4fr) minmax(0, 0.4fr) minmax(0, 3.1fr);
     column-gap: 0.7rem;
+  }
+  .gig-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: center;
     padding: 0.22rem 0;
     border-top: 1px solid var(--border);
     min-height: 30px;
   }
-  .gig-row .c-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .c-tags { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .c-sub { color: var(--text-tertiary); font-weight: 400; }
-  .c-tags {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.06em;
-    color: var(--text-tertiary);
+  /* Tout ce qui est en colonne se coupe plutot que de se replier : une seule
+     ligne, toujours, c'est la condition de l'egalite des hauteurs. */
+  .c-title, .c-org, .c-place, .c-set, .c-tags {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .c-sub, .c-city { color: var(--text-tertiary); font-weight: 400; }
+  .c-org, .c-place { font-size: 0.78rem; color: var(--text-secondary); }
+  /* Le mono porte ce qui est technique et temporel, le display ce qui est nom
+     propre. C'est ce qui distingue les types d'information ici — pas la
+     couleur, deja prise par les 24 jetons de style. */
+  .c-set, .c-tags {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    letter-spacing: 0.06em; color: var(--text-tertiary);
+  }
+  .c-more {
+    font-family: var(--font-mono); font-size: 0.58rem; line-height: 1;
+    width: 18px; height: 18px; padding: 0; cursor: pointer;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: transparent; color: var(--text-tertiary);
+  }
+  .c-more[hidden] { visibility: hidden; display: block; }   /* garde la colonne */
+  .c-more:hover { border-color: var(--facet-son); color: var(--facet-son); }
+  .c-more[aria-expanded="true"] { border-color: var(--facet-son); color: var(--facet-son); }
+
   .c-rec {
     display: grid;
-    grid-template-columns: 8.2em 22px 28px minmax(0, 1fr) 7.4em 22px;
+    grid-template-columns: 28px minmax(0, 1fr) 4.2em 22px;
     align-items: center;
     column-gap: 0.45rem;
     min-width: 0;
   }
-  .c-rec > .c-tags   { grid-column: 1; }
-  .c-rec > .c-media  { grid-column: 2; }
-  .c-rec > .rec-play { grid-column: 3; }
-  .c-rec > .wave     { grid-column: 4; }
-  .c-rec > .wave-time { grid-column: 5; }
-  .c-rec > .dl       { grid-column: 6; }
-  /* Une mention sans lecteur (set non enregistre) occupe toute la zone ;
-     une mention qui accompagne un bouton se range dans la colonne waveform. */
-  .c-rec > .rec-note { grid-column: 3 / -1; }
-  .c-rec > .rec-note--link { grid-column: 4; }
-  /* Recit libre de la date. Meme colonne que le titre, pour que le regard
-     descende en ligne droite. */
-  .gig-desc {
-    grid-column: 2 / -1;
-    margin: 0.2rem 0 0;
-    font-size: 0.72rem;
-    line-height: 1.45;
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-  }
-  .gig-desc.is-open {
-    -webkit-line-clamp: none;
-    line-clamp: none;
-    overflow: visible;
-  }
-  .gig-desc:hover { color: var(--text-primary); }
-  .gig-desc:focus-visible {
-    outline: 1px solid var(--facet-son);
-    outline-offset: 2px;
-    border-radius: 3px;
+  .c-rec > .rec-play { grid-column: 1; }
+  .c-rec > .wave     { grid-column: 2; }
+  .c-rec > .c-dur    { grid-column: 3; }
+  .c-rec > .dl       { grid-column: 4; }
+  /* Une mention sans lecteur occupe la place de la waveform : la duree et le
+     lien gardent leur colonne, donc la ligne garde sa geometrie. */
+  .c-rec > .rec-note { grid-column: 1 / 3; }
+  .c-rec > .rec-note--link { grid-column: 2; }
+  .c-dur {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    color: var(--text-tertiary); text-align: right;
   }
 
-  /* Details complementaires : n'apparaissent que si le CMS les renseigne. */
-  .gig-det {
-    grid-column: 2 / -1;
-    display: flex; flex-wrap: wrap; gap: 0.5rem;
-    margin-top: 0.1rem;
+  /* Le panneau de detail. Un seul ouvert a la fois, donc il peut respirer. */
+  .c-panel {
+    grid-column: 3 / -1;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 0.6rem 0 0.8rem;
   }
+  .c-panel[hidden] { display: none; }
+  .p-desc {
+    margin: 0; font-size: 0.82rem; line-height: 1.5;
+    color: var(--text-secondary); max-width: 62ch;
+  }
+  .p-line { margin: 0; font-size: 0.75rem; color: var(--text-secondary); }
+  .p-lab {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-tertiary); margin-right: 0.5rem;
+  }
+  .p-med { display: flex; flex-wrap: wrap; gap: 4px; }
+
   .det {
     font-family: var(--font-mono); font-size: 0.56rem;
     letter-spacing: 0.06em; color: var(--text-tertiary);
@@ -566,21 +597,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     transition: color 0.15s ease, background 0.15s ease;
   }
   .dl:hover { color: var(--facet-son); background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
-  /* Pastille du nombre de medias : presente sans peser, elle allume la
-     projection au survol et ouvre la visionneuse au clic. */
-  .c-media {
-    font-family: var(--font-mono); font-size: 0.56rem;
-    line-height: 1; padding: 0; width: 18px; height: 18px;
-    border-radius: 50%; cursor: pointer;
-    background: transparent; color: var(--text-tertiary);
-    border: 1px solid var(--border);
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .c-media:hover { color: var(--facet-son); border-color: var(--facet-son); }
-
-  /* Vignettes : cachees en desktop, ou la pastille suffit et ou la projection
-     laterale montre deja de quoi il s'agit. */
-  .c-thumbs { display: none; gap: 3px; align-items: center; }
+  /* Vignettes : elles vivent dans le panneau de detail, avec le recit. */
   .c-th {
     position: relative;
     width: 34px; height: 34px; padding: 0;
@@ -667,16 +684,16 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   .mlb-nav--p { left: 0.5rem; }
   .mlb-nav--n { right: 0.5rem; }
 
-  .wave-time {
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    color: var(--text-tertiary);
-    white-space: nowrap;
-    text-align: right;
-  }
   .gig-line { display: flex; align-items: baseline; gap: 0.6rem; min-width: 0; }
   .gig-row:last-child { border-bottom: 1px solid var(--border); }
 
+  /* Les dates a venir ne sont pas un tableau : elles n'ont rien a comparer
+     entre elles et pas encore d'enregistrement. Elles gardent donc leur bloc
+     libre, et la subgrid ne s'applique qu'a l'historique. */
+  .gig-list--next { display: block; }
+  .gig-list--next .gig-row {
+    display: block; grid-column: auto; grid-template-columns: none;
+  }
   .gig-upcoming {
     border-top: none;
     border-left: 2px solid var(--facet-son);
@@ -795,30 +812,25 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       padding: 1rem;
     }
     .bio { display: none; }
+    /* L'argument des colonnes n'existe que sur ecran large : personne ne
+       compare deux dates cote a cote sur un telephone, on descend. Ici on
+       empile donc librement, et la subgrid est abandonnee. */
+    .gig-list { display: block; }
     .gig-row {
-      grid-template-columns: 78px minmax(0, 1fr);
-      row-gap: 0.15rem;
+      display: grid;
+      grid-template-columns: 18px 72px minmax(0, 1fr);
+      column-gap: 0.5rem; row-gap: 0.1rem;
+      padding: 0.45rem 0;
     }
-    .c-rec {
-      grid-column: 1 / -1;
-      grid-template-columns: 28px minmax(0, 1fr) 20px;
-      row-gap: 0.15rem;
-    }
-    .c-rec > .c-tags    { grid-column: 1 / -1; }
-    .c-rec > .rec-play  { grid-column: 1; }
-    .c-rec > .wave      { grid-column: 2; }
-    .c-rec > .wave-time { display: none; }
-    .c-rec > .dl        { grid-column: 3; }
-    .c-rec > .rec-note  { grid-column: 1 / -1; }
-    .c-rec > .rec-note--link { grid-column: 2; }
-    .c-tags { max-width: none; flex: 1 1 100%; }
-    .gig-det { grid-column: 1 / -1; }
-    .gig-desc { grid-column: 1 / -1; }
-    /* Pas de projection laterale ici : ce sont les vignettes qui signalent
-       les medias, sur leur propre ligne pour ne pas comprimer la waveform. */
-    .c-rec > .c-mediabox { grid-column: 1 / -1; }
-    .c-media { display: none; }
-    .c-thumbs { display: flex; }
+    .c-more  { grid-column: 1; grid-row: 1; }
+    .c-date  { grid-column: 2; grid-row: 1; }
+    .c-title { grid-column: 3; grid-row: 1; }
+    .c-place { grid-column: 2 / -1; grid-row: 2; }
+    .c-org   { display: none; }
+    .c-set   { grid-column: 2; grid-row: 3; }
+    .c-tags  { grid-column: 3; grid-row: 3; }
+    .c-rec   { grid-column: 2 / -1; grid-row: 4; margin-top: 0.2rem; }
+    .c-panel { grid-column: 2 / -1; }
     .mlb-nav { width: 30px; height: 46px; }
 
     .panels { overflow: visible; }
@@ -965,9 +977,10 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
              : `${m}:${String(r).padStart(2,'0')}`;
   };
 
-  /** Le libelle de duree vit a cote de sa waveform : on le retrouve par l'URL du set. */
-  const timeElFor = (url?: string) =>
-    url ? document.querySelector<HTMLElement>(`.wave-time[data-time-for="${CSS.escape(url)}"]`) : null;
+  /** La duree affichee a cote de la waveform est celle de la fiche, fixe.
+   *  L'ancien compteur de lecture vivait la ; il faisait varier la largeur de
+   *  la colonne en cours de lecture, donc bouger la waveform sous le doigt. */
+  const timeElFor = (_url?: string): HTMLElement | null => null;
 
   function drawWave(el: HTMLElement, peaks: number[]) {
     const step = Math.max(1, Math.floor(peaks.length / barCount(el, peaks.length)));
@@ -1224,7 +1237,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
     // Pastille et vignettes ouvrent la meme visionneuse.
     document.querySelector('.panel-agenda')?.addEventListener('click', e => {
-      const hit = (e.target as HTMLElement).closest<HTMLElement>('.c-media, .c-th');
+      const hit = (e.target as HTMLElement).closest<HTMLElement>('.c-th');
       if (!hit) return;
       const row = hit.closest<HTMLElement>('.gig-row');
       if (!row || !row.dataset.media) return;
@@ -1236,25 +1249,27 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     });
   }
 
-  /** Deplie / replie le recit d'une date. */
-  function attachDesc() {
+  /** Ouvre le detail d'une date. Un seul a la fois : c'est ce qui permet au
+   *  panneau d'etre genereux sans allonger la page de 81 fois sa hauteur. */
+  function attachPanels() {
     const list = document.querySelector('.panel-agenda');
-    if (!list || (list as HTMLElement).dataset.descReady) return;
-    (list as HTMLElement).dataset.descReady = '1';
-    const toggle = (el: HTMLElement | null) => el?.classList.toggle('is-open');
+    if (!list || (list as HTMLElement).dataset.panelReady) return;
+    (list as HTMLElement).dataset.panelReady = '1';
     list.addEventListener('click', e => {
-      toggle((e.target as HTMLElement).closest<HTMLElement>('.gig-desc'));
-    });
-    list.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const d = (e.target as HTMLElement).closest<HTMLElement>('.gig-desc');
-      if (!d) return;
-      e.preventDefault();
-      toggle(d);
+      const b = (e.target as HTMLElement).closest<HTMLElement>('.c-more');
+      if (!b) return;
+      const row = b.closest<HTMLElement>('.gig-row');
+      const panel = row?.querySelector<HTMLElement>('.c-panel');
+      if (!panel) return;
+      const ouvert = !panel.hidden;
+      list.querySelectorAll<HTMLElement>('.c-panel').forEach(p => { p.hidden = true; });
+      list.querySelectorAll<HTMLElement>('.c-more').forEach(x => x.setAttribute('aria-expanded', 'false'));
+      panel.hidden = ouvert;
+      b.setAttribute('aria-expanded', String(!ouvert));
     });
   }
 
-  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); attachDesc(); }
+  function initSon() { attachPlayerButtons(); attachMediaHover(); attachWaveforms(); attachTagFilter(); attachLightbox(); attachPanels(); }
   initSon();
   document.addEventListener('astro:page-load', initSon);
 </script>
