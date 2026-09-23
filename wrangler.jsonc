@@ -19,11 +19,11 @@
     // Le verrou d'identite optionnel (ATELIER_EMAIL) reste un secret Cloudflare,
     // pose a la main, pour ne pas versionner une adresse personnelle.
     "ACCESS_TEAM": "felix-jambon20",
-    // Le tag de l'application qui protege /api/atelier — PAS celle de la page.
-    // Chaque application Access a son propre AUD ; accepter celui de la page
-    // laisserait un jeton emis pour la lecture servir a ecrire.
-    // Plusieurs tags separes par une virgule sont acceptes, si les applications
-    // sont un jour reunies ou redecoupees.
-    "ACCESS_AUD": "45ba3dd89e0976d6c681636462078ca714de58c5c7939ce6fd04b4b3d46f4fb5"
+    // Une seule application Access couvre desormais la page /atelier ET
+    // /api/atelier : deux applications = deux AUD = deux connexions, et un
+    // fetch() vers une API non ouverte part en redirection cross-origin, que
+    // le navigateur rend indistinguable d'une panne reseau.
+    // Plusieurs tags separes par une virgule restent acceptes.
+    "ACCESS_AUD": "deca0f63839416a0a17aab7dcd8181a1fbe0648fc7511ddae9599385c557c0f7"
   }
 }
