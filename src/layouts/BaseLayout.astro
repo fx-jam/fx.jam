@@ -364,6 +364,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
     #library-panel[hidden] { display: none; }
     #library-panel { transition: height 0.11s cubic-bezier(0.2, 0, 0, 1); }
+    /* Pendant le glissement, le flou d'arriere-plan est coupe. Un
+       backdrop-filter oblige le compositeur a re-echantillonner et re-flouter
+       TOUTE la surface du panneau a chaque changement de hauteur : au-dessus
+       d'un fond etoile anime, c'est ce qui rendait le redimensionnement
+       saccade. Le fond devient opaque le temps du geste, personne ne le
+       remarque, et le glissement redevient fluide. */
+    #library-panel[data-drag="1"] {
+      backdrop-filter: none;
+      background: var(--bg-app);
+      transition: none;
+    }
 
     /* Poignee : toute la largeur du panneau est saisissable, et la zone deborde
        vers le haut au-dela de sa hauteur visible pour rattraper les pouces. */
@@ -475,7 +486,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
       background: color-mix(in srgb, var(--chip) 16%, transparent);
     }
 
-    .lib-list { flex: 1 1 auto; overflow-y: auto; padding: 0 0.6rem 0.6rem; }
+    /* `contain` arrete la propagation du recalcul : changer la hauteur du
+       panneau ne doit pas relayouter tout ce qu'il contient. */
+    .lib-list {
+      flex: 1 1 auto; overflow-y: auto; padding: 0 0.6rem 0.6rem;
+      contain: layout paint;
+    }
     /* La legende reprend exactement la grille des lignes. */
     .lib-legend {
       display: grid;
@@ -499,6 +515,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
       padding: 0.2rem 0.4rem;
       border-top: 1px solid var(--border);
       cursor: pointer;
+      /* Les lignes hors champ ne sont pas mises en page du tout. Chacune porte
+         une waveform en SVG de plusieurs centaines de rectangles : sans ca,
+         chaque pixel de redimensionnement les repassait toutes en revue. */
+      content-visibility: auto;
+      contain-intrinsic-size: auto 46px;
     }
     .lib-row:hover { background: color-mix(in srgb, var(--facet-son) 7%, transparent); }
     .lib-row.is-current { background: color-mix(in srgb, var(--facet-son) 12%, transparent); }
@@ -967,10 +988,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.84 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.85 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.84');
+  console.log('🐱 fx_jam_v1.85');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2670,18 +2691,28 @@ const facetHrefs = visibleFacets().map(f => f.href);
         dragging = true;
         startY = e.clientY;
         el.setAttribute('data-drag', '1');
+        libPanel.dataset.drag = '1';
         try { el.setPointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = 'none';
         e.preventDefault();
       });
+      // Un pointermove peut arriver a 120 Hz ; l'ecran n'affiche qu'une image a
+      // la fois. On garde la derniere position et on n'ecrit qu'une fois par
+      // image : le geste reste au doigt, le navigateur travaille deux fois
+      // moins.
+      let cible = 0, prevu = 0;
       el.addEventListener('pointermove', (e: PointerEvent) => {
         if (!dragging) return;
-        setLibHeight(startH + (startY - e.clientY));
+        cible = startH + (startY - e.clientY);
+        if (prevu) return;
+        prevu = requestAnimationFrame(() => { prevu = 0; if (dragging) setLibHeight(cible); });
       });
       const end = (e: PointerEvent) => {
         if (!dragging) return;
         dragging = false;
+        if (prevu) { cancelAnimationFrame(prevu); prevu = 0; }
         el.removeAttribute('data-drag');
+        delete libPanel.dataset.drag;
         try { el.releasePointerCapture(e.pointerId); } catch (_) {}
         libPanel.style.transition = '';
         const h = libPanel.getBoundingClientRect().height;
@@ -2952,7 +2983,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.84';
+    _vt.textContent = 'fx_jam_v1.85';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
