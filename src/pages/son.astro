@@ -186,7 +186,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                 <li class="gig-row gig-upcoming">
                   <div class="gig-line">
                     <time datetime={g.data.date.toISOString()} class="c-date">{fmtLong(g.data.date)}</time>
-                    <span class="c-title">{g.data.title}</span>
+                    <span class="c-title" title={g.data.title}>{g.data.title}</span>
                     {g.data.venue !== g.data.title && <span class="c-venue">@ {g.data.venue}</span>}
                     <span class="c-format">{g.data.format}</span>
                   </div>
@@ -229,20 +229,18 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
                         perdre, et qui libere la moitie de la largeur pour
                         l'ecoute. */}
                     <button class="c-more" type="button" aria-expanded="false"
-                            hidden={!(i === 0 && (g.data.description || (g.data.lineup ?? []).length
+                            hidden={!(i === 0 && (g.data.description || (g.data.lineup ?? []).length || g.data.organizer
                                       || (g.data.media ?? []).length || g.data.eventUrl))}
                             aria-label="Voir le détail de cette date"
                     >{(i === 0 && (g.data.media ?? []).length) ? (g.data.media ?? []).length : '+'}</button>
 
                     <time datetime={g.data.date.toISOString()} class="c-date">{fmtShort(g.data.date)}</time>
 
-                    <span class="c-title">{g.data.title}{(r?.label || g.data.formation) && (
+                    <span class="c-title" title={g.data.title}>{g.data.title}{(r?.label || g.data.formation) && (
                       <span class="c-sub"> · {r?.label ?? g.data.formation}</span>
                     )}</span>
 
-                    <span class="c-org">{g.data.organizer ?? ''}</span>
-
-                    <span class="c-place">{g.data.venue}{g.data.city && (
+                    <span class="c-place" title={[g.data.venue, g.data.city].filter(Boolean).join(" · ")}>{g.data.venue}{g.data.city && (
                       <span class="c-city"> · {g.data.city}</span>
                     )}</span>
 
@@ -297,10 +295,13 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
                     {/* Le detail. Un seul ouvert a la fois : il peut donc etre
                         genereux sans allonger la page. */}
-                    {i === 0 && (g.data.description || (g.data.lineup ?? []).length
+                    {i === 0 && (g.data.description || (g.data.lineup ?? []).length || g.data.organizer
                                  || (g.data.media ?? []).length || g.data.eventUrl) && (
                       <div class="c-panel" hidden>
                         {g.data.description && <p class="p-desc">{g.data.description}</p>}
+                        {g.data.organizer && (
+                          <p class="p-line"><span class="p-lab">Organisé par</span>{g.data.organizer}</p>
+                        )}
                         {(g.data.lineup ?? []).length > 0 && (
                           <p class="p-line"><span class="p-lab">Line-up</span>{(g.data.lineup ?? []).join(' · ')}</p>
                         )}
@@ -488,13 +489,22 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
      des villes — n'existerait pas.
      Le partage des `fr` est volontaire : les cinq colonnes d'information pesent
      3,1 au total, l'ecoute 3,1 a elle seule. Elle occupe donc la moitie. */
+  /* Le cadre du site fait 820 px : a cette largeur, « la moitie pour l'ecoute »
+     et « du texte lisible » ne tiennent pas ensemble. Mesure faite, il reste
+     environ 600 px souples une fois la date, le bouton et les gouttieres
+     retires. A 50 % pour l'ecoute, les quatre colonnes de texte se partagent
+     300 px — d'ou « closi… » et « mashu… », des mots de sept lettres coupes.
+     L'ecoute passe donc a 40 %, ce qui laisse la waveform a ~140 px, largement
+     lisible comme forme et comme position. Un seul nombre a bouger si on veut
+     rearbitrer. */
   .gig-list {
+    --ecoute: 2.05fr;          /* face a 3,05fr de texte : 40 % de la largeur souple */
     list-style: none; padding: 0; margin: 0;
     display: grid;
     grid-template-columns:
-      18px 82px minmax(0, 0.95fr) minmax(0, 0.6fr) minmax(0, 0.75fr)
-      minmax(0, 0.4fr) minmax(0, 0.4fr) minmax(0, 3.1fr);
-    column-gap: 0.7rem;
+      18px 82px minmax(0, 1.25fr) minmax(0, 0.85fr)
+      minmax(0, 0.45fr) minmax(0, 0.5fr) minmax(0, var(--ecoute));
+    column-gap: 0.6rem;
   }
   .gig-row {
     grid-column: 1 / -1;
@@ -507,11 +517,11 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   /* Tout ce qui est en colonne se coupe plutot que de se replier : une seule
      ligne, toujours, c'est la condition de l'egalite des hauteurs. */
-  .c-title, .c-org, .c-place, .c-set, .c-tags {
+  .c-title, .c-place, .c-set, .c-tags {
     min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .c-sub, .c-city { color: var(--text-tertiary); font-weight: 400; }
-  .c-org, .c-place { font-size: 0.78rem; color: var(--text-secondary); }
+  .c-place { font-size: 0.78rem; color: var(--text-secondary); }
   /* Le mono porte ce qui est technique et temporel, le display ce qui est nom
      propre. C'est ce qui distingue les types d'information ici — pas la
      couleur, deja prise par les 24 jetons de style. */
@@ -531,9 +541,9 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
 
   .c-rec {
     display: grid;
-    grid-template-columns: 28px minmax(0, 1fr) 4.2em 22px;
+    grid-template-columns: 26px minmax(0, 1fr) 3.4em 18px;
     align-items: center;
-    column-gap: 0.45rem;
+    column-gap: 0.35rem;
     min-width: 0;
   }
   .c-rec > .rec-play { grid-column: 1; }
@@ -826,7 +836,6 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
     .c-date  { grid-column: 2; grid-row: 1; }
     .c-title { grid-column: 3; grid-row: 1; }
     .c-place { grid-column: 2 / -1; grid-row: 2; }
-    .c-org   { display: none; }
     .c-set   { grid-column: 2; grid-row: 3; }
     .c-tags  { grid-column: 3; grid-row: 3; }
     .c-rec   { grid-column: 2 / -1; grid-row: 4; margin-top: 0.2rem; }
