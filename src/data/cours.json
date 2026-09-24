@@ -15,12 +15,14 @@
   "photos": [],
   "image_fond": "",
   "recto": {
-    "phrase": "MAO — Ableton Live, à Grenoble",
+    "image": "",
+    "titre": "",
+    "phrase": "DJing/Techniques du son",
     "chiffres": []
   },
   "verso": {
     "intro": "",
     "entrees": []
   },
-  "chantier": "Page en préparation — écris-moi en attendant."
+  "chantier": null
 }
