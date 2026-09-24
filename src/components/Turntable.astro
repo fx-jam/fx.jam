@@ -1555,6 +1555,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     align-items: center;
     justify-content: center;
   }
+
+  /* Fermetures au doigt : 36 et 40 px mesures, les deux passent a 44 sans que
+     la croix elle-meme grossisse. En fin de feuille : meme specificite que les
+     regles d'origine, c'est l'ordre qui tranche. */
+  @media (pointer: coarse) {
+    .modal-close  { width: 44px; height: 44px; }
+    .tt-lb-close  { width: 44px; height: 44px; }
+    .flip-arrow   { min-width: 44px; min-height: 44px; }
+  }
 </style>
 
 <script>
@@ -1654,10 +1663,18 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     faceBVisible = false;
     scene.dataset.state = '0';
 
+    /* Le disque etait bride a 90 % de la largeur dans les deux orientations.
+       Sur un telephone tenu droit c'est la largeur qui contraint, et de loin :
+       390 x 844 donnait 351 px de disque pour 493 px de hauteur inutilisee.
+       En portrait on rend donc presque toute la largeur ; en paysage c'est la
+       hauteur qui contraint et les facteurs d'origine restent les bons. */
     function calcDiskSize(): number {
+      const w = document.documentElement.clientWidth;
+      const h = document.documentElement.clientHeight;
+      const portrait = h >= w;
       return Math.min(
-        document.documentElement.clientWidth  * 0.90,
-        document.documentElement.clientHeight * 0.85,
+        w * (portrait ? 0.96 : 0.90),
+        h * (portrait ? 0.62 : 0.85),
         560
       );
     }

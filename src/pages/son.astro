@@ -1038,6 +1038,40 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
   }
   .mix-tag:hover { color: var(--facet-son); text-decoration: underline; }
   .mix-row { flex-wrap: wrap; }
+
+  /* ── Cibles tactiles ──
+     Le critere est le doigt, pas la largeur de fenetre : une tablette large en
+     tactile a le meme probleme qu'un telephone, un navigateur etroit a la
+     souris n'en a aucun. D'ou `pointer: coarse` plutot qu'un `max-width`.
+     Regle : la zone de frappe atteint 44 px, le dessin ne bouge pas. Quand
+     elargir le bouton pousserait ses voisins (les lignes d'agenda sont
+     denses), on etend par un calque `::after` dans une direction ou la
+     colonne est vide.
+     Ce bloc est en fin de feuille a dessein : plusieurs de ces selecteurs ont
+     la meme specificite que les regles d'origine, c'est l'ordre qui tranche. */
+  @media (pointer: coarse) {
+    /* Colonne 1 de la ligne : vide sur les rangees 2 a 4 et bordee par la
+       gouttiere du panneau. Le calque deborde sans rien recouvrir. */
+    .c-more { position: relative; }
+    .c-more::after {
+      content: ''; position: absolute; inset: -14px; border-radius: 6px;
+    }
+
+    /* Le triangle garde sa taille ; c'est sa colonne qui s'ouvre. */
+    .c-rec { grid-template-columns: 44px minmax(0, 1fr) 3.4em 34px; }
+    .c-rec > .rec-play { width: 44px; height: 44px; }
+
+    .dl { padding: 0.55rem 0.5rem; position: relative; }
+    .dl::after { content: ''; position: absolute; inset: -8px -5px; }
+
+    .p-arw { width: 30px; height: 44px; }
+
+    /* Depliants de groupe : une bande pleine largeur haute de 17 px. */
+    .group-label { padding: 0.85rem 0; margin-bottom: 0.1rem; }
+
+    .home, .btn-ecouter { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .btn-ecouter--sm { padding-top: 0.55rem; padding-bottom: 0.55rem; }
+  }
 </style>
 
 <script>
