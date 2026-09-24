@@ -553,6 +553,7 @@ import { TRACKS } from '../lib/atelier';
         // Les reponses acquises n'ont plus a etre gardees comme « en attente ».
         for (const x of lot) { delete answers[x.id]; }
         save(answers);
+        aPublier = true;
         dire(enAttente.length ? `${enAttente.length} en cours…` : 'enregistré');
         planifierPush();
       } else {
@@ -573,17 +574,39 @@ import { TRACKS } from '../lib/atelier';
       if (enAttente.length || besoinAuth) return planifierPush();
       dire('publication…');
       const rep = await poste('/api/atelier/push');
-      if (rep.ok) dire(rep.d.pushed ? `publié (${rep.d.pushed})` : 'à jour');
+      if (rep.ok) { aPublier = false; dire(rep.d.pushed ? `publié (${rep.d.pushed}) — en ligne dans ~90 s` : 'à jour'); }
       else { authBanner(rep.auth); dire(rep.msg); }
     }, delai);
   }
+
+  //  Publication : un commit sans push est du travail perdu de vue. Trois
+  //  filets, parce que la panne observee le 24/09 — « les changements n'ont pas
+  //  suivi » — venait d'un commit reste local quand l'onglet s'est ferme avant
+  //  la fin du delai de 20 s.
+  let aPublier = false;
+
+  /** Filet 2 : l'onglet se ferme ou passe en arriere-plan. `sendBeacon` est fait
+   *  pour ca — la requete part meme si la page disparait dans la milliseconde,
+   *  ce qu'un `fetch` ordinaire ne garantit pas. */
+  function publierAuDepart() {
+    if (!aPublier) return;
+    try { navigator.sendBeacon('/api/atelier/push'); aPublier = false; } catch { /* rien a faire */ }
+  }
+  addEventListener('pagehide', publierAuDepart);
+  addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') publierAuDepart();
+  });
 
   //  Sonde au chargement : mieux vaut apprendre que la session est fermee
   //  avant d'avoir repondu a trente questions qu'apres.
   (async () => {
     const r = await poste('/api/atelier/whoami').catch(() => null);
-    if (r && !r.ok && r.auth) authBanner(true);
-    else if (enAttente.length) vider();
+    if (r && !r.ok && r.auth) { authBanner(true); return; }
+    if (enAttente.length) vider();
+    // Filet 3 : solder a l'ouverture ce qu'une session precedente aurait laisse
+    // commite sans etre publie. Gratuit quand il n'y a rien (0,3 s).
+    const p = await poste('/api/atelier/push').catch(() => null);
+    if (p && p.ok && p.d?.pushed) dire(`${p.d.pushed} publication(s) en retard rattrapée(s)`);
   })();
 
   const $ = (id: string) => document.getElementById(id)!;
@@ -1141,6 +1164,7 @@ import { TRACKS } from '../lib/atelier';
     const rep = await poste('/api/atelier/save', { gig, champs: brouillon, creer: creation });
     if (!rep.ok) { authBanner(rep.auth); fdire(rep.msg); return; }
     if (rep.d.error) { fdire(rep.d.error); return; }
+    aPublier = true;
     fdire(creation ? `fiche ${gig} créée` : `${gig} enregistrée`);
     planifierPush();
     await chargerFiches(true);
@@ -1399,6 +1423,7 @@ import { TRACKS } from '../lib/atelier';
     });
     if (!rep.ok) { authBanner(rep.auth); jdire(rep.msg); return; }
     if (rep.d.error) { jdire(rep.d.error); return; }
+    aPublier = true;
     jdire(`${jOuverte.cle} enregistrée`);
     planifierPush();
     await chargerFacettes(true);
