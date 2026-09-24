@@ -2,9 +2,15 @@
 # Le Worker ne voit pas ces requetes : avec les assets statiques Cloudflare, un
 # fichier qui correspond a la route est servi sans invoquer le code. Les en-tetes
 # doivent donc venir d'ici — une enveloppe dans le Worker resterait sans effet.
+#
+# La CSP est passee en APPLICATION le 24/09, apres deux jours d'observation et
+# verification de la console : il ne restait aucune violation une fois ajoutes
+# le script d'integration Spotify, sdk.scdn.co et l'evaluation dynamique que
+# son SDK exige. En cas de casse, remettre « -Report-Only » sur la ligne suffit
+# a revenir en arriere sans rien perdre.
 /*
   Strict-Transport-Security: max-age=604800
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
-  Content-Security-Policy-Report-Only: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https://media.hamcat.live https://i.scdn.co https://*.sndcdn.com; media-src 'self' blob: https://media.hamcat.live; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://w.soundcloud.com https://sdk.scdn.co https://open.spotify.com https://embed-cdn.spotifycdn.com; connect-src 'self' https://media.hamcat.live https://api.soundcloud.com https://api.spotify.com; frame-src https://w.soundcloud.com https://open.spotify.com https://sdk.scdn.co
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https://media.hamcat.live https://i.scdn.co https://*.sndcdn.com; media-src 'self' blob: https://media.hamcat.live; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://w.soundcloud.com https://sdk.scdn.co https://open.spotify.com https://embed-cdn.spotifycdn.com; connect-src 'self' https://media.hamcat.live https://api.soundcloud.com https://api.spotify.com; frame-src https://w.soundcloud.com https://open.spotify.com https://sdk.scdn.co

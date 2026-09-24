@@ -602,13 +602,28 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     display: none;
     aspect-ratio: 1;
     width: min(300px, 34vw);
-    border-radius: var(--radius-lg);
-    border: 1px solid color-mix(in srgb, var(--stage-c, var(--bg-app)) 45%, var(--border));
+    /* Une pochette a des angles nets. Le grand arrondi la faisait ressembler a
+       une carte d'interface ; 4 px suffisent a adoucir sans nier l'objet. */
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--stage-c, var(--bg-app)) 40%, var(--border));
     background:
-      linear-gradient(150deg,
-        color-mix(in srgb, var(--stage-c, var(--bg-app)) 16%, var(--bg-surface)) 0%,
-        var(--bg-surface) 62%);
-    box-shadow: 0 10px 40px -18px color-mix(in srgb, var(--stage-c, #000) 60%, #000);
+      /* grain du carton : deux trames fines, croisees, a peine perceptibles —
+         c'est ce qui distingue du papier d'une surface numerique */
+      repeating-linear-gradient(115deg,
+        rgb(255 255 255 / 0.014) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(25deg,
+        rgb(0 0 0 / 0.018) 0 1px, transparent 1px 4px),
+      /* lumiere venue du haut-gauche, comme sur une pochette posee a plat */
+      linear-gradient(145deg,
+        color-mix(in srgb, var(--stage-c, var(--bg-app)) 20%, var(--bg-surface)) 0%,
+        var(--bg-surface) 55%,
+        color-mix(in srgb, #000 14%, var(--bg-surface)) 100%);
+    /* Le liseré clair en haut et a gauche est la tranche du carton qui accroche
+       la lumiere ; l'ombre portee la decolle du fond. */
+    box-shadow:
+      inset 1px 1px 0 rgb(255 255 255 / 0.07),
+      inset -1px -1px 0 rgb(0 0 0 / 0.25),
+      0 14px 44px -20px color-mix(in srgb, var(--stage-c, #000) 65%, #000);
     overflow: hidden;
     position: relative;
   }
@@ -625,13 +640,36 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   .scene[data-state="2"] .panel-content { display: none; }
   /* Une pochette a un pli cote dos : c'est ce liseré qui lui donne une epaisseur
      et distingue le recto du verso sans avoir a l'ecrire. */
+  /* Le dos : un pli d'ombre plus large et plus doux qu'un simple trait. C'est
+     lui qui donne l'epaisseur, et il se place du cote du disque — les deux
+     pochettes s'ouvrent donc vers le centre. */
   .jq--recto::before, .jq--verso::before {
-    content: ''; position: absolute; top: 0; bottom: 0; width: 6px;
+    content: ''; position: absolute; top: 0; bottom: 0; width: 14px;
     background: linear-gradient(90deg,
-      color-mix(in srgb, #000 35%, transparent), transparent);
+      rgb(0 0 0 / 0.38) 0%, rgb(0 0 0 / 0.12) 45%, transparent 100%);
+    pointer-events: none;
   }
   .jq--recto::before { right: 0; transform: scaleX(-1); }
   .jq--verso::before { left: 0; }
+
+  /* Le disque qui depasse du cote du dos. Un quart de cercle seulement : c'est
+     l'image qui dit « pochette » sans avoir a l'ecrire, et elle pointe vers la
+     platine au centre. */
+  .jq::after {
+    content: ''; position: absolute; z-index: -1;
+    width: 62%; aspect-ratio: 1; border-radius: 50%;
+    top: 19%;
+    background:
+      radial-gradient(circle at 50% 50%,
+        var(--bg-app) 0 13%,
+        color-mix(in srgb, var(--stage-c, var(--bg-app)) 55%, #0a0a0f) 14% 34%,
+        #14141c 35% 100%);
+    box-shadow: 0 6px 22px -8px #000;
+    pointer-events: none;
+  }
+  .jq--recto::after { right: -13%; }
+  .jq--verso::after { left: -13%; }
+  .jq { z-index: 1; }
   .jq-in {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;

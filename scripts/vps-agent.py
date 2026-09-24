@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs
 PORT  = 7890
 TOKEN = os.environ.get("VPS_API_TOKEN", "")
 REPO  = os.environ.get("REPO_PATH", "/home/ubuntu/projects/hamcat.live")
-ALLOWED = {"git","pnpm","npm","node","npx","wrangler","python3","pip3","ls","cat","find","head","tail","systemctl","journalctl"}
+ALLOWED = {"git","pnpm","npm","node","npx","wrangler","python3","pip3","ls","cat","find","head","tail","systemctl","journalctl","crontab"}
 
 def run(args, cwd=None, timeout=120):
     cwd = cwd or REPO
