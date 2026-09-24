@@ -2109,7 +2109,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
           return;
         }
         openModal(activeFacetIdx);
-      }, { signal });
+      }, { signal: sig });
     }
 
     // Fermer modal (× ou clic hors modal-inner)
