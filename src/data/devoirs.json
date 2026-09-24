@@ -1,0 +1,140 @@
+{
+  "_": "Cahiers de devoirs de l'atelier. Chaque cahier est un questionnaire de fond, converti depuis un document du projet Claude pour etre repondable au pouce. Les reponses vont dans devoirs-reponses.json, que Claude relit d'une session a l'autre. Rien ici n'est publie : aucune page du site n'importe ce fichier.",
+  "cahiers": [
+    {
+      "cle": "mise-en-ligne",
+      "titre": "Mise en ligne",
+      "intro": "Passer du site en construction au site diffusable. Quinze questions de fond : chacune change ce qu'on construit ensuite. Reponds dans n'importe quel ordre, passe celles qui ne sont pas mures.",
+      "sections": [
+        {
+          "titre": "L'etendue de la premiere diffusion",
+          "questions": [
+            {
+              "id": "ml-1",
+              "q": "Tu diffuses les six facettes d'un coup, ou tu sors avec Son + Contact seulement ?",
+              "aide": "Sortir incomplet mais honnete est souvent mieux que sortir complet mais creux. Les autres facettes porteraient un « bientot » explicite.",
+              "type": "choix",
+              "options": ["Les six d'un coup", "Son + Contact, le reste en chantier", "Un entre-deux, je precise"]
+            },
+            {
+              "id": "ml-2",
+              "q": "Y a-t-il une date ou un evenement qui sert d'echeance ?",
+              "aide": "Une prog, un festival, une campagne de demarchage. Une echeance change tout l'ordre des priorites.",
+              "type": "texte"
+            }
+          ]
+        },
+        {
+          "titre": "L'accueil",
+          "questions": [
+            {
+              "id": "ml-3",
+              "q": "La platine reste-t-elle le concept d'accueil, ou on livre plus simple d'abord ?",
+              "aide": "C'est le chantier le plus long qui reste. Il est deja bien avance : disque, facettes, jaquettes.",
+              "type": "choix",
+              "options": ["La platine, on va au bout", "Un accueil simple d'abord", "La platine mais degradee sur mobile"]
+            },
+            {
+              "id": "ml-4",
+              "q": "Que doit comprendre quelqu'un en dix secondes sur l'accueil ?",
+              "aide": "Qui tu es, ce que tu proposes, ou ce que tu as fait. Les trois ne tiennent pas dans le meme ecran avec la meme force — il faut un premier.",
+              "type": "choix",
+              "options": ["Qui je suis", "Ce que je propose", "Ce que j'ai fait"]
+            }
+          ]
+        },
+        {
+          "titre": "Les cinq facettes creuses",
+          "questions": [
+            {
+              "id": "ml-5",
+              "q": "Parmi Regie, Projets, Outils, Contact, Blog : lesquelles doivent ramener du travail remunere ?",
+              "aide": "C'est le critere qui decide de l'ordre. Une facette qui ne sert qu'a montrer peut attendre ; une facette qui doit faire venir des clients ne peut pas rester vide.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-6",
+              "q": "Regie : quel contenu minimum pour etre credible aupres d'un organisateur ?",
+              "aide": "Liste de materiel maitrise, festivals faits, un tarif, des references nommees ? Dis-moi ce que toi tu regardes quand tu choisis un technicien.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-7",
+              "q": "Cours : le site doit-il vendre des cours, ou seulement dire que tu en donnes ?",
+              "aide": "Vendre veut dire tarifs, creneaux, prise de contact structuree. C'est un chantier, pas une phrase.",
+              "type": "choix",
+              "options": ["Vendre : tarifs et prise de contact", "Dire seulement que j'en donne", "Les cours passent sous Projets"]
+            },
+            {
+              "id": "ml-8",
+              "q": "Outils : qu'est-ce que c'est, concretement ?",
+              "aide": "C'est la seule facette dont j'ignore le contenu. Tant que je ne sais pas, je ne peux ni la construire ni decider si elle merite un secteur du disque.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-9",
+              "q": "Blog : est-ce que tu ecriras vraiment ?",
+              "aide": "Un blog vide sur un site vitrine fait plus de mal que pas de blog du tout. Si le premier article n'est pas ecrit dans le mois, on desactive la facette.",
+              "type": "choix",
+              "options": ["Oui, un premier article ce mois-ci", "Oui mais plus tard — on cache la facette", "Non, on retire le blog"]
+            }
+          ]
+        },
+        {
+          "titre": "Ce qu'on montre et ce qu'on cache",
+          "questions": [
+            {
+              "id": "ml-10",
+              "q": "Les 81 dates : est-ce que tout est montrable ?",
+              "aide": "Des dates, des lieux ou des line-ups que tu ne veux pas voir apparaitre publiquement ? Donne-moi les noms, je passe les fiches en brouillon.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-11",
+              "q": "Les enregistrements marques « bientot » depuis des annees : on fait quoi ?",
+              "aide": "Une promesse non tenue et visible use la confiance plus qu'une absence.",
+              "type": "choix",
+              "options": ["Passer en « pas d'enregistrement »", "Les laisser promettre", "Au cas par cas, je fais le tri"]
+            }
+          ]
+        },
+        {
+          "titre": "Le contact",
+          "questions": [
+            {
+              "id": "ml-12",
+              "q": "Par quel canal veux-tu reellement etre joint pour du travail ?",
+              "aide": "Mail, formulaire, Instagram, telephone. Aujourd'hui contact.json fait 654 octets, donc la reponse n'est pas encore dans le site.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-13",
+              "q": "Acceptes-tu qu'une adresse mail soit publique ?",
+              "aide": "Sinon il faut un formulaire qui la protege — c'est un petit chantier de plus, mais il existe deja des solutions simples sur Workers.",
+              "type": "choix",
+              "options": ["Oui, adresse publique", "Non, formulaire", "Adresse publique mais dediee au site"]
+            }
+          ]
+        },
+        {
+          "titre": "La diffusion elle-meme",
+          "questions": [
+            {
+              "id": "ml-14",
+              "q": "Quand le site sera pret, a qui l'envoies-tu en premier ?",
+              "aide": "Organisateurs, eleves, reseau psytrance, pros du son ? Ca determine quelle facette doit etre la plus solide le jour J.",
+              "type": "texte"
+            },
+            {
+              "id": "ml-15",
+              "q": "Le site doit-il etre trouve dans Google, ou servir de carte de visite ?",
+              "aide": "« DJ psytrance Grenoble », « ingenieur son festival Isere » : etre trouve demande du texte ecrit pour ca, ce qui change la redaction des facettes.",
+              "type": "choix",
+              "options": ["Etre trouve sur des requetes precises", "Carte de visite qu'on donne", "Les deux, mais trouve d'abord"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

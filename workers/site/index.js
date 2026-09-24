@@ -236,6 +236,7 @@ export default {
       '/api/atelier/quick', '/api/atelier/push',
       '/api/atelier/fiches', '/api/atelier/save', '/api/atelier/delete',
       '/api/atelier/facettes', '/api/atelier/facette-save',
+      '/api/atelier/devoirs', '/api/atelier/devoir-save',
     ]);
     if (ATELIER_ROUTES.has(path) && request.method === 'POST') {
       let who;
@@ -248,7 +249,8 @@ export default {
       if (!env.VPS_TOKEN) return errJson('vps_token_absent', 503);
       const route = path.slice('/api/atelier'.length);
       let body = {};
-      if (route !== '/push' && route !== '/fiches' && route !== '/facettes') {
+      if (route !== '/push' && route !== '/fiches' && route !== '/facettes'
+          && route !== '/devoirs') {
         try { body = await request.json(); } catch { return errJson('json_invalide', 400); }
       }
       if (route === '/quick' && (!Array.isArray(body.answers) || !body.answers.length)) {
@@ -259,6 +261,9 @@ export default {
       }
       if (route === '/facette-save' && (!body.cle || typeof body.cle !== 'string')) {
         return errJson('cle_requise', 400);
+      }
+      if (route === '/devoir-save' && (!body.id || typeof body.id !== 'string')) {
+        return errJson('id_requis', 400);
       }
       try {
         const res = await fetch(`${VPS_AGENT}/atelier${route}`, {

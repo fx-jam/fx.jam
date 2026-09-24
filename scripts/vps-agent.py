@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json, os, re, subprocess
 from collections import OrderedDict
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -493,6 +494,102 @@ def supprimer_fiche(gig):
 #  trois cles. `son.json` fait 54 Ko de donnees historiques qui n'ont rien a
 #  voir avec les jaquettes — les perdre pour une faute de frappe dans une phrase
 #  de recto serait absurde.
+# ─────────────────────────────────────────────────────────────────────────────
+#  Cahiers de devoirs
+#
+#  Les questions de fond vivaient dans les documents du projet Claude, que Fx
+#  ne peut pas editer confortablement depuis l'App. Elles passent donc dans
+#  l'atelier, au meme endroit que le reste : une question par ecran, repondable
+#  au pouce, la reponse part seule.
+#
+#  Deux fichiers, deux roles : `devoirs.json` porte les questions et n'est
+#  jamais ecrit par ici ; `devoirs-reponses.json` ne porte que les reponses.
+#  Separer les deux evite qu'une ecriture de reponse puisse abimer l'enonce.
+#  Aucune page du site n'importe ni l'un ni l'autre : rien de tout ca n'est
+#  publie, et une reponse n'a donc pas besoin de build pour etre acquise.
+# ─────────────────────────────────────────────────────────────────────────────
+
+DEVOIRS_Q = "src/data/devoirs.json"
+DEVOIRS_R = "src/data/devoirs-reponses.json"
+DEVOIR_MAX = 4000
+
+
+def _lire_json(rel, defaut):
+    full, err = safe_path(rel)
+    if err or not os.path.isfile(full):
+        return defaut
+    try:
+        with open(full, encoding="utf-8") as f:
+            return json.load(f, object_pairs_hook=OrderedDict)
+    except Exception:
+        return defaut
+
+
+def lister_devoirs():
+    q = _lire_json(DEVOIRS_Q, {"cahiers": []})
+    r = _lire_json(DEVOIRS_R, {"reponses": {}})
+    return {"ok": True,
+            "cahiers": q.get("cahiers") or [],
+            "reponses": r.get("reponses") or {}}
+
+
+def enregistrer_devoir(qid, valeur):
+    qid = str(qid or "").strip()
+    if not qid or len(qid) > 64 or not re.match(r"^[a-z0-9-]+$", qid):
+        return {"ok": False, "error": "identifiant de question invalide"}
+
+    # L'identifiant doit exister dans l'enonce. Sans ce controle, une reponse
+    # egaree ecrirait une cle orpheline que personne ne relirait jamais.
+    connus = set()
+    for c in (_lire_json(DEVOIRS_Q, {"cahiers": []}).get("cahiers") or []):
+        for s in (c.get("sections") or []):
+            for q in (s.get("questions") or []):
+                connus.add(str(q.get("id", "")))
+    if qid not in connus:
+        return {"ok": False, "error": "question inconnue : " + qid}
+
+    valeur = str(valeur or "").replace("\r\n", "\n").strip()
+    if len(valeur) > DEVOIR_MAX:
+        return {"ok": False, "error": "reponse trop longue (%d max)" % DEVOIR_MAX}
+
+    full, err = safe_path(DEVOIRS_R)
+    if err:
+        return {"ok": False, "error": err}
+    original = ""
+    if os.path.isfile(full):
+        with open(full, encoding="utf-8") as f:
+            original = f.read()
+    try:
+        d = json.loads(original, object_pairs_hook=OrderedDict) if original else OrderedDict()
+    except Exception as e:
+        return {"ok": False, "error": "fichier de reponses illisible : %s" % e}
+    if not isinstance(d.get("reponses"), dict):
+        d["reponses"] = OrderedDict()
+
+    if valeur:
+        d["reponses"][qid] = OrderedDict([
+            ("v", valeur),
+            ("d", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")),
+        ])
+    else:
+        d["reponses"].pop(qid, None)      # vider une reponse, c'est la retirer
+
+    try:
+        nouveau = json.dumps(d, ensure_ascii=False, indent=2) + "\n"
+        json.loads(nouveau)               # relecture : on n'ecrit pas a l'aveugle
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(nouveau)
+    except Exception as e:
+        if original:
+            with open(full, "w", encoding="utf-8") as f:
+                f.write(original)
+        return {"ok": False, "error": str(e)}
+
+    steps = {"add": run(["git", "add", "-A"]),
+             "commit": run(["git", "commit", "-m", "atelier: devoir %s" % qid])}
+    return {"ok": True, "id": qid, "vide": not valeur, "steps": steps}
+
+
 FACETTES = {"son", "regie", "projets", "blog", "outils", "contact"}
 FACETTE_CLES = {"recto", "verso", "chantier"}
 CLES_CHIFFRES = {"dates", "apres", "sets", "styles", "lieux", "medias", "billets"}
@@ -711,6 +808,10 @@ class Agent(BaseHTTPRequestHandler):
             if not isinstance(champs, dict) or not champs:
                 return self._json({"error": "champs requis"}, 400)
             self._json(enregistrer_facette(str(body.get("cle", "")).strip(), champs))
+        elif p.path == "/atelier/devoirs":
+            self._json(lister_devoirs())
+        elif p.path == "/atelier/devoir-save":
+            self._json(enregistrer_devoir(body.get("id"), body.get("valeur")))
         elif p.path == "/atelier/delete":
             self._json(supprimer_fiche(str(body.get("gig", "")).strip()))
         elif p.path == "/atelier/push":

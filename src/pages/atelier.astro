@@ -46,6 +46,7 @@ import { TRACKS } from '../lib/atelier';
       <button class="md" id="md-q" aria-current="true">Questions</button>
       <button class="md" id="md-f" aria-current="false">Fiches</button>
       <button class="md" id="md-j" aria-current="false">Facettes</button>
+      <button class="md" id="md-d" aria-current="false">Devoirs</button>
     </nav>
 
     <div id="mode-q">
@@ -95,6 +96,20 @@ import { TRACKS } from '../lib/atelier';
       <p class="f-state" id="j-state">chargement…</p>
       <div class="f-list" id="j-list"></div>
       <div class="f-edit" id="j-edit" hidden></div>
+    </section>
+
+    <!-- Devoirs : les questions de fond, qui vivaient dans les documents du
+         projet Claude. Meme forme que la file de questions — une par ecran,
+         repondable au pouce — mais la reponse est libre et porte sur le site,
+         pas sur une date. -->
+    <section class="fiches" id="mode-d" hidden>
+      <p class="f-state" id="d-state">chargement…</p>
+      <div class="d-cahier" id="d-cahier" hidden>
+        <p class="d-intro" id="d-intro"></p>
+        <div class="d-bar"><span class="d-jauge"><i id="d-jauge-i"></i></span><span class="d-cpt" id="d-cpt"></span></div>
+      </div>
+      <div class="f-list" id="d-list"></div>
+      <div class="f-edit" id="d-edit" hidden></div>
     </section>
 
     <section class="fiches" id="mode-f" hidden>
@@ -418,10 +433,67 @@ import { TRACKS } from '../lib/atelier';
     color: var(--facet-outils);
   }
 
+  /* ── Devoirs ── */
+  .d-cahier { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.3rem; }
+  .d-cahier[hidden] { display: none; }
+  .d-intro {
+    margin: 0; font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary);
+  }
+  .d-bar { display: flex; align-items: center; gap: 0.6rem; }
+  .d-jauge {
+    flex: 1; height: 3px; border-radius: 2px; overflow: hidden;
+    background: color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .d-jauge > i {
+    display: block; height: 100%; width: 0%;
+    background: var(--facet-outils);
+    transition: transform 0.35s ease;
+    transform-origin: left center;
+  }
+  .d-cpt {
+    font-family: var(--font-mono); font-size: 0.66rem; color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  :global(.d-sec) {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--facet-outils);
+    margin: 0.8rem 0 0.1rem; padding-bottom: 0.3rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--facet-outils) 25%, var(--border));
+  }
+  :global(.d-row) {
+    display: grid; grid-template-columns: 1.1rem 1fr; gap: 0.6rem;
+    align-items: baseline; text-align: left; cursor: pointer;
+    padding: 0.55rem 0.6rem; border-radius: 6px;
+    border: 1px solid transparent; background: transparent; width: 100%;
+  }
+  :global(.d-row:hover) { border-color: var(--facet-outils); }
+  :global(.d-mark) { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-tertiary); }
+  :global(.d-row[data-fait="1"] .d-mark) { color: var(--facet-outils); }
+  :global(.d-q) { font-family: var(--font-display); font-size: 0.9rem; color: var(--text-primary); line-height: 1.35; }
+  :global(.d-a) { font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.15rem; }
+  :global(.d-opts) { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  :global(.d-opt) {
+    font: inherit; font-size: 0.78rem; cursor: pointer;
+    padding: 0.45rem 0.7rem; border-radius: 99px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+  }
+  :global(.d-opt:hover), :global(.d-opt[aria-pressed="true"]) {
+    border-color: var(--facet-outils); color: var(--facet-outils);
+  }
+
   @media (max-width: 640px) {
     .at-head { padding: 0.85rem 1rem; }
     .tracks { grid-template-columns: 1fr; padding: 0.8rem 1rem 0; }
     .card, .done { padding: 1rem; }
+  }
+
+  /* Cibles tactiles : meme regle que l'agenda — 44 px au doigt. L'atelier se
+     remplit surtout dans les transports, c'est la qu'il doit tomber juste. */
+  @media (pointer: coarse) {
+    .md { min-height: 44px; }
+    :global(.d-opt) { min-height: 44px; }
+    :global(.d-row) { padding: 0.75rem 0.6rem; }
+    :global(.f-row) { padding: 0.7rem 0.6rem; }
   }
 </style>
 
@@ -1195,19 +1267,26 @@ import { TRACKS } from '../lib/atelier';
     await chargerFiches(true);
   }
 
-  function mode(f: boolean) {
-    $('md-q').setAttribute('aria-current', String(!f));
-    $('md-f').setAttribute('aria-current', String(f));
-    $('md-j').setAttribute('aria-current', 'false');
-    $('mode-q').hidden = f;
-    $('mode-f').hidden = !f;
-    $('mode-j').hidden = true;
-    $('at-title').textContent = f ? 'Fiches' : 'Questions';
-    if (f) chargerFiches();
+  //  Quatre modes. Le basculement etait binaire a l'origine puis rafistole une
+  //  fois : une seule table, sinon le cinquieme mode oubliera d'en cacher un.
+  const MODES = [
+    { b: 'md-q', m: 'mode-q', t: 'Questions', go: () => {} },
+    { b: 'md-f', m: 'mode-f', t: 'Fiches',    go: () => chargerFiches() },
+    { b: 'md-j', m: 'mode-j', t: 'Facettes',  go: () => chargerFacettes() },
+    { b: 'md-d', m: 'mode-d', t: 'Devoirs',   go: () => chargerDevoirs() },
+  ];
+  function aller(bouton: string) {
+    for (const x of MODES) {
+      const actif = x.b === bouton;
+      $(x.b).setAttribute('aria-current', String(actif));
+      $(x.m).hidden = !actif;
+      if (actif) $('at-title').textContent = x.t;
+    }
+    MODES.find(x => x.b === bouton)?.go();
   }
-  $('md-q').onclick = () => mode(false);
-  $('md-f').onclick = () => mode(true);
-  $('f-new').onclick = () => { mode(true); nouvelle(); };
+  const mode = (f: boolean) => aller(f ? 'md-f' : 'md-q');
+  for (const x of MODES) $(x.b).onclick = () => aller(x.b);
+  $('f-new').onclick = () => { aller('md-f'); nouvelle(); };
   ($('f-search') as HTMLInputElement).oninput = () => { if (fichesChargees) listeFiches(); };
 
   // ── Mode Facettes ──────────────────────────────────────────────────────────
@@ -1431,15 +1510,190 @@ import { TRACKS } from '../lib/atelier';
     if (maj) { jOuverte = JSON.parse(JSON.stringify(maj)); rendreFacette(); }
   }
 
-  function modeJ() {
-    for (const [b, m] of [['md-q', 'mode-q'], ['md-f', 'mode-f'], ['md-j', 'mode-j']] as const) {
-      const actif = b === 'md-j';
-      $(b).setAttribute('aria-current', String(actif));
-      $(m).hidden = !actif;
+  // ── Mode Devoirs ───────────────────────────────────────────────────────────
+  //  Les questions de fond du projet, sorties des documents que Fx ne peut pas
+  //  editer depuis l'App. Deux ecrans : la liste, ou l'on voit d'un coup d'oeil
+  //  ce qui reste, et la question seule, ou l'on repond. Meme parti pris que la
+  //  file de questions : on ne force aucun ordre.
+  type DQ = { id: string; q: string; aide?: string; type?: string; options?: string[] };
+  type DSec = { titre: string; questions: DQ[] };
+  type DCahier = { cle: string; titre: string; intro?: string; sections: DSec[] };
+
+  let cahiers: DCahier[] = [];
+  let reponses: Record<string, { v: string; d: string }> = {};
+  let devoirsCharges = false;
+  let dOuverte: DQ | null = null;
+
+  const dQuestions = (): DQ[] =>
+    cahiers.flatMap(c => (c.sections || []).flatMap(s => s.questions || []));
+
+  async function chargerDevoirs(force = false) {
+    if (devoirsCharges && !force) return;
+    $('d-state').textContent = 'chargement…';
+    const rep = await poste('/api/atelier/devoirs');
+    if (!rep.ok) {
+      $('d-state').textContent = rep.msg;
+      authBanner(rep.auth);
+      return;
     }
-    $('at-title').textContent = 'Facettes';
-    chargerFacettes();
+    authBanner(false);
+    cahiers = rep.d.cahiers ?? [];
+    reponses = rep.d.reponses ?? {};
+    devoirsCharges = true;
+    listeDevoirs();
   }
-  $('md-j').onclick = modeJ;
+
+  function listeDevoirs() {
+    dOuverte = null;
+    $('d-edit').hidden = true;
+    $('d-list').hidden = false;
+    const c = cahiers[0];
+    if (!c) { $('d-state').textContent = 'aucun cahier'; $('d-cahier').hidden = true; return; }
+
+    $('d-cahier').hidden = false;
+    $('d-intro').textContent = c.intro || '';
+    const tout = dQuestions();
+    const faites = tout.filter(q => (reponses[q.id]?.v || '').trim()).length;
+    $('d-cpt').textContent = `${faites} / ${tout.length}`;
+    // Animation par transform seulement : la largeur est interdite ici.
+    ($('d-jauge-i') as HTMLElement).style.width = '100%';
+    ($('d-jauge-i') as HTMLElement).style.transform =
+      `scaleX(${tout.length ? faites / tout.length : 0})`;
+    $('d-state').textContent = faites === tout.length ? 'cahier complet' : '';
+
+    const l = $('d-list');
+    l.textContent = '';
+    for (const s of c.sections || []) {
+      const h = document.createElement('p');
+      h.className = 'd-sec';
+      h.textContent = s.titre;
+      l.appendChild(h);
+      for (const q of s.questions || []) {
+        const r = (reponses[q.id]?.v || '').trim();
+        const b = document.createElement('button');
+        b.className = 'd-row';
+        b.dataset.fait = r ? '1' : '0';
+        b.onclick = () => ouvrirDevoir(q);
+        const m = document.createElement('span');
+        m.className = 'd-mark';
+        m.textContent = r ? '●' : '○';
+        const t = document.createElement('span');
+        const t1 = document.createElement('span');
+        t1.className = 'd-q';
+        t1.textContent = q.q;
+        t.appendChild(t1);
+        if (r) {
+          const t2 = document.createElement('span');
+          t2.className = 'd-a';
+          t2.textContent = r.length > 90 ? r.slice(0, 90) + '…' : r;
+          t.appendChild(document.createElement('br'));
+          t.appendChild(t2);
+        }
+        b.append(m, t);
+        l.appendChild(b);
+      }
+    }
+  }
+
+  function ouvrirDevoir(q: DQ) {
+    dOuverte = q;
+    $('d-list').hidden = true;
+    $('d-cahier').hidden = true;
+    const e = $('d-edit');
+    e.hidden = false;
+    e.textContent = '';
+
+    const head = document.createElement('div');
+    head.className = 'fe-head';
+    const h = document.createElement('h2');
+    h.className = 'd-q';
+    h.textContent = q.q;
+    const id = document.createElement('span');
+    id.className = 'fe-id';
+    id.textContent = q.id;
+    head.append(h, id);
+    e.appendChild(head);
+
+    if (q.aide) {
+      const a = document.createElement('p');
+      a.className = 'd-a';
+      a.textContent = q.aide;
+      e.appendChild(a);
+    }
+
+    const ta = document.createElement('textarea');
+    ta.className = 'fe-ta';
+    ta.rows = 5;
+    ta.value = reponses[q.id]?.v || '';
+    ta.placeholder = 'Ta réponse…';
+
+    //  Les propositions ne ferment rien : elles remplissent le champ, qu'on
+    //  reste libre de completer. Un choix a la volee dans le tram, une nuance
+    //  ecrite au calme, meme case.
+    if (q.options?.length) {
+      const o = document.createElement('div');
+      o.className = 'd-opts';
+      for (const opt of q.options) {
+        const b = document.createElement('button');
+        b.className = 'd-opt';
+        b.type = 'button';
+        b.textContent = opt;
+        b.setAttribute('aria-pressed', String(ta.value.trim() === opt));
+        b.onclick = () => {
+          ta.value = opt;
+          for (const x of o.querySelectorAll('.d-opt')) x.setAttribute('aria-pressed', 'false');
+          b.setAttribute('aria-pressed', 'true');
+          ta.focus();
+        };
+        o.appendChild(b);
+      }
+      e.appendChild(o);
+    }
+    e.appendChild(ta);
+
+    const act = document.createElement('div');
+    act.className = 'q-actions';
+    const retour = document.createElement('button');
+    retour.className = 'btn';
+    retour.textContent = 'Retour';
+    retour.onclick = () => listeDevoirs();
+    const ok = document.createElement('button');
+    ok.className = 'btn btn--ok';
+    ok.textContent = 'Enregistrer';
+    ok.onclick = async () => {
+      ok.disabled = true;
+      await enregistrerDevoir(q.id, ta.value);
+      ok.disabled = false;
+    };
+    act.append(retour, ok);
+    e.appendChild(act);
+
+    const st = document.createElement('p');
+    st.className = 'f-state';
+    st.id = 'd-edit-state';
+    e.appendChild(st);
+    ta.focus();
+  }
+
+  async function enregistrerDevoir(id: string, valeur: string) {
+    const st = document.getElementById('d-edit-state');
+    if (st) st.textContent = 'envoi…';
+    const rep = await poste('/api/atelier/devoir-save', { id, valeur });
+    if (!rep.ok) {
+      if (st) st.textContent = rep.msg;
+      authBanner(rep.auth);
+      return;
+    }
+    authBanner(false);
+    const v = valeur.trim();
+    if (v) reponses[id] = { v, d: new Date().toISOString() };
+    else delete reponses[id];
+    aPublier = true;
+    planifierPush();
+    if (st) st.textContent = 'enregistré';
+    //  On revient a la liste : voir la jauge avancer est ce qui donne envie de
+    //  faire la suivante. Rester sur la question repondue ne dit rien.
+    setTimeout(() => { if (dOuverte?.id === id) listeDevoirs(); }, 350);
+  }
 
 </script>
