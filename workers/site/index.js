@@ -235,6 +235,7 @@ export default {
     const ATELIER_ROUTES = new Set([
       '/api/atelier/quick', '/api/atelier/push',
       '/api/atelier/fiches', '/api/atelier/save', '/api/atelier/delete',
+      '/api/atelier/facettes', '/api/atelier/facette-save',
     ]);
     if (ATELIER_ROUTES.has(path) && request.method === 'POST') {
       let who;
@@ -247,7 +248,7 @@ export default {
       if (!env.VPS_TOKEN) return errJson('vps_token_absent', 503);
       const route = path.slice('/api/atelier'.length);
       let body = {};
-      if (route !== '/push' && route !== '/fiches') {
+      if (route !== '/push' && route !== '/fiches' && route !== '/facettes') {
         try { body = await request.json(); } catch { return errJson('json_invalide', 400); }
       }
       if (route === '/quick' && (!Array.isArray(body.answers) || !body.answers.length)) {
@@ -255,6 +256,9 @@ export default {
       }
       if (route === '/save' || route === '/delete') {
         if (!body.gig || typeof body.gig !== 'string') return errJson('gig_requis', 400);
+      }
+      if (route === '/facette-save' && (!body.cle || typeof body.cle !== 'string')) {
+        return errJson('cle_requise', 400);
       }
       try {
         const res = await fetch(`${VPS_AGENT}/atelier${route}`, {

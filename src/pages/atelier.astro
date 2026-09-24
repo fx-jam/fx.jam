@@ -45,6 +45,7 @@ import { TRACKS } from '../lib/atelier';
     <nav class="modes">
       <button class="md" id="md-q" aria-current="true">Questions</button>
       <button class="md" id="md-f" aria-current="false">Fiches</button>
+      <button class="md" id="md-j" aria-current="false">Facettes</button>
     </nav>
 
     <div id="mode-q">
@@ -89,6 +90,12 @@ import { TRACKS } from '../lib/atelier';
     </section>
 
     </div><!-- /mode-q -->
+
+    <section class="fiches" id="mode-j" hidden>
+      <p class="f-state" id="j-state">chargement…</p>
+      <div class="f-list" id="j-list"></div>
+      <div class="f-edit" id="j-edit" hidden></div>
+    </section>
 
     <section class="fiches" id="mode-f" hidden>
       <div class="f-bar">
@@ -242,7 +249,21 @@ import { TRACKS } from '../lib/atelier';
     display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
     padding-top: 0.6rem; border-top: 1px solid var(--border);
   }
-  :global(.fe-note) { margin: 0; font-size: 0.66rem; color: var(--text-tertiary); }
+  :global(.fe-note) { margin: 0.4rem 0 0; font-size: 0.66rem; color: var(--text-tertiary); }
+  /* Compteur de signes : il ne tronque pas, il previent — et il ferme le bouton
+     d'enregistrement tant que ca deborde. Un recto qui deborde n'est plus une
+     jaquette, c'est une page. */
+  :global(.fe-cpt) {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    color: var(--text-tertiary); letter-spacing: 0;
+  }
+  :global(.fe-cpt[data-trop="1"]) { color: var(--facet-son); font-weight: 700; }
+  :global(.fe-chips) { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  :global(.fe-e) {
+    display: grid; grid-template-columns: 1fr 1.4fr 1fr auto; gap: 0.35rem;
+    margin-bottom: 0.3rem;
+  }
+  :global(.btn[disabled]) { opacity: 0.35; pointer-events: none; }
 
   .tracks {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
@@ -1153,8 +1174,10 @@ import { TRACKS } from '../lib/atelier';
   function mode(f: boolean) {
     $('md-q').setAttribute('aria-current', String(!f));
     $('md-f').setAttribute('aria-current', String(f));
+    $('md-j').setAttribute('aria-current', 'false');
     $('mode-q').hidden = f;
     $('mode-f').hidden = !f;
+    $('mode-j').hidden = true;
     $('at-title').textContent = f ? 'Fiches' : 'Questions';
     if (f) chargerFiches();
   }
@@ -1162,5 +1185,236 @@ import { TRACKS } from '../lib/atelier';
   $('md-f').onclick = () => mode(true);
   $('f-new').onclick = () => { mode(true); nouvelle(); };
   ($('f-search') as HTMLInputElement).oninput = () => { if (fichesChargees) listeFiches(); };
+
+  // ── Mode Facettes ──────────────────────────────────────────────────────────
+  //  Les deux faces de chaque facette. Voir claude/architecture-jaquettes.md :
+  //  le recto porte l'identite et ne deborde jamais, le verso porte l'index.
+  //  Les limites ci-dessous ne sont pas decoratives — une jaquette existe pour
+  //  etre lue a deux metres, et l'editeur doit le dire A LA SAISIE plutot que
+  //  de laisser decouvrir le degat en ligne.
+  const MAXR = { titre: 18, phrase: 42, chiffres: 3 };
+  const MAXV = { intro: 180, entrees: 6 };
+  const CHIFFRES: { cle: string; l: string }[] = [
+    { cle: 'dates',   l: 'dates' },
+    { cle: 'apres',   l: 'à venir' },
+    { cle: 'sets',    l: 'sets à écouter' },
+    { cle: 'styles',  l: 'styles' },
+    { cle: 'lieux',   l: 'lieux' },
+    { cle: 'medias',  l: 'médias' },
+    { cle: 'billets', l: 'articles' },
+  ];
+
+  type Facette = {
+    cle: string; label: string; teaser?: string;
+    recto: any; verso: any; chantier: string | null;
+  };
+  let facettes: Facette[] = [];
+  let jChargees = false;
+  let jOuverte: Facette | null = null;
+
+  const jdire = (t: string) => { const e = $('j-state'); if (e) e.textContent = t; };
+
+  async function chargerFacettes(force = false) {
+    if (jChargees && !force) return;
+    jdire('chargement…');
+    const rep = await poste('/api/atelier/facettes');
+    if (!rep.ok) { authBanner(rep.auth); jdire(rep.msg); return; }
+    facettes = rep.d.facettes || [];
+    jChargees = true;
+    listeFacettes();
+  }
+
+  /** Ce qui manque à une facette, dit en un mot — comme pour les fiches. */
+  function jTrous(f: Facette): string {
+    const m: string[] = [];
+    if (!txt(f.recto?.phrase)) m.push('phrase');
+    if (!arr(f.recto?.chiffres).length) m.push('chiffres');
+    if (!txt(f.verso?.intro)) m.push('intro');
+    if (!arr(f.verso?.entrees).length) m.push('index');
+    return m.join(' · ');
+  }
+
+  function listeFacettes() {
+    const el = $('j-list'); el.textContent = ''; el.hidden = false;
+    $('j-edit').hidden = true;
+    for (const f of facettes) {
+      const b = document.createElement('button'); b.className = 'f-row';
+      const d = document.createElement('span'); d.className = 'f-d'; d.textContent = f.cle;
+      const t = document.createElement('span'); t.className = 'f-t'; t.textContent = f.label;
+      const v = document.createElement('span'); v.className = 'f-v';
+      v.textContent = f.chantier ? 'en chantier' : txt(f.recto?.phrase);
+      const g = document.createElement('span'); g.className = 'f-gap'; g.textContent = jTrous(f);
+      const mid = document.createElement('span'); mid.append(t, document.createTextNode(' '), v);
+      b.append(d, mid, g);
+      b.onclick = () => { jOuverte = JSON.parse(JSON.stringify(f)); rendreFacette(); };
+      el.appendChild(b);
+    }
+    jdire(`${facettes.length} facettes`);
+  }
+
+  /** Champ texte avec compteur : le nombre restant vire au rouge quand on passe
+   *  la limite, et le bouton d'enregistrement se ferme. Mieux vaut empecher que
+   *  tronquer. */
+  function champLimite(lab: string, val: string, max: number, multi: boolean,
+                       onChange: (v: string) => void): HTMLElement {
+    const w = document.createElement('div'); w.className = 'fe-f';
+    const l = document.createElement('span'); l.className = 'fe-l';
+    const c = document.createElement('span'); c.className = 'fe-cpt';
+    const maj = (v: string) => {
+      c.textContent = `${v.length}/${max}`;
+      c.dataset.trop = v.length > max ? '1' : '0';
+    };
+    l.append(document.createTextNode(lab + '  '), c);
+    const i = multi ? document.createElement('textarea') : document.createElement('input');
+    i.className = multi ? 'fe-ta' : 'fe-i';
+    (i as HTMLInputElement).value = val;
+    i.oninput = () => { maj((i as HTMLInputElement).value); onChange((i as HTMLInputElement).value); jMaj(); };
+    maj(val);
+    w.append(l, i);
+    return w;
+  }
+
+  function jMaj() {
+    const b = $('j-save') as HTMLButtonElement | null;
+    if (!b || !jOuverte) return;
+    const p = jProblemes();
+    b.disabled = p.length > 0;
+    jdire(p.length ? p.join(' · ') : 'prêt à enregistrer');
+  }
+
+  function jProblemes(): string[] {
+    if (!jOuverte) return [];
+    const p: string[] = [];
+    const r = jOuverte.recto || {}, v = jOuverte.verso || {};
+    if (txt(r.titre).length  > MAXR.titre)  p.push('titre trop long');
+    if (txt(r.phrase).length > MAXR.phrase) p.push('phrase trop longue — passe-la au verso');
+    if (arr(r.chiffres).length > MAXR.chiffres) p.push('trois chiffres au maximum');
+    if (txt(v.intro).length  > MAXV.intro)  p.push('intro trop longue');
+    if (arr(v.entrees).length > MAXV.entrees) p.push('six entrées au maximum');
+    return p;
+  }
+
+  function rendreFacette() {
+    const el = $('j-edit'); el.textContent = ''; el.hidden = false;
+    $('j-list').hidden = true;
+    if (!jOuverte) return;
+    const f = jOuverte;
+    f.recto = f.recto || {}; f.verso = f.verso || {};
+
+    const head = document.createElement('div'); head.className = 'fe-head';
+    const h = document.createElement('strong'); h.textContent = f.label;
+    const idl = document.createElement('span'); idl.className = 'fe-id'; idl.textContent = 'recto · verso';
+    head.append(h, idl);
+    el.appendChild(head);
+
+    // ── Recto ────────────────────────────────────────────────────────────
+    const tr = document.createElement('p'); tr.className = 'fe-note';
+    tr.textContent = 'RECTO — l’identité, lue à deux mètres. Ce qui ne tient pas ici va au verso.';
+    el.appendChild(tr);
+    el.appendChild(champLimite('Titre', txt(f.recto.titre) || f.label, MAXR.titre, false,
+      v => { f.recto.titre = v; }));
+    el.appendChild(champLimite('Phrase', txt(f.recto.phrase), MAXR.phrase, false,
+      v => { f.recto.phrase = v; }));
+    el.appendChild(champLimite('Image (identifiant ou chemin)', txt(f.recto.image), 200, false,
+      v => { f.recto.image = v; }));
+
+    const wc = document.createElement('div'); wc.className = 'fe-f';
+    const lc = document.createElement('span'); lc.className = 'fe-l';
+    lc.textContent = 'Chiffres — comptés automatiquement, jamais saisis (3 max)';
+    const box = document.createElement('div'); box.className = 'fe-chips';
+    for (const c of CHIFFRES) {
+      const on = arr(f.recto.chiffres).some((x: any) => x.cle === c.cle);
+      const b = document.createElement('button'); b.className = 'fe-b';
+      b.textContent = c.l; b.setAttribute('aria-pressed', String(on));
+      b.onclick = () => {
+        const l = arr(f.recto.chiffres).slice();
+        const i = l.findIndex((x: any) => x.cle === c.cle);
+        if (i >= 0) l.splice(i, 1); else l.push({ cle: c.cle });
+        f.recto.chiffres = l; rendreFacette(); jMaj();
+      };
+      box.appendChild(b);
+    }
+    wc.append(lc, box);
+    el.appendChild(wc);
+
+    // ── Verso ────────────────────────────────────────────────────────────
+    const tv = document.createElement('p'); tv.className = 'fe-note';
+    tv.textContent = 'VERSO — l’index : ce qu’on trouve à l’intérieur.';
+    el.appendChild(tv);
+    el.appendChild(champLimite('Intro', txt(f.verso.intro), MAXV.intro, true,
+      v => { f.verso.intro = v; }));
+
+    const we = document.createElement('div'); we.className = 'fe-f';
+    const le = document.createElement('span'); le.className = 'fe-l';
+    le.textContent = `Entrées (${arr(f.verso.entrees).length}/${MAXV.entrees})`;
+    we.appendChild(le);
+    arr(f.verso.entrees).forEach((e: any, i: number) => {
+      const row = document.createElement('div'); row.className = 'fe-e';
+      const mk = (ph: string, k: string, cl: string) => {
+        const inp = document.createElement('input'); inp.className = cl;
+        inp.placeholder = ph; inp.value = txt(e[k]);
+        inp.oninput = () => { e[k] = inp.value; };
+        return inp;
+      };
+      const del = document.createElement('button'); del.className = 'fe-b fe-b--danger';
+      del.textContent = '×';
+      del.onclick = () => { f.verso.entrees = arr(f.verso.entrees).filter((_: any, j: number) => j !== i);
+                            rendreFacette(); jMaj(); };
+      row.append(mk('Titre', 'titre', 'fe-i'), mk('Texte court', 'texte', 'fe-i'),
+                 mk('Lien', 'href', 'fe-i'), del);
+      we.appendChild(row);
+    });
+    if (arr(f.verso.entrees).length < MAXV.entrees) {
+      const add = document.createElement('button'); add.className = 'fe-b';
+      add.textContent = '+ entrée';
+      add.onclick = () => { f.verso.entrees = [...arr(f.verso.entrees), { titre: '' }];
+                            rendreFacette(); jMaj(); };
+      we.appendChild(add);
+    }
+    el.appendChild(we);
+
+    // ── Cône de chantier ─────────────────────────────────────────────────
+    el.appendChild(champLimite('En chantier — vide si la facette est prête', txt(f.chantier), 120, false,
+      v => { f.chantier = v; }));
+
+    const act = document.createElement('div'); act.className = 'fe-actions';
+    const save = document.createElement('button');
+    save.className = 'btn btn--ok'; save.id = 'j-save'; save.textContent = 'Enregistrer';
+    save.onclick = enregistrerFacette;
+    const back = document.createElement('button');
+    back.className = 'btn'; back.textContent = 'Retour';
+    back.onclick = () => { jOuverte = null; listeFacettes(); };
+    act.append(save, back);
+    el.appendChild(act);
+    jMaj();
+  }
+
+  async function enregistrerFacette() {
+    if (!jOuverte) return;
+    if (jProblemes().length) return;
+    jdire('enregistrement…');
+    const rep = await poste('/api/atelier/facette-save', {
+      cle: jOuverte.cle,
+      champs: { recto: jOuverte.recto, verso: jOuverte.verso, chantier: jOuverte.chantier || '' },
+    });
+    if (!rep.ok) { authBanner(rep.auth); jdire(rep.msg); return; }
+    if (rep.d.error) { jdire(rep.d.error); return; }
+    jdire(`${jOuverte.cle} enregistrée`);
+    planifierPush();
+    await chargerFacettes(true);
+    const maj = facettes.find(x => x.cle === jOuverte!.cle);
+    if (maj) { jOuverte = JSON.parse(JSON.stringify(maj)); rendreFacette(); }
+  }
+
+  function modeJ() {
+    for (const [b, m] of [['md-q', 'mode-q'], ['md-f', 'mode-f'], ['md-j', 'mode-j']] as const) {
+      const actif = b === 'md-j';
+      $(b).setAttribute('aria-current', String(actif));
+      $(m).hidden = !actif;
+    }
+    $('at-title').textContent = 'Facettes';
+    chargerFacettes();
+  }
+  $('md-j').onclick = modeJ;
 
 </script>

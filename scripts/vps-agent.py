@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json, os, re, subprocess
+from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -486,6 +487,118 @@ def supprimer_fiche(gig):
             "steps": {"commit": run(["git", "commit", "-m", "atelier: fiche %s supprimee" % gig])}}
 
 
+
+# ── Les deux faces d'une facette ─────────────────────────────────────────────
+#  Meme philosophie que les fiches : on ne reconstruit pas le fichier, on y pose
+#  trois cles. `son.json` fait 54 Ko de donnees historiques qui n'ont rien a
+#  voir avec les jaquettes — les perdre pour une faute de frappe dans une phrase
+#  de recto serait absurde.
+FACETTES = {"son", "regie", "cours", "blog", "outils", "contact"}
+FACETTE_CLES = {"recto", "verso", "chantier"}
+CLES_CHIFFRES = {"dates", "apres", "sets", "styles", "lieux", "medias", "billets"}
+
+
+def _chemin_facette(cle):
+    if cle not in FACETTES:
+        return None, "facette inconnue"
+    return safe_path("src/data/%s.json" % cle)
+
+
+def lister_facettes():
+    out = []
+    for cle in sorted(FACETTES):
+        full, err = _chemin_facette(cle)
+        if err or not os.path.isfile(full):
+            continue
+        try:
+            with open(full, encoding="utf-8") as f:
+                d = json.load(f)
+        except Exception as e:
+            out.append({"cle": cle, "erreur": str(e)}); continue
+        out.append({"cle": cle, "label": d.get("label", cle),
+                    "teaser": d.get("teaser", ""),
+                    "recto": d.get("recto") or {},
+                    "verso": d.get("verso") or {},
+                    "chantier": d.get("chantier")})
+    return out
+
+
+def _nettoie_recto(r):
+    if not isinstance(r, dict):
+        raise ValueError("recto : objet attendu")
+    chiffres = []
+    for c in (r.get("chiffres") or [])[:3]:
+        cle = str((c or {}).get("cle", "")).strip()
+        if cle not in CLES_CHIFFRES:
+            raise ValueError("chiffre inconnu : " + cle[:20])
+        o = {"cle": cle}
+        if str((c or {}).get("quoi", "")).strip():
+            o["quoi"] = str(c["quoi"]).strip()
+        chiffres.append(o)
+    return {"image":  str(r.get("image", "") or "").strip(),
+            "titre":  " ".join(str(r.get("titre", "") or "").split()),
+            "phrase": " ".join(str(r.get("phrase", "") or "").split()),
+            "chiffres": chiffres}
+
+
+def _nettoie_verso(v):
+    if not isinstance(v, dict):
+        raise ValueError("verso : objet attendu")
+    entrees = []
+    for e in (v.get("entrees") or [])[:6]:
+        titre = " ".join(str((e or {}).get("titre", "") or "").split())
+        if not titre:
+            continue
+        o = {"titre": titre}
+        for k in ("texte", "href"):
+            val = " ".join(str((e or {}).get(k, "") or "").split())
+            if val:
+                o[k] = val
+        entrees.append(o)
+    return {"intro": str(v.get("intro", "") or "").replace("\r\n", "\n").strip(),
+            "entrees": entrees}
+
+
+def enregistrer_facette(cle, champs):
+    full, err = _chemin_facette(cle)
+    if err:
+        return {"ok": False, "error": err}
+    if not os.path.isfile(full):
+        return {"ok": False, "error": "fichier de facette introuvable"}
+    inconnus = [c for c in champs if c not in FACETTE_CLES]
+    if inconnus:
+        return {"ok": False, "error": "champ non autorise: " + ", ".join(inconnus[:3])}
+
+    with open(full, encoding="utf-8") as f:
+        original = f.read()
+    try:
+        d = json.loads(original, object_pairs_hook=OrderedDict)
+        if "recto" in champs:
+            d["recto"] = _nettoie_recto(champs["recto"])
+        if "verso" in champs:
+            d["verso"] = _nettoie_verso(champs["verso"])
+        if "chantier" in champs:
+            t = str(champs["chantier"] or "").strip()
+            d["chantier"] = t or None
+        nouveau = json.dumps(d, ensure_ascii=False, indent=2) + "\n"
+        json.loads(nouveau)                      # relecture : on n'ecrit pas a l'aveugle
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    try:
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(nouveau)
+    except Exception as e:
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(original)
+        return {"ok": False, "error": str(e)}
+
+    steps = {"add": run(["git", "add", "-A"]),
+             "commit": run(["git", "commit", "-m",
+                            "atelier: facette %s (%s)" % (cle, ", ".join(sorted(champs)))])}
+    return {"ok": True, "cle": cle, "champs": sorted(champs), "steps": steps}
+
+
 class Agent(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args): pass
 
@@ -591,6 +704,13 @@ class Agent(BaseHTTPRequestHandler):
                 return self._json({"error": "trop de champs"}, 400)
             self._json(enregistrer_fiche(str(body.get("gig", "")).strip(), champs,
                                          creer=bool(body.get("creer"))))
+        elif p.path == "/atelier/facettes":
+            self._json({"ok": True, "facettes": lister_facettes()})
+        elif p.path == "/atelier/facette-save":
+            champs = body.get("champs") or {}
+            if not isinstance(champs, dict) or not champs:
+                return self._json({"error": "champs requis"}, 400)
+            self._json(enregistrer_facette(str(body.get("cle", "")).strip(), champs))
         elif p.path == "/atelier/delete":
             self._json(supprimer_fiche(str(body.get("gig", "")).strip()))
         elif p.path == "/atelier/push":
