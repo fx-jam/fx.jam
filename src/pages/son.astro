@@ -176,11 +176,15 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
       <div class="panel panel-agenda" data-panel="agenda">
         <h2 class="col-title">Agenda</h2>
 
+        {/* Pas de bloc vide : un titre « À venir » suivi d'une excuse occupe la
+            place la plus visible de la page pour annoncer qu'il n'y a rien. Le
+            groupe n'existe que s'il a des dates — le passage d'une date de
+            « a venir » a l'historique se fait tout seul, par comparaison a la
+            date du jour au moment de la construction du site. */}
+        {upcoming.length > 0 && (
         <div class="gig-group">
           <h3 class="group-label">À venir</h3>
-          {upcoming.length === 0 ? (
-            <p class="empty">Prochaines dates bientôt annoncées.</p>
-          ) : (
+          {(
             <ul class="gig-list gig-list--next">
               {upcoming.map(g => (
                 <li class="gig-row gig-upcoming">
@@ -195,6 +199,7 @@ const playlistsByCategory = visiblePlaylists.reduce((acc, p) => {
             </ul>
           )}
         </div>
+        )}
 
         <details class="gig-group" open>
           <summary class="group-label">
