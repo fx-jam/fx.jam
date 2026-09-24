@@ -14,12 +14,14 @@
   "image_fond": "",
   "photos": [],
   "recto": {
-    "phrase": "Ingénierie son — FOH, festivals",
+    "image": "",
+    "titre": "",
+    "phrase": "Tech",
     "chiffres": []
   },
   "verso": {
-    "intro": "",
+    "intro": "Tech son face / retours / plateau \nX32 / M32 \nRégie générale - production d'événéments",
     "entrees": []
   },
-  "chantier": "Page en préparation — écris-moi en attendant."
+  "chantier": "en chantier"
 }
