@@ -493,7 +493,7 @@ def supprimer_fiche(gig):
 #  trois cles. `son.json` fait 54 Ko de donnees historiques qui n'ont rien a
 #  voir avec les jaquettes — les perdre pour une faute de frappe dans une phrase
 #  de recto serait absurde.
-FACETTES = {"son", "regie", "cours", "blog", "outils", "contact"}
+FACETTES = {"son", "regie", "projets", "blog", "outils", "contact"}
 FACETTE_CLES = {"recto", "verso", "chantier"}
 CLES_CHIFFRES = {"dates", "apres", "sets", "styles", "lieux", "medias", "billets"}
 
