@@ -1404,17 +1404,7 @@
     "image": "",
     "titre": "",
     "phrase": "DJ hybride / Instruments Live",
-    "chiffres": [
-      {
-        "cle": "sets"
-      },
-      {
-        "cle": "styles"
-      },
-      {
-        "cle": "dates"
-      }
-    ]
+    "chiffres": []
   },
   "verso": {
     "intro": "",
