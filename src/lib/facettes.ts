@@ -109,9 +109,12 @@ export async function jaquettes(): Promise<Jaquette[]> {
       label: f.label,
       href: f.href,
       recto: {
-        image:  r.image ?? d.cover_image ?? '',
-        titre:  r.titre ?? f.label,
-        phrase: r.phrase ?? f.teaser ?? '',
+        // `||` et non `??` : l'atelier ecrit des chaines vides pour les champs
+        // non renseignes, et une chaine vide n'est pas nullish — le repli vers
+        // le label n'aurait jamais joue.
+        image:  r.image  || d.cover_image || '',
+        titre:  r.titre  || f.label,
+        phrase: r.phrase || f.teaser || '',
         // Une clé inconnue est ignorée plutôt que rendue en « undefined ».
         chiffres: (r.chiffres ?? [])
           .map(x => (c[x.cle] ? { ...c[x.cle], quoi: x.quoi ?? c[x.cle].quoi } : null))
