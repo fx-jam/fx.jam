@@ -17,7 +17,7 @@
 
 import sonData from './son.json';
 import regieData from './regie.json';
-import coursData from './cours.json';
+import projetsData from './projets.json';
 import blogData from './blog.json';
 import outilsData from './outils.json';
 import contactData from './contact.json';
@@ -25,7 +25,7 @@ import contactData from './contact.json';
 export type FacetKey =
   | 'son'
   | 'regie'
-  | 'cours'
+  | 'projets'
   | 'blog'
   | 'outils'
   | 'contact';
@@ -54,10 +54,14 @@ export const FACETS: readonly Facet[] = [
     enabled: true,
   },
   {
-    key: 'cours',
-    label: coursData.label || 'Cours',
-    teaser: coursData.teaser || 'Cours MAO — Ableton, production',
-    href: '/cours',
+    // Remplace Cours (24/09) : Fx a une douzaine d'eleves et n'en cherche pas
+    // plus, alors que les projets collectifs — ADN, Hadra, le label, le booking
+    // — representent des annees de matiere sans aucun endroit ou exister.
+    // Le champ `organizer` des fiches fait deja la jointure avec l'agenda.
+    key: 'projets',
+    label: projetsData.label || 'Projets',
+    teaser: projetsData.teaser || 'Collectifs, festivals, label, booking',
+    href: '/projets',
     enabled: true,
   },
   {

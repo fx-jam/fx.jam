@@ -1,6 +1,6 @@
 {
-  "label": "Cours",
-  "teaser": "Cours MAO & Techniques du Son : DJing, Production, Sonorisation, Enregistrement",
+  "label": "Projets",
+  "teaser": "Collectifs, festivals, label, booking",
   "headline": "Cours",
   "note_stub": "Facette Cours",
   "cover_image": "",
@@ -16,13 +16,13 @@
   "image_fond": "",
   "recto": {
     "image": "",
-    "titre": "",
-    "phrase": "DJing/Techniques du son",
+    "titre": "Projets",
+    "phrase": "Collectifs, festivals, label, booking",
     "chiffres": []
   },
   "verso": {
     "intro": "",
     "entrees": []
   },
-  "chantier": null
+  "chantier": "Des années d’aventures à rassembler — page en écriture."
 }

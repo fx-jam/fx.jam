@@ -5,7 +5,7 @@ import siteData from '../data/site.json';
 import { getCollection } from 'astro:content';
 import sonJson    from '../data/son.json';
 import regieJson  from '../data/regie.json';
-import coursJson  from '../data/cours.json';
+import projetsJson from '../data/projets.json';
 import blogJson   from '../data/blog.json';
 import outilsJson from '../data/outils.json';
 import contactJson from '../data/contact.json';
@@ -14,7 +14,7 @@ import type { SonData, RegieData, CoursData, OutilsData, ContactData } from '../
 // Typed data for face-B rich rendering
 const sonDataTyped    = sonJson    as unknown as SonData;
 const regieDataTyped  = regieJson  as unknown as RegieData;
-const coursDataTyped  = coursJson  as unknown as CoursData;
+const projetsDataTyped = projetsJson as unknown as CoursData;
 const outilsDataTyped = outilsJson as unknown as OutilsData;
 const contactDataTyped = contactJson as unknown as ContactData;
 
@@ -60,7 +60,7 @@ const OVERLAY_GIGS_COUNT = 3;
 const facetJsonMap: Record<string, Record<string, unknown>> = {
   son: sonJson as Record<string, unknown>,
   regie: regieJson as Record<string, unknown>,
-  cours: coursJson as Record<string, unknown>,
+  projets: projetsJson as Record<string, unknown>,
   blog: blogJson as Record<string, unknown>,
   outils: outilsJson as Record<string, unknown>,
   contact: contactJson as Record<string, unknown>,
@@ -378,12 +378,12 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
             )}
 
             {/* ── Cours ── */}
-            {item.key === 'cours' && (
+            {item.key === 'projets' && (
               <>
-                {coursDataTyped.intro && <p class="face-b-text">{coursDataTyped.intro}</p>}
-                {coursDataTyped.courses && coursDataTyped.courses.length > 0 ? (
+                {projetsDataTyped.intro && <p class="face-b-text">{projetsDataTyped.intro}</p>}
+                {projetsDataTyped.courses && projetsDataTyped.courses.length > 0 ? (
                   <ul class="face-b-list">
-                    {coursDataTyped.courses.map(cours => (
+                    {projetsDataTyped.courses.map(cours => (
                       <li class="face-b-list-item face-b-list-item--col">
                         <span class="fbli-title">{cours.title}</span>
                         <span class="fbli-row">
@@ -395,13 +395,13 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
                     ))}
                   </ul>
                 ) : (
-                  !coursDataTyped.intro && <p class="face-b-text">{item.teaser}</p>
+                  !projetsDataTyped.intro && <p class="face-b-text">{item.teaser}</p>
                 )}
-                {coursDataTyped.schedule_info && (
-                  <p class="face-b-text face-b-text--sm">{coursDataTyped.schedule_info}</p>
+                {projetsDataTyped.schedule_info && (
+                  <p class="face-b-text face-b-text--sm">{projetsDataTyped.schedule_info}</p>
                 )}
-                {coursDataTyped.registration_link && (
-                  <a href={coursDataTyped.registration_link} target="_blank" rel="noopener" class="fbli-link">
+                {projetsDataTyped.registration_link && (
+                  <a href={projetsDataTyped.registration_link} target="_blank" rel="noopener" class="fbli-link">
                     S'inscrire
                   </a>
                 )}
@@ -685,8 +685,8 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
   .jq-chantier {
     margin-top: auto; font-family: var(--font-mono); font-size: 0.64rem;
-    line-height: 1.4; color: var(--facet-cours);
-    border-top: 1px dashed color-mix(in srgb, var(--facet-cours) 50%, transparent);
+    line-height: 1.4; color: var(--facet-projets);
+    border-top: 1px dashed color-mix(in srgb, var(--facet-projets) 50%, transparent);
     padding-top: 0.6rem;
   }
   .jq-chantier[hidden] { display: none; }

@@ -18,7 +18,7 @@ import { getCollection } from 'astro:content';
 import { FACETS, type FacetKey } from '../data/facets';
 import sonData     from '../data/son.json';
 import regieData   from '../data/regie.json';
-import coursData   from '../data/cours.json';
+import projetsData from '../data/projets.json';
 import blogData    from '../data/blog.json';
 import outilsData  from '../data/outils.json';
 import contactData from '../data/contact.json';
@@ -43,7 +43,7 @@ export type Jaquette = {
 };
 
 const BRUT: Record<string, any> = {
-  son: sonData, regie: regieData, cours: coursData,
+  son: sonData, regie: regieData, projets: projetsData,
   blog: blogData, outils: outilsData, contact: contactData,
 };
 

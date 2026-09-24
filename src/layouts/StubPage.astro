@@ -11,7 +11,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getFacet, type FacetKey } from '../data/facets.ts';
 import regieData from '../data/regie.json';
-import coursData from '../data/cours.json';
+import projetsData from '../data/projets.json';
 import outilsData from '../data/outils.json';
 import contactData from '../data/contact.json';
 
@@ -25,7 +25,7 @@ const f = getFacet(facet);
 
 const dataMap: Record<string, { label?: string; teaser?: string; note_stub?: string; bio?: string; email?: string; contact_email?: string }> = {
   regie: regieData,
-  cours: coursData,
+  projets: projetsData,
   outils: outilsData,
   contact: contactData,
 };

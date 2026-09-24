@@ -1,51 +1,51 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getFacet } from '../data/facets.ts';
-import coursJson from '../data/cours.json';
-import type { CoursData } from '../data/types';
-const coursData = coursJson as unknown as CoursData;
+import projetsJson from '../data/projets.json';
+import type { ProjetsData } from '../data/types';
+const projetsData = projetsJson as unknown as ProjetsData;
 
-const f = getFacet('cours');
+const f = getFacet('projets');
 ---
 
 <BaseLayout
-  title="Cours MAO & techniques du son — Ableton, DJing, prod | Hamcat"
-  description={coursData.teaser || "Cours de MAO et de techniques du son à Grenoble : Ableton Live, production, DJing, sonorisation et enregistrement."}
+  title="Projets MAO & techniques du son — Ableton, DJing, prod | Hamcat"
+  description={projetsData.teaser || "Projets de MAO et de techniques du son à Grenoble : Ableton Live, production, DJing, sonorisation et enregistrement."}
 >
-  <main class="cours">
+  <main class="projets">
 
     <!-- ── COVER HERO ──────────────────────────────────────────────── -->
-    {coursData.cover_image && (
+    {projetsData.cover_image && (
       <div class="cover-hero">
-        <img src={coursData.cover_image} alt={coursData.headline || 'Cours'} class="cover-img" />
+        <img src={projetsData.cover_image} alt={projetsData.headline || 'Projets'} class="cover-img" />
       </div>
     )}
 
     <!-- ── HEADER ─────────────────────────────────────────────────── -->
     <header class="hd">
-      <span class="label">{coursData.label || 'Cours'}</span>
-      <h1>{coursData.headline || 'Cours MAO'}</h1>
-      {coursData.intro && <p class="intro">{coursData.intro}</p>}
-      {!coursData.intro && <p class="teaser">{coursData.teaser}</p>}
+      <span class="label">{projetsData.label || 'Projets'}</span>
+      <h1>{projetsData.headline || 'Projets MAO'}</h1>
+      {projetsData.intro && <p class="intro">{projetsData.intro}</p>}
+      {!projetsData.intro && <p class="teaser">{projetsData.teaser}</p>}
     </header>
 
-    <!-- ── COURS PROPOSÉS ─────────────────────────────────────────── -->
-    {coursData.courses && coursData.courses.length > 0 && (
-      <section class="section cours-list-section">
-        <h2 class="section-title">Cours proposés</h2>
-        <ul class="cours-list">
-          {coursData.courses.map(c => (
-            <li class="cours-card">
-              <div class="cours-card-head">
-                <span class="cours-title">{c.title}</span>
-                <span class="cours-meta-row">
+    <!-- ── PROJETS PROPOSÉS ─────────────────────────────────────────── -->
+    {projetsData.projetses && projetsData.projetses.length > 0 && (
+      <section class="section projets-list-section">
+        <h2 class="section-title">Projets proposés</h2>
+        <ul class="projets-list">
+          {projetsData.projetses.map(c => (
+            <li class="projets-card">
+              <div class="projets-card-head">
+                <span class="projets-title">{c.title}</span>
+                <span class="projets-meta-row">
                   {c.level    && <span class="tag">{c.level}</span>}
                   {c.duration && <span class="tag tag--dim">{c.duration}</span>}
                   {c.price    && <span class="tag tag--price">{c.price}</span>}
                 </span>
               </div>
-              {c.description && <p class="cours-desc">{c.description}</p>}
-              {c.tools       && <p class="cours-tools">{c.tools}</p>}
+              {c.description && <p class="projets-desc">{c.description}</p>}
+              {c.tools       && <p class="projets-tools">{c.tools}</p>}
             </li>
           ))}
         </ul>
@@ -53,17 +53,17 @@ const f = getFacet('cours');
     )}
 
     <!-- ── INFOS PRATIQUES ────────────────────────────────────────── -->
-    {coursData.schedule_info && (
+    {projetsData.schedule_info && (
       <section class="section infos">
         <h2 class="section-title">Infos pratiques</h2>
-        <p class="schedule-text">{coursData.schedule_info}</p>
+        <p class="schedule-text">{projetsData.schedule_info}</p>
       </section>
     )}
 
     <!-- ── INSCRIPTION ────────────────────────────────────────────── -->
-    {coursData.registration_link && (
+    {projetsData.registration_link && (
       <section class="section inscription">
-        <a href={coursData.registration_link} target="_blank" rel="noopener" class="cta-btn">
+        <a href={projetsData.registration_link} target="_blank" rel="noopener" class="cta-btn">
           S'inscrire →
         </a>
       </section>
@@ -81,7 +81,7 @@ const f = getFacet('cours');
      automatiques centrent quand il y a de la place et s'effacent sinon.
      Le rembourrage redevient symetrique — 4 rem en haut et 3 en bas etait deja
      un decentrage en soi. */
-  .cours {
+  .projets {
     height: calc(100dvh - var(--player-pad, 0px));
     overflow-y: auto;
     display: flex;
@@ -90,8 +90,8 @@ const f = getFacet('cours');
     padding: 4rem 2rem;
     gap: 3rem;
   }
-  .cours > :first-child { margin-block-start: auto; }
-  .cours > :last-child  { margin-block-end: auto; }
+  .projets > :first-child { margin-block-start: auto; }
+  .projets > :last-child  { margin-block-end: auto; }
 
   .cover-hero {
     width: 100%;
@@ -114,7 +114,7 @@ const f = getFacet('cours');
     text-align: center;
   }
   .label {
-    color: var(--facet-cours);
+    color: var(--facet-projets);
     font-family: var(--font-mono);
     font-size: 0.8rem;
     letter-spacing: 0.25em;
@@ -151,39 +151,39 @@ const f = getFacet('cours');
     font-size: 0.72rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: var(--facet-cours);
+    color: var(--facet-projets);
     font-weight: 500;
     margin: 0;
   }
 
-  /* ── Cards cours ── */
-  .cours-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+  /* ── Cards projets ── */
+  .projets-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 
-  .cours-card {
-    border: 1px solid color-mix(in srgb, var(--facet-cours) 30%, var(--border));
-    border-left: 3px solid var(--facet-cours);
+  .projets-card {
+    border: 1px solid color-mix(in srgb, var(--facet-projets) 30%, var(--border));
+    border-left: 3px solid var(--facet-projets);
     border-radius: 8px;
-    background: color-mix(in srgb, var(--facet-cours) 5%, var(--bg-surface));
+    background: color-mix(in srgb, var(--facet-projets) 5%, var(--bg-surface));
     padding: 0.9rem 1.1rem;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
   }
 
-  .cours-card-head {
+  .projets-card-head {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  .cours-title {
+  .projets-title {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.05rem;
     color: var(--text-primary);
     flex: 1;
   }
-  .cours-meta-row {
+  .projets-meta-row {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
@@ -195,21 +195,21 @@ const f = getFacet('cours');
     letter-spacing: 0.06em;
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
-    border: 1px solid var(--facet-cours);
-    color: var(--facet-cours);
+    border: 1px solid var(--facet-projets);
+    color: var(--facet-projets);
     white-space: nowrap;
   }
   .tag--dim { border-color: var(--border); color: var(--text-tertiary); }
-  .tag--price { border-color: color-mix(in srgb, var(--facet-cours) 50%, transparent); color: var(--text-secondary); }
+  .tag--price { border-color: color-mix(in srgb, var(--facet-projets) 50%, transparent); color: var(--text-secondary); }
 
-  .cours-desc {
+  .projets-desc {
     font-family: var(--font-display);
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.5;
     margin: 0;
   }
-  .cours-tools {
+  .projets-tools {
     font-family: var(--font-mono);
     font-size: 0.7rem;
     color: var(--text-tertiary);
@@ -231,37 +231,37 @@ const f = getFacet('cours');
   .cta-btn {
     display: inline-block;
     padding: 0.7rem 1.8rem;
-    border: 1px solid var(--facet-cours);
+    border: 1px solid var(--facet-projets);
     border-radius: 8px;
-    color: var(--facet-cours);
+    color: var(--facet-projets);
     text-decoration: none;
     font-family: var(--font-mono);
     font-size: 0.88rem;
     letter-spacing: 0.1em;
     transition: background 0.2s ease;
   }
-  .cta-btn:hover { background: color-mix(in srgb, var(--facet-cours) 15%, transparent); }
+  .cta-btn:hover { background: color-mix(in srgb, var(--facet-projets) 15%, transparent); }
 
   .home {
     align-self: center;
-    color: var(--facet-cours);
+    color: var(--facet-projets);
     text-decoration: none;
     font-family: var(--font-mono);
     font-size: 0.85rem;
     letter-spacing: 0.1em;
     padding: 0.6rem 1.2rem;
-    border: 1px solid var(--facet-cours);
+    border: 1px solid var(--facet-projets);
     border-radius: 8px;
     transition: background 0.2s ease;
     margin-top: 0.5rem;
     margin-bottom: 1rem;
   }
-  .home:hover { background: color-mix(in srgb, var(--facet-cours) 15%, transparent); }
+  .home:hover { background: color-mix(in srgb, var(--facet-projets) 15%, transparent); }
 
   @media (max-width: 640px) {
-    .cours-card-head { flex-direction: column; align-items: flex-start; }
+    .projets-card-head { flex-direction: column; align-items: flex-start; }
   }
   @media (max-width: 420px) {
-    .cours { padding: 3rem 1.25rem 2rem; }
+    .projets { padding: 3rem 1.25rem 2rem; }
   }
 </style>

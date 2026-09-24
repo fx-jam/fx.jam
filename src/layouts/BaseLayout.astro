@@ -84,7 +84,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       /* Couleurs des facettes (arc-en-ciel saturé, ordre = spectre) */
       --facet-son:     oklch(0.65 0.22 25);   /* rouge-orange   ~0 deg spectre  */
       --facet-regie:   oklch(0.75 0.18 80);   /* jaune-or       ~60 deg spectre */
-      --facet-cours:   oklch(0.70 0.17 145);  /* vert           ~120 deg spectre */
+      --facet-projets:   oklch(0.70 0.17 145);  /* vert           ~120 deg spectre */
       --facet-blog:    oklch(0.72 0.14 195);  /* cyan           ~180 deg spectre */
       --facet-outils:  oklch(0.65 0.18 260);  /* bleu           ~240 deg spectre */
       --facet-contact: oklch(0.68 0.20 320);  /* violet-rose    ~300 deg spectre */
@@ -998,10 +998,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.95 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.96 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.95');
+  console.log('🐱 fx_jam_v1.96');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -3032,7 +3032,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.95';
+    _vt.textContent = 'fx_jam_v1.96';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
