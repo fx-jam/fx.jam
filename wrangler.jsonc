@@ -7,6 +7,10 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  // Le 24/09, VPS_TOKEN manquait et l'atelier echouait a l'usage sans que rien
+  // ne le signale au deploiement. Declare requis, son absence fait echouer le
+  // deploiement au lieu de laisser decouvrir la panne en ligne.
+  "secrets": { "required": ["VPS_TOKEN"] },
   "observability": {
     "enabled": true
   },

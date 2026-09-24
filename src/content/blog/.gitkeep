@@ -1,0 +1,2 @@
+# Les articles vivent ici. Le repertoire doit exister meme vide :
+# sans lui, le chargeur de contenu d'Astro avertit a chaque build.
