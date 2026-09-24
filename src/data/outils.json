@@ -11,6 +11,8 @@
   "photos": [],
   "image_fond": "",
   "recto": {
+    "image": "",
+    "titre": "",
     "phrase": "fx.tools",
     "chiffres": []
   },
@@ -18,5 +20,5 @@
     "intro": "",
     "entrees": []
   },
-  "chantier": "Page en préparation — écris-moi en attendant."
+  "chantier": "..."
 }
