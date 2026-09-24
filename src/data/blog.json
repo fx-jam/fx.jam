@@ -9,7 +9,7 @@
   "recto": {
     "image": "",
     "titre": "",
-    "phrase": "Notes et carnets",
+    "phrase": "Notes",
     "chiffres": [
       {
         "cle": "billets"
@@ -20,5 +20,5 @@
     "intro": "",
     "entrees": []
   },
-  "chantier": "Premier article en écriture."
+  "chantier": "en chantier"
 }
