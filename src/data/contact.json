@@ -21,22 +21,13 @@
   "photos": [],
   "recto": {
     "image": "",
-    "titre": "Contact",
+    "titre": "",
     "phrase": "Écrire, proposer, programmer",
-    "chiffres": [
-      {
-        "cle": "dates"
-      }
-    ]
+    "chiffres": []
   },
   "verso": {
-    "intro": "Test",
-    "entrees": [
-      {
-        "titre": "Mail",
-        "texte": "réponse sous 48 h"
-      }
-    ]
+    "intro": "",
+    "entrees": []
   },
   "chantier": null
 }
