@@ -1,5 +1,6 @@
 ---
 import { visibleFacets } from '../data/facets';
+import { jaquettes } from '../lib/facettes';
 import siteData from '../data/site.json';
 import { getCollection } from 'astro:content';
 import sonJson    from '../data/son.json';
@@ -16,6 +17,10 @@ const regieDataTyped  = regieJson  as unknown as RegieData;
 const coursDataTyped  = coursJson  as unknown as CoursData;
 const outilsDataTyped = outilsJson as unknown as OutilsData;
 const contactDataTyped = contactJson as unknown as ContactData;
+
+// Les deux faces de chaque facette (voir claude/architecture-jaquettes.md).
+// Les chiffres sont comptes ici, au build : ils ne peuvent pas mentir.
+const JAQ = await jaquettes();
 
 // Last 3 published blog posts for face-B
 const allBlogPosts = await getCollection('blog', ({ data }) => !data.draft);
@@ -141,6 +146,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 <div class="scene" data-state="0" data-n-facets={N} data-r-baseline={rBaseline.toFixed(3)} data-r-cap={R_CAP.toFixed(3)}>
 
   <div class="bg-stage" aria-hidden="true"></div>
+  <script type="application/json" id="jq-data" set:html={JSON.stringify(JAQ)}></script>
 
   <!-- Flèches carrousel (état 2) -->
   <button class="carousel-arrow carousel-arrow--prev" type="button" aria-label="Facette précédente">&#8592;</button>
@@ -148,6 +154,15 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   <!-- Panel gauche (landscape) / haut (portrait) -->
   <div class="panel-start" aria-hidden="true">
+    {/* RECTO — l'identite, lue a deux metres. Carre, comme une pochette. */}
+    <div class="jq jq--recto" id="jq-recto">
+      <div class="jq-in">
+        <span class="jq-lab" id="jq-lab"></span>
+        <h2 class="jq-titre" id="jq-titre"></h2>
+        <p class="jq-phrase" id="jq-phrase"></p>
+        <div class="jq-chiffres" id="jq-chiffres"></div>
+      </div>
+    </div>
     <div class="panel-content">
       <span class="facet-chip" id="panel-chip"></span>
       <h2 class="panel-headline" id="panel-headline"></h2>
@@ -257,6 +272,14 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
 
   <!-- Panel droite (landscape) / bas (portrait) -->
   <div class="panel-end" aria-hidden="true">
+    {/* VERSO — l'index : ce qu'on trouve derriere. */}
+    <div class="jq jq--verso" id="jq-verso">
+      <div class="jq-in">
+        <p class="jq-intro" id="jq-intro"></p>
+        <ul class="jq-entrees" id="jq-entrees"></ul>
+        <p class="jq-chantier" id="jq-chantier" hidden></p>
+      </div>
+    </div>
     <div class="panel-content">
       <div id="panel-gigs" class="panel-gigs"></div>
       <div id="panel-streams" class="panel-streams"></div>
@@ -570,6 +593,100 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   }
 
   /* ─── Fond coloré (états 1 + 2) ─────────────────────────────── */
+  /* ── Jaquettes (etat 2) ──────────────────────────────────────────────────
+     Un carre pour les six facettes, quelle que soit la quantite de contenu
+     derriere. C'est ce qui les rend egales en apparence alors que Son pese
+     54 Ko et Outils 200 octets : le desequilibre ne se decouvre qu'une fois
+     qu'on entre, et a ce moment-la le visiteur a choisi. */
+  .jq {
+    display: none;
+    aspect-ratio: 1;
+    width: min(300px, 34vw);
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--stage-c, var(--bg-app)) 45%, var(--border));
+    background:
+      linear-gradient(150deg,
+        color-mix(in srgb, var(--stage-c, var(--bg-app)) 16%, var(--bg-surface)) 0%,
+        var(--bg-surface) 62%);
+    box-shadow: 0 10px 40px -18px color-mix(in srgb, var(--stage-c, #000) 60%, #000);
+    overflow: hidden;
+    position: relative;
+  }
+  .scene[data-state="2"] .jq { display: block; }
+  .scene[data-state="2"] .panel-content { display: none; }
+  /* Une pochette a un pli cote dos : c'est ce liseré qui lui donne une epaisseur
+     et distingue le recto du verso sans avoir a l'ecrire. */
+  .jq--recto::before, .jq--verso::before {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 6px;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, #000 35%, transparent), transparent);
+  }
+  .jq--recto::before { right: 0; transform: scaleX(-1); }
+  .jq--verso::before { left: 0; }
+  .jq-in {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    padding: 1.4rem;
+  }
+
+  .jq-lab {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--stage-c, var(--text-tertiary));
+  }
+  .jq-titre {
+    margin: 0.5rem 0 0; font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.6rem, 3.4vw, 2.4rem); line-height: 1;
+    color: var(--text-primary);
+  }
+  .jq-phrase {
+    margin: 0.5rem 0 0; font-size: 0.82rem; line-height: 1.35;
+    color: var(--text-secondary);
+  }
+  /* Les chiffres tombent en bas de la pochette : c'est la qu'on les lit sur un
+     vrai disque, et ca donne au carre un point d'appui plutot qu'un texte qui
+     flotte au milieu. */
+  .jq-chiffres {
+    margin-top: auto; display: flex; gap: 1.1rem; flex-wrap: wrap;
+  }
+  .jq-ch { display: flex; flex-direction: column; }
+  .jq-ch b {
+    font-family: var(--font-display); font-weight: 700; font-size: 1.5rem;
+    line-height: 1; color: var(--stage-c, var(--text-primary));
+  }
+  .jq-ch span {
+    font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-tertiary); margin-top: 0.2rem;
+  }
+
+  .jq-intro {
+    margin: 0; font-size: 0.78rem; line-height: 1.45; color: var(--text-secondary);
+  }
+  .jq-entrees { list-style: none; margin: 0.9rem 0 0; padding: 0; }
+  .jq-entrees li {
+    padding: 0.4rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .jq-entrees b {
+    display: block; font-family: var(--font-display); font-weight: 600;
+    font-size: 0.86rem; color: var(--text-primary);
+  }
+  .jq-entrees span {
+    font-size: 0.7rem; color: var(--text-tertiary);
+  }
+  .jq-chantier {
+    margin-top: auto; font-family: var(--font-mono); font-size: 0.64rem;
+    line-height: 1.4; color: var(--facet-cours);
+    border-top: 1px dashed color-mix(in srgb, var(--facet-cours) 50%, transparent);
+    padding-top: 0.6rem;
+  }
+  .jq-chantier[hidden] { display: none; }
+
+  @media (max-width: 900px) {
+    .jq { width: min(260px, 64vw); }
+    .jq-in { padding: 1rem; }
+  }
+
   .bg-stage {
     position: absolute;
     /* Deborde vers le bas de la valeur exacte de la respiration ajoutee sous
@@ -1799,10 +1916,65 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     }
 
     // ── Panels : mise à jour du contenu ───────────────────────────
+    // ── Les deux faces ──────────────────────────────────────────────────
+    //  Donnees serialisees au build, lues une fois. Aucun appel reseau : la
+    //  jaquette doit etre la au moment ou le disque s'ecarte, pas apres.
+    type Jaq = {
+      cle: string; label: string;
+      recto: { titre?: string; phrase?: string; chiffres?: { valeur: string; quoi: string }[] };
+      verso: { intro?: string; entrees?: { titre: string; texte?: string; href?: string }[] };
+      chantier: string | null;
+    };
+    let JAQ: Record<string, Jaq> = {};
+    try {
+      const brut = document.getElementById('jq-data')?.textContent || '[]';
+      for (const j of JSON.parse(brut) as Jaq[]) JAQ[j.cle] = j;
+    } catch (_) { /* pas de jaquettes : les panneaux d'origine restent */ }
+
+    function remplirJaquette(cle: string): void {
+      const j = JAQ[cle];
+      const el = (id: string) => document.getElementById(id);
+      if (!j) return;
+      const lab = el('jq-lab'), ti = el('jq-titre'), ph = el('jq-phrase');
+      if (lab) lab.textContent = j.label;
+      if (ti)  ti.textContent  = j.recto?.titre || j.label;
+      if (ph)  ph.textContent  = j.recto?.phrase || '';
+
+      const ch = el('jq-chiffres');
+      if (ch) {
+        ch.textContent = '';
+        for (const c of j.recto?.chiffres || []) {
+          const d = document.createElement('div'); d.className = 'jq-ch';
+          const b = document.createElement('b'); b.textContent = c.valeur;
+          const s = document.createElement('span'); s.textContent = c.quoi;
+          d.append(b, s); ch.appendChild(d);
+        }
+      }
+
+      const intro = el('jq-intro');
+      if (intro) intro.textContent = j.verso?.intro || '';
+      const ul = el('jq-entrees');
+      if (ul) {
+        ul.textContent = '';
+        for (const e of j.verso?.entrees || []) {
+          const li = document.createElement('li');
+          const b = document.createElement('b'); b.textContent = e.titre;
+          li.appendChild(b);
+          if (e.texte) { const s = document.createElement('span'); s.textContent = e.texte; li.appendChild(s); }
+          ul.appendChild(li);
+        }
+      }
+      // Le cone de chantier : la facette existe, se parcourt, et dit ou elle en
+      // est. C'est la promesse non tenue qui dissuade, pas l'incompletude.
+      const ct = el('jq-chantier');
+      if (ct) { ct.textContent = j.chantier || ''; (ct as HTMLElement).hidden = !j.chantier; }
+    }
+
     function updatePanels(idx: number): void {
       const d = ttItems[idx];
       if (!d) return;
       const color = `var(--facet-${d.key})`;
+      remplirJaquette(d.key);
 
       // Panel start
       panelChip.textContent = d.label;
