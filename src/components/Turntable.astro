@@ -652,23 +652,26 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
   .jq--recto::before { right: 0; transform: scaleX(-1); }
   .jq--verso::before { left: 0; }
 
-  /* Le disque qui depasse du cote du dos. Un quart de cercle seulement : c'est
-     l'image qui dit « pochette » sans avoir a l'ecrire, et elle pointe vers la
-     platine au centre. */
-  .jq::after {
-    content: ''; position: absolute; z-index: -1;
-    width: 62%; aspect-ratio: 1; border-radius: 50%;
-    top: 19%;
-    background:
-      radial-gradient(circle at 50% 50%,
-        var(--bg-app) 0 13%,
-        color-mix(in srgb, var(--stage-c, var(--bg-app)) 55%, #0a0a0f) 14% 34%,
-        #14141c 35% 100%);
-    box-shadow: 0 6px 22px -8px #000;
-    pointer-events: none;
+  /* Pas d'illustration en attendant mieux : un disque dessine a cote d'un carre
+     ne fait pas une pochette, il fait un pictogramme. Ce qui tient lieu d'image
+     ici, c'est la matiere — le grain, la tranche eclairee, le dos ombre — et une
+     lueur de la teinte de la facette qui sourd du cote du dos, comme si quelque
+     chose se trouvait a l'interieur. Le jour ou chaque facette aura sa vraie
+     image, elle prendra cette place sans rien deplacer. */
+  .jq--recto .jq-in::before, .jq--verso .jq-in::before {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 45%;
+    pointer-events: none; opacity: 0.5;
   }
-  .jq--recto::after { right: -13%; }
-  .jq--verso::after { left: -13%; }
+  .jq--recto .jq-in::before {
+    right: 0;
+    background: radial-gradient(120% 90% at 100% 50%,
+      color-mix(in srgb, var(--stage-c, transparent) 26%, transparent) 0%, transparent 70%);
+  }
+  .jq--verso .jq-in::before {
+    left: 0;
+    background: radial-gradient(120% 90% at 0% 50%,
+      color-mix(in srgb, var(--stage-c, transparent) 26%, transparent) 0%, transparent 70%);
+  }
   .jq { z-index: 1; }
   .jq-in {
     position: absolute; inset: 0;
