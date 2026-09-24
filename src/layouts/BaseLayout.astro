@@ -753,10 +753,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
     }
 
     /* v1.28: sur mobile, priorite au titre — le reste se degage/retrecit
-       24/09 : cette mise en page etait la bonne depuis le debut, elle ne se
-       declenchait simplement jamais sur le telephone de Fx, qui annonce ~950 px
-       CSS. D'ou la seconde condition — au doigt, quelle que soit la largeur. */
-    @media (max-width: 480px), (pointer: coarse) {
+       24/09 : cette double rangee reste la bonne reponse en dessous de 480 px,
+       ou rien ne tient sur une ligne. Elle avait ete etendue au tactile, puis
+       ramenee ici : sur un ecran large tenu au doigt elle produisait une barre
+       de trois rangees, transport pousse a droite et boutons de connexion
+       orphelins en bas. La largeur est le bon critere pour une MISE EN PAGE —
+       c'est pour les CIBLES qu'il fallait le pointeur. Voir le bloc tactile
+       en fin de feuille. */
+    @media (max-width: 480px) {
       /* Trois commandes atteignables au pouce, bien separees : menu a gauche,
          lecture au centre, muet a droite. Le reste se range entre les deux. */
       /* La barre porte desormais tout : sur telephone elle passe sur deux
@@ -822,15 +826,14 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #hamcat-player:not([data-expanded='true']) #sc-playlist { display: none !important; }
 
     /* ── Commandes du player au doigt ──
-       Tout l'amenagement tactile du player vivait dans `max-width: 480px`.
-       Un telephone qui declare un viewport large — certains Android annoncent
-       ~950 px CSS — n'y entre jamais : il recevait la mise en page de bureau,
-       commandes de 24 px comprises, sur un ecran ou l'on vise au pouce.
-       Le bon critere est le pointeur. Ce bloc ne touche donc pas a la mise en
-       page (la regle 480 px garde sa rangee double et ses masquages) : il ne
-       fait qu'amener les cibles a 44 px, la ou elles se trouvent.
-       Place en fin de feuille : meme specificite que les regles d'origine,
-       c'est l'ordre qui tranche. */
+       Deux criteres distincts, c'est la lecon du 24/09.
+       La LARGEUR decide de la mise en page : en dessous de 480 px la barre
+       passe sur deux rangees, au-dessus elle tient sur une ligne.
+       Le POINTEUR decide des cibles : un telephone qui annonce ~950 px CSS
+       recevait des commandes de 24 px alors qu'on y vise au pouce.
+       Ce bloc ne fait que les cibles — la mise en page en ligne unique est
+       traitee juste apres. Place en fin de feuille : meme specificite que les
+       regles d'origine, c'est l'ordre qui tranche. */
     @media (pointer: coarse) {
       .player-full button,
       .player-step,
@@ -860,6 +863,57 @@ const facetHrefs = visibleFacets().map(f => f.href);
       /* La poignee de redimensionnement se manque au pouce : 26 px de haut
          pour un trait. On elargit la zone, pas le trait. */
       #library-panel .lib-grip, #library-panel [data-grip] { min-height: 44px; }
+    }
+
+    /* ── Player reduit au doigt, sur ecran large : une seule ligne ──
+       Au-dessus de 480 px tout tient sur une rangee, et c'est ce qu'il faut :
+       une barre de transport se lit d'un coup d'oeil, pas en trois etages.
+       Les boutons de connexion restent sur la ligne — ils invitent a lier un
+       compte, les reléguer en bas les rendait a la fois orphelins et inutiles.
+       Ce qui cassait la symetrie n'etait pas le nombre de commandes mais deux
+       `margin-left: auto` herites de la version etroite : ils poussaient le
+       transport a droite et creusaient un vide au milieu. On les annule, et
+       c'est la waveform — seule a s'etirer — qui absorbe toute la place
+       restante. Le reste garde sa largeur naturelle, donc rien ne flotte. */
+    @media (pointer: coarse) and (min-width: 481px) {
+      .player-full {
+        flex-wrap: nowrap;
+        height: 64px; min-height: 64px;
+        gap: 0.4rem; padding: 0 0.6rem;
+        overflow: hidden;
+      }
+      /* Ordre du DOM, aucune marge automatique : la barre se lit de gauche a
+         droite comme elle est ecrite. */
+      .player-full > * { order: 0; margin-left: 0; margin-right: 0; }
+      #btn-prev, #btn-next, #btn-volume, #btn-close,
+      #btn-playpause, .player-volume-slider { margin-left: 0; margin-right: 0; }
+
+      /* Le titre cede avant la waveform : on peut lire un titre tronque, on ne
+         peut rien faire d'une waveform de 40 px. */
+      .player-meta { flex: 0 1 auto; min-width: 48px; }
+      .player-scrubber { flex: 1 1 auto; min-width: 90px; height: 44px; }
+
+      /* Deux informations qui ne sont pas des commandes et que le titre ou la
+         waveform portent deja : elles laissent leur place aux boutons. */
+      #player-artwork, #player-time { display: none; }
+
+      /* Le transport etait double : precedent/suivant de la bibliotheque, et
+         precedent/suivant de la source. Deux paires de chevrons cote a cote ne
+         disent pas au doigt laquelle fait quoi. On garde celle qui parcourt la
+         bibliotheque — c'est la liste de lecture du site. Alea, repetition et
+         j'aime restent sur le player deplie et au bureau. */
+      #btn-sp-shuffle, #btn-sp-repeat,
+      #btn-sp-prev, #btn-sp-next,
+      #btn-sp-like, #btn-sc-like { display: none; }
+
+      .player-volume-slider { width: 60px; flex: 0 0 auto; }
+      .player-output-select { display: none; }
+      /* Les invitations a connecter : lisibles, mais elles ne prennent jamais
+         la place de la waveform. */
+      .player-spotify-connect {
+        flex: 0 1 auto; min-width: 0; min-height: 40px;
+        overflow: hidden; text-overflow: ellipsis;
+      }
     }
   </style>
 
@@ -2752,10 +2806,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
       // rangees, et le disque d'accueil doit se reserver la bonne hauteur.
       const bar = playerDiv.querySelector('.player-full') as HTMLElement | null;
       const h = active && bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+      //  La bibliotheque ouverte occupe l'ecran au meme titre que la barre, et
+      //  elle n'entrait pas dans le compte : la scene gardait sa hauteur pleine
+      //  et le disque passait derriere le panneau, tronque par le bas. C'est ce
+      //  qui cassait la symetrie a l'accueil des qu'on ouvrait la liste.
+      const lib = playerDiv.dataset.library === 'true' && !libPanel.hidden
+        ? Math.round(libPanel.getBoundingClientRect().height) : 0;
       const gap = parseFloat(
         getComputedStyle(document.documentElement).getPropertyValue('--player-gap')) || 14;
       document.documentElement.style.setProperty('--player-pad',
-        ((active ? (h || 56) : 62) + gap) + 'px');
+        ((active ? (h || 56) : 62) + lib + gap) + 'px');
     }
 
     function openLibrary(open: boolean) {
@@ -2765,6 +2825,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       playerDiv.dataset.expanded = String(open);
       const b = document.getElementById('btn-library');
       if (b) b.setAttribute('aria-expanded', String(open));
+      //  Avant la sortie anticipee : fermer la bibliotheque libere de la place,
+      //  et cette place n'etait jamais rendue. Le disque restait a la taille
+      //  qu'il avait sous le panneau, panneau refermé.
+      syncPlayerPad();
       if (!open) return;
       playerDiv.dataset.active = 'true';
       syncPlayerPad();
@@ -2793,6 +2857,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
 
     function setLibHeight(px: number) {
       libPanel.style.setProperty('--lib-h', Math.max(80, Math.min(libMax(), px)) + 'px');
+      //  Redimensionner la bibliotheque change la place qui reste au-dessus :
+      //  la reserve doit suivre le doigt, sinon elle ne vaut que pour la
+      //  hauteur d'ouverture.
+      syncPlayerPad();
     }
 
     /** Branche une poignee. `fromClosed` : le geste ouvre d'abord le panneau. */
