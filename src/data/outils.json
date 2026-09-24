@@ -9,5 +9,14 @@
   "tools": [],
   "links": {},
   "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "recto": {
+    "phrase": "fx.tools",
+    "chiffres": []
+  },
+  "verso": {
+    "intro": "",
+    "entrees": []
+  },
+  "chantier": "Page en préparation — écris-moi en attendant."
 }

@@ -12,5 +12,14 @@
     "lien1": ""
   },
   "image_fond": "",
-  "photos": []
+  "photos": [],
+  "recto": {
+    "phrase": "Ingénierie son — FOH, festivals",
+    "chiffres": []
+  },
+  "verso": {
+    "intro": "",
+    "entrees": []
+  },
+  "chantier": "Page en préparation — écris-moi en attendant."
 }

@@ -1399,5 +1399,40 @@
     "facebook": ""
   },
   "image_fond": "",
-  "photos": []
+  "photos": [],
+  "recto": {
+    "phrase": "DJ & Live — psytrance, hi-tech, goa",
+    "chiffres": [
+      {
+        "cle": "dates"
+      },
+      {
+        "cle": "sets"
+      },
+      {
+        "cle": "styles"
+      }
+    ]
+  },
+  "verso": {
+    "intro": "",
+    "entrees": [
+      {
+        "titre": "Agenda",
+        "texte": "Toutes les dates, passées et à venir",
+        "href": "/son"
+      },
+      {
+        "titre": "Styles",
+        "texte": "Le vocabulaire des sets",
+        "href": "/styles"
+      },
+      {
+        "titre": "Lieux",
+        "texte": "Les salles et festivals",
+        "href": "/lieux"
+      }
+    ]
+  },
+  "chantier": null
 }

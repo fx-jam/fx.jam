@@ -18,5 +18,14 @@
   },
   "image_fond": "",
   "links": {},
-  "photos": []
+  "photos": [],
+  "recto": {
+    "phrase": "Écrire, proposer, programmer",
+    "chiffres": []
+  },
+  "verso": {
+    "intro": "",
+    "entrees": []
+  },
+  "chantier": null
 }

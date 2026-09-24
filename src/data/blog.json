@@ -5,5 +5,18 @@
   "note_stub": "Articles à venir. Revenez bientôt.",
   "bio": "",
   "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "recto": {
+    "phrase": "Notes et carnets",
+    "chiffres": [
+      {
+        "cle": "billets"
+      }
+    ]
+  },
+  "verso": {
+    "intro": "",
+    "entrees": []
+  },
+  "chantier": "Premier article en écriture."
 }

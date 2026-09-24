@@ -13,5 +13,14 @@
     "inscription": ""
   },
   "photos": [],
-  "image_fond": ""
+  "image_fond": "",
+  "recto": {
+    "phrase": "MAO — Ableton Live, à Grenoble",
+    "chiffres": []
+  },
+  "verso": {
+    "intro": "",
+    "entrees": []
+  },
+  "chantier": "Page en préparation — écris-moi en attendant."
 }
