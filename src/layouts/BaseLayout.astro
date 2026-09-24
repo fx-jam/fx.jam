@@ -805,6 +805,36 @@ const facetHrefs = visibleFacets().map(f => f.href);
     #hamcat-player:not([data-expanded='true']) #embed-toggle-bar,
     #hamcat-player:not([data-expanded='true']) #player-embed-zone,
     #hamcat-player:not([data-expanded='true']) #sc-playlist { display: none !important; }
+
+    /* ── Commandes du player au doigt ──
+       Tout l'amenagement tactile du player vivait dans `max-width: 480px`.
+       Un telephone qui declare un viewport large — certains Android annoncent
+       ~950 px CSS — n'y entre jamais : il recevait la mise en page de bureau,
+       commandes de 24 px comprises, sur un ecran ou l'on vise au pouce.
+       Le bon critere est le pointeur. Ce bloc ne touche donc pas a la mise en
+       page (la regle 480 px garde sa rangee double et ses masquages) : il ne
+       fait qu'amener les cibles a 44 px, la ou elles se trouvent.
+       Place en fin de feuille : meme specificite que les regles d'origine,
+       c'est l'ordre qui tranche. */
+    @media (pointer: coarse) {
+      .player-full button,
+      .player-step,
+      .player-play-btn,
+      .player-lib-btn,
+      .player-mute-btn,
+      #btn-close, #btn-library, #btn-lib-close {
+        min-width: 44px; min-height: 44px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      /* Viser un rail de 3 px au pouce est impossible. La zone monte a 44 px,
+         le trait garde son epaisseur : il est centre par `translateY(-50%)`. */
+      .player-scrubber { height: 44px; }
+      /* Le curseur de volume se manque de la meme facon. */
+      .player-volume-slider { height: 44px; }
+      /* Les deux boutons du transport les plus utilises meritent d'etre
+         distingues du reste au doigt, sans changer leur dessin. */
+      #btn-playpause { min-width: 52px; }
+    }
   </style>
 
   <!-- Mode modal (?modal=1) : scroll activé pour affichage dans iframe -->

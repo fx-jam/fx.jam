@@ -1663,19 +1663,35 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     faceBVisible = false;
     scene.dataset.state = '0';
 
-    /* Le disque etait bride a 90 % de la largeur dans les deux orientations.
-       Sur un telephone tenu droit c'est la largeur qui contraint, et de loin :
-       390 x 844 donnait 351 px de disque pour 493 px de hauteur inutilisee.
-       En portrait on rend donc presque toute la largeur ; en paysage c'est la
-       hauteur qui contraint et les facteurs d'origine restent les bons. */
+    /* Trois corrections d'un meme calcul, toutes mesurees.
+
+       1. Le disque etait bride a 90 % de la largeur dans les deux orientations.
+          Sur un ecran haut c'est la largeur qui contraint, et de loin :
+          390 x 844 donnait 351 px pour 493 px de hauteur inutilisee.
+
+       2. Le plafond de 560 px etait absolu. Sur un telephone qui declare un
+          viewport large — c'est le cas de certains Android, ~950 px CSS — le
+          disque tombait a 59 % de la largeur, perdu au milieu du fond etoile.
+          560 px reste un choix de mise en page assume a la souris ; au doigt,
+          l'ecran se tient a bout de bras et le disque EST la navigation, il
+          merite la place. D'ou un plafond qui depend du pointeur.
+
+       3. La hauteur venait du document, pas de la scene. Or la scene se
+          raccourcit quand le player ou la bibliotheque s'ouvrent : le disque
+          pouvait deborder sous eux. On mesure donc la boite reellement
+          disponible, et `haut` decrit sa forme a elle — ce qui est le bon
+          critere, plus juste que l'orientation de l'appareil. */
+    const auDoigt = window.matchMedia('(pointer: coarse)');
+
     function calcDiskSize(): number {
       const w = document.documentElement.clientWidth;
-      const h = document.documentElement.clientHeight;
-      const portrait = h >= w;
+      const boite = scene.getBoundingClientRect().height;
+      const h = boite > 200 ? boite : document.documentElement.clientHeight;
+      const haut = h >= w;
       return Math.min(
-        w * (portrait ? 0.96 : 0.90),
-        h * (portrait ? 0.62 : 0.85),
-        560
+        w * (haut ? 0.96 : 0.90),
+        h * (haut ? 0.62 : 0.85),
+        auDoigt.matches ? 820 : 560
       );
     }
 
@@ -1692,10 +1708,22 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     applyDiskSize();
 
     let resizeTimer: ReturnType<typeof setTimeout>;
-    window.addEventListener('resize', () => {
+    const reposer = () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => { applyDiskSize(); update(); }, 100);
-    }, { signal: sig });
+    };
+    window.addEventListener('resize', reposer, { signal: sig });
+
+    //  Ouvrir le player ou la bibliotheque ne declenche aucun `resize` : la
+    //  fenetre n'a pas bouge, c'est la scene qui a raccourci. Sans cet
+    //  observateur le disque gardait la taille d'avant et passait sous eux.
+    //  Pas de boucle possible : la hauteur de la scene ne depend pas du disque.
+    let obs: ResizeObserver | null = null;
+    if ('ResizeObserver' in window) {
+      obs = new ResizeObserver(reposer);
+      obs.observe(scene);
+      sig.addEventListener('abort', () => obs?.disconnect(), { once: true });
+    }
 
     const diskTrack     = document.querySelector<HTMLElement>('.disk-track')!;
     const centerEl      = document.querySelector<HTMLElement>('#disk-center')!;
