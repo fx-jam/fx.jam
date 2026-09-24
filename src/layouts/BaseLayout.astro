@@ -998,10 +998,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
   )}
 
   <script>
-  // ── Player audio persistant · fx_jam_v1.98 ─────────────────────────
+  // ── Player audio persistant · fx_jam_v1.99 ─────────────────────────
   // SC : v1.13 __scWidget preservé sur re-run IIFE (View Transitions, transition:persist)
   // AbortController : chaque IIFE abort les listeners précédents → pas d'accumulation.
-  console.log('🐱 fx_jam_v1.98');
+  console.log('🐱 fx_jam_v1.99');
   import { swapFunctions } from 'astro:transitions/client';
 
   // v1.20 — SWAP CUSTOM : l'iframe SC ne quitte JAMAIS le document.
@@ -2183,6 +2183,22 @@ const facetHrefs = visibleFacets().map(f => f.href);
         if (window.location.pathname === '/') {
           playerDiv.dataset.expanded = 'false';
           if (!saved) return;
+
+          // L'accueil repart d'une page blanche sonore. Une lecture EN COURS
+          // n'est jamais coupee — on ne va pas arreter la musique parce que le
+          // visiteur revient au disque. Mais un chargement a froid sur / ne
+          // ressuscite plus la derniere piste : la memoire reste en place
+          // (localStorage intact), elle sert quand on repart vers une facette.
+          const lectureVivante =
+               (state.currentSource === 'audio' && !audioEl.paused)
+            || !!w.__scWidget
+            || !!(w as any).__spController
+            || playerDiv.classList.contains('playing');
+          if (!lectureVivante) {
+            playerDiv.dataset.active = 'false';
+            return;
+          }
+
           playerDiv.dataset.active = 'true';
           if (saved.type === 'soundcloud') {
             // Si l'iframe SC est encore vivante (transition:persist), rebinder sans rechargement
@@ -3032,7 +3048,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
   <div id="version-toast" style="position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;pointer-events:none;opacity:0;font-family:monospace;z-index:9999;"></div>
   <script>
     const _vt = document.getElementById('version-toast')!;
-    _vt.textContent = 'fx_jam_v1.98';
+    _vt.textContent = 'fx_jam_v1.99';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'v' || e.key === 'V') {
         _vt.style.transition = 'none';
