@@ -1401,16 +1401,18 @@
   "image_fond": "",
   "photos": [],
   "recto": {
-    "phrase": "DJ & Live — psytrance, hi-tech, goa",
+    "image": "",
+    "titre": "",
+    "phrase": "DJ hybride / Instruments Live",
     "chiffres": [
-      {
-        "cle": "dates"
-      },
       {
         "cle": "sets"
       },
       {
         "cle": "styles"
+      },
+      {
+        "cle": "dates"
       }
     ]
   },
