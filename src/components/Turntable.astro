@@ -612,7 +612,16 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
     overflow: hidden;
     position: relative;
   }
-  .scene[data-state="2"] .jq { display: block; }
+  .scene[data-state="2"] .jq { display: block; cursor: pointer; }
+  /* Elle se souleve au survol — transform et opacity seulement, jamais une
+     propriete qui declenche une mise en page. */
+  .jq { transition: transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.25s; }
+  .scene[data-state="2"] .jq:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 50px -18px color-mix(in srgb, var(--stage-c, #000) 75%, #000);
+  }
+  .jq-entrees li[data-href] { cursor: pointer; }
+  .jq-entrees li[data-href]:hover b { color: var(--stage-c, var(--text-primary)); }
   .scene[data-state="2"] .panel-content { display: none; }
   /* Une pochette a un pli cote dos : c'est ce liseré qui lui donne une epaisseur
      et distingue le recto du verso sans avoir a l'ecrire. */
@@ -1958,6 +1967,7 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
         ul.textContent = '';
         for (const e of j.verso?.entrees || []) {
           const li = document.createElement('li');
+          if (e.href) li.dataset.href = e.href;
           const b = document.createElement('b'); b.textContent = e.titre;
           li.appendChild(b);
           if (e.texte) { const s = document.createElement('span'); s.textContent = e.texte; li.appendChild(s); }
@@ -2084,6 +2094,23 @@ const overlayItems: OverlayData[] = labelItems.map(item => {
       // restait dans l'etat intermediaire et il fallait un second appui.
       setState(0);
     }, { signal: sig });
+
+    // La pochette ouvre le livret. Une entree du verso qui porte un lien ouvre
+    // sa destination plutot que la page de la facette : l'index sert alors
+    // vraiment d'index, et pas seulement d'annonce.
+    for (const id of ['jq-recto', 'jq-verso']) {
+      document.getElementById(id)?.addEventListener('click', (e) => {
+        if (appState < 2 || activeFacetIdx < 0) return;
+        const li = (e.target as HTMLElement).closest<HTMLElement>('[data-href]');
+        if (li?.dataset.href) {
+          modalIframe.src = li.dataset.href + '?modal=1';
+          modalOverlay.classList.add('is-open');
+          appState = 3;
+          return;
+        }
+        openModal(activeFacetIdx);
+      }, { signal });
+    }
 
     // Fermer modal (× ou clic hors modal-inner)
     modalOverlay.querySelector('.modal-close')?.addEventListener('click', () => {
