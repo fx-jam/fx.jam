@@ -1,3 +1,123 @@
+## v1.75 → v2.02 — L'atelier devient le CMS, l'agenda se met en colonnes, les jaquettes naissent — 2026-09-23/24
+
+### L'atelier remplace Sveltia
+
+**Envoi en direct réparé de bout en bout.** La panne durait depuis la veille et
+avait trois couches. Le message « hors ligne » venait d'un `catch` qui rangeait
+une redirection Cloudflare Access dans le même panier qu'une coupure réseau :
+`/atelier` et `/api/atelier` étaient **deux applications Access distinctes**, donc
+voir la page n'ouvrait pas l'API. Fusionnées en une seule (AUD `deca0f63…`).
+Puis la vraie cause : **`VPS_TOKEN` n'avait jamais été posé** sur le Worker — ni
+par le tableau de bord ni par wrangler, dont le jeton OAuth avait expiré sur
+fx-m2. Diagnostic par une sonde `whoami` qui retourne les *noms* des liaisons.
+
+**Mode Fiches (v1.80)** — édition complète des 81 dates : tous les champs,
+création, suppression, médias avec réordonnancement. **Mode Facettes (v1.93)** —
+les deux faces des six facettes.
+
+> **Règle d'écriture, tenue partout** : on ne reconstruit jamais un frontmatter
+> ni un JSON entier, on remplace les blocs des seuls champs modifiés. Trois
+> fiches portent des listes en bloc YAML qu'une réécriture globale aurait
+> normalisées sans qu'on l'ait demandé, et `son.json` pèse 54 Ko de données
+> historiques. Aller-retour vérifié **octet pour octet sur les 81 fiches**.
+
+**Trois filets de publication (v1.98)** après la panne « les changements n'ont
+pas suivi » : un commit était resté local parce que l'onglet s'était fermé avant
+le délai de 20 s. Publication différée, `sendBeacon` au départ de la page, et
+rattrapage à l'ouverture de l'atelier.
+
+### L'agenda en colonnes (v1.81 → v1.83)
+
+Une ligne par date, jamais deux. **La grille vit sur la liste, pas sur la
+ligne** : chaque ligne reprend ses pistes avec `subgrid`, sans quoi les colonnes
+ne s'alignent pas d'une date à l'autre et le balayage vertical n'existe pas.
+
+Le partage de largeur est explicite : l'écoute prend 40 % de la largeur souple.
+Mesure à l'appui — à 820 px de cadre, « la moitié pour la waveform » et « du
+texte lisible » ne tiennent pas ensemble, quatre colonnes se partageaient 300 px
+et coupaient des mots de sept lettres. **Les largeurs sortent d'une mesure des
+81 fiches** (80e centile : titre 19 signes, lieu 21, type de set 10, styles 20),
+pas d'une estimation. Le lieu redit le titre sur **32 dates sur 81** — dans ce
+cas seule la ville s'affiche. Le détail (récit, line-up, médias, organisateur)
+descend dans un panneau dépliable, un seul ouvert à la fois.
+
+Deux champs ajoutés au schéma : **`organizer`** et **`formation`**. Le premier
+fera la jointure avec la future facette Projets sans aucune saisie.
+
+### Les jaquettes (v1.93 → v2.02)
+
+Architecture dans `claude/architecture-jaquettes.md`. **Les deux faces ne sont
+pas à égalité** : recto = identité lue à deux mètres, verso = index, **livret =
+état 3, rectangulaire** — c'est ce qui permet à l'agenda de garder sa largeur.
+Gestes : horizontal change de facette, vertical retourne. Jamais le même geste
+pour deux sens selon l'état.
+
+**Les chiffres du recto sont calculés au build**, jamais saisis — le JSON ne
+porte qu'une clé. Preuve immédiate : Son affiche 79 dates et 29 styles, pas les
+81 et 24 qu'on aurait écrits à la main. Les limites de débordement sont des
+fonctions (`rectoDeborde`), et l'atelier ferme le bouton d'enregistrement plutôt
+que de tronquer.
+
+**Cours devient Projets** : Fx a une douzaine d'élèves et n'en cherche pas plus,
+alors que les collectifs — ADN, Hadra, le label, le booking — représentent des
+années de matière sans aucun endroit où exister.
+
+### Sécurité, infrastructure
+
+- **CSP passée en application** après deux jours d'observation. Piège rencontré :
+  une directive explicite **remplace** `default-src`, elle ne s'y ajoute pas —
+  `frame-src` sans `'self'` bloquait la modale de l'accueil. En mode observation,
+  rien ne le signalait.
+- **Reconstruction quotidienne** à 4h17, script versionné dans le dépôt : la
+  bascule « à venir » → historique est calculée au build.
+- Access unifié, `VPS_TOKEN` déclaré requis dans `wrangler.jsonc`, répertoire du
+  blog créé, balise `apple-mobile-web-app-capable` doublée par la standard.
+- **Immich** exposé en `https://immich.tail255381.ts.net` via `tailscale serve`.
+  Depuis M2 l'adresse reste `http://localhost:2283` : le demi-tour Tailscale vers
+  un pair hébergé dans son propre WSL ne passe pas.
+
+### Deux régressions, même famille
+
+La v1.88 et la v1.95 ont toutes deux tué **tout le script** d'un fichier par une
+seule référence : une zone morte temporelle, puis `{ signal }` au lieu de
+`{ signal: sig }`. Dans les deux cas **le build était vert**. D'où la règle
+désormais dans les instructions du projet : vérifier la console après tout
+déploiement touchant au script.
+
+### Mesurer avant d'optimiser
+
+Le redimensionnement de la bibliothèque saccadait. Deux hypothèses plausibles
+déployées pour rien (`backdrop-filter`, mise en page de la liste), puis mesure
+dans un vrai navigateur : médiane 16,6 ms mais **42 images sur 130 au-dessus de
+32 ms, pointes à 438 ms**. Cause réelle : le panneau qui grandit fait entrer des
+lignes dans le champ, ce qui déclenche le chargement de leurs waveforms SVG en
+plein geste. Suspendues pendant le glissement. `content-visibility` avait même
+**aggravé** les choses.
+
+### Mémoire du projet
+
+Trois documents nouveaux, et un changement de méthode. **`claude/carnet.md`** —
+tout ce qui a été dit et pas encore fait, avec un état par entrée (`mûr`,
+`voisin`, `bloqué`, `fond`), **écrit au fil de l'eau et non en fin de session** :
+un log écrit seulement à la fin est un log qui n'existe pas le jour où la session
+se termine mal. **`claude/a-faire-fx.md`** — les actions qui n'attendent que Fx,
+ordonnées par rapport entre ce qu'elles débloquent et ce qu'elles coûtent.
+**`claude/architecture-jaquettes.md`**.
+
+Instructions du projet réécrites : le chemin du dépôt sur le VPS était faux
+(`fx.jam`, pas `hamcat.live`), et « traduire les décisions pour Claude Code » ne
+décrivait plus rien — la construction et le déploiement passent par l'API de
+l'agent.
+
+### Reste en cours
+
+Les quinze questions de `claude/questionnaire-mise-en-ligne.md` bloquent presque
+tout le contenu. Jaquettes : étapes 4 et 5. Habillage des jaquettes à décider à
+froid. Transitions livret ↔ jaquette. Registre des noms de facettes. Rotation du
+jeton VPS et de la clé Immich. Tri Immich et hébergement.
+
+---
+
 ## v1.65 → v1.67 — Le graphe s'ouvre : styles, lieux, atelier — 2026-09-22 (soir)
 
 ### Décision de fond : un graphe d'entités, quatre lectures
