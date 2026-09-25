@@ -3054,8 +3054,25 @@ const facetHrefs = visibleFacets().map(f => f.href);
       else playSC(next.url, next.title);
     }
 
-    /** Tient --player-pad a jour selon l'etat courant du player. */
-    function syncPlayerPad() {
+    //  Vrai pendant un glissement de la poignee. Voir `syncPlayerPad`.
+    let gestePoignee = false;
+
+    /** Tient --player-pad a jour selon l'etat courant du player.
+     *
+     *  MESURE du 25/09 (glissement de 80 pas, telephone 412 x 780) : 80 images
+     *  sur 250 au-dessus de 32 ms, taches longues jusqu'a 225 ms. La page sans
+     *  platine etait la PIRE des deux, ce qui a elimine le suspect evident —
+     *  le recalcul du disque — et designe le vrai coupable : cette fonction
+     *  ecrit deux proprietes personnalisees sur `documentElement`, soixante
+     *  fois par seconde. Une ecriture a la racine invalide le style du
+     *  document ENTIER ; sur l'agenda et ses 81 lignes a waveform, la facture
+     *  est maximale. D'ou la page la plus chargee la plus saccadee.
+     *
+     *  Pendant le geste, la reserve n'a aucun lecteur : on regarde la
+     *  bibliotheque, pas le disque. On la recalcule donc une seule fois, au
+     *  relachement. */
+    function syncPlayerPad(forcer = false) {
+      if (gestePoignee && !forcer) return;
       const active = playerDiv.dataset.active === 'true';
       // Mesuree et non codee en dur : sur telephone la barre passe sur deux
       // rangees, et le disque d'accueil doit se reserver la bonne hauteur.
@@ -3151,6 +3168,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
           startH = libPanel.getBoundingClientRect().height;
         }
         dragging = true;
+        gestePoignee = true;
         startY = e.clientY;
         el.setAttribute('data-drag', '1');
         // Hauteur figee de la liste pour toute la duree du geste.
@@ -3176,6 +3194,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       const end = (e: PointerEvent) => {
         if (!dragging) return;
         dragging = false;
+        gestePoignee = false;
+        syncPlayerPad(true);          // une seule fois, a la fin du geste
         if (prevu) { cancelAnimationFrame(prevu); prevu = 0; }
         el.removeAttribute('data-drag');
         delete libPanel.dataset.drag;
