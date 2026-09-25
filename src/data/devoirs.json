@@ -14,7 +14,11 @@
               "q": "Tu diffuses les six facettes d'un coup, ou tu sors avec Son + Contact seulement ?",
               "aide": "Sortir incomplet mais honnete est souvent mieux que sortir complet mais creux. Les autres facettes porteraient un « bientot » explicite.",
               "type": "choix",
-              "options": ["Les six d'un coup", "Son + Contact, le reste en chantier", "Un entre-deux, je precise"]
+              "options": [
+                "Les six d'un coup",
+                "Son + Contact, le reste en chantier",
+                "Un entre-deux, je precise"
+              ]
             },
             {
               "id": "ml-2",
@@ -32,14 +36,22 @@
               "q": "La platine reste-t-elle le concept d'accueil, ou on livre plus simple d'abord ?",
               "aide": "C'est le chantier le plus long qui reste. Il est deja bien avance : disque, facettes, jaquettes.",
               "type": "choix",
-              "options": ["La platine, on va au bout", "Un accueil simple d'abord", "La platine mais degradee sur mobile"]
+              "options": [
+                "La platine, on va au bout",
+                "Un accueil simple d'abord",
+                "La platine mais degradee sur mobile"
+              ]
             },
             {
               "id": "ml-4",
               "q": "Que doit comprendre quelqu'un en dix secondes sur l'accueil ?",
               "aide": "Qui tu es, ce que tu proposes, ou ce que tu as fait. Les trois ne tiennent pas dans le meme ecran avec la meme force — il faut un premier.",
               "type": "choix",
-              "options": ["Qui je suis", "Ce que je propose", "Ce que j'ai fait"]
+              "options": [
+                "Qui je suis",
+                "Ce que je propose",
+                "Ce que j'ai fait"
+              ]
             }
           ]
         },
@@ -63,7 +75,11 @@
               "q": "Cours : le site doit-il vendre des cours, ou seulement dire que tu en donnes ?",
               "aide": "Vendre veut dire tarifs, creneaux, prise de contact structuree. C'est un chantier, pas une phrase.",
               "type": "choix",
-              "options": ["Vendre : tarifs et prise de contact", "Dire seulement que j'en donne", "Les cours passent sous Projets"]
+              "options": [
+                "Vendre : tarifs et prise de contact",
+                "Dire seulement que j'en donne",
+                "Les cours passent sous Projets"
+              ]
             },
             {
               "id": "ml-8",
@@ -76,7 +92,11 @@
               "q": "Blog : est-ce que tu ecriras vraiment ?",
               "aide": "Un blog vide sur un site vitrine fait plus de mal que pas de blog du tout. Si le premier article n'est pas ecrit dans le mois, on desactive la facette.",
               "type": "choix",
-              "options": ["Oui, un premier article ce mois-ci", "Oui mais plus tard — on cache la facette", "Non, on retire le blog"]
+              "options": [
+                "Oui, un premier article ce mois-ci",
+                "Oui mais plus tard — on cache la facette",
+                "Non, on retire le blog"
+              ]
             }
           ]
         },
@@ -94,7 +114,11 @@
               "q": "Les enregistrements marques « bientot » depuis des annees : on fait quoi ?",
               "aide": "Une promesse non tenue et visible use la confiance plus qu'une absence.",
               "type": "choix",
-              "options": ["Passer en « pas d'enregistrement »", "Les laisser promettre", "Au cas par cas, je fais le tri"]
+              "options": [
+                "Passer en « pas d'enregistrement »",
+                "Les laisser promettre",
+                "Au cas par cas, je fais le tri"
+              ]
             }
           ]
         },
@@ -112,7 +136,11 @@
               "q": "Acceptes-tu qu'une adresse mail soit publique ?",
               "aide": "Sinon il faut un formulaire qui la protege — c'est un petit chantier de plus, mais il existe deja des solutions simples sur Workers.",
               "type": "choix",
-              "options": ["Oui, adresse publique", "Non, formulaire", "Adresse publique mais dediee au site"]
+              "options": [
+                "Oui, adresse publique",
+                "Non, formulaire",
+                "Adresse publique mais dediee au site"
+              ]
             }
           ]
         },
@@ -130,7 +158,170 @@
               "q": "Le site doit-il etre trouve dans Google, ou servir de carte de visite ?",
               "aide": "« DJ psytrance Grenoble », « ingenieur son festival Isere » : etre trouve demande du texte ecrit pour ca, ce qui change la redaction des facettes.",
               "type": "choix",
-              "options": ["Etre trouve sur des requetes precises", "Carte de visite qu'on donne", "Les deux, mais trouve d'abord"]
+              "options": [
+                "Etre trouve sur des requetes precises",
+                "Carte de visite qu'on donne",
+                "Les deux, mais trouve d'abord"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cle": "actions",
+      "titre": "Actions",
+      "intro": "Ce que je ne peux pas faire a ta place. Ordonne par rapport entre ce que ca debloque et ce que ca coute. Reponds « Fait » et je le vois a la session suivante — ou ecris ce qui coince.",
+      "sections": [
+        {
+          "titre": "Quelques minutes, gros effet",
+          "questions": [
+            {
+              "id": "ac-1",
+              "q": "M'envoyer les fichiers du logo et des deux ciels etoiles",
+              "aide": "Tu as indique que les teintes divergent. Avec les fichiers je propose une harmonisation serieuse au lieu de principes en l'air.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            },
+            {
+              "id": "ac-2",
+              "q": "Remplir les six rectos dans l'atelier, mode Facettes",
+              "aide": "Titre et phrase suffisent, le verso peut attendre. C'est ce qui me permet d'habiller les jaquettes sur du contenu reel plutot qu'un gabarit vide — et c'est le sujet de la prochaine session.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            },
+            {
+              "id": "ac-3",
+              "q": "Cocher « featured » sur trois ou quatre dates",
+              "aide": "Le champ existe au schema et l'atelier l'edite. Il remplit automatiquement le best-of du verso, sans liste a maintenir en double.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            }
+          ]
+        },
+        {
+          "titre": "Medias",
+          "questions": [
+            {
+              "id": "ac-4",
+              "q": "Tri Immich : les gros fichiers",
+              "aide": "Le dedoublonnage est fait. Reste Utilities → Large files, qui est le vrai levier pour ramener 500 Go sous 200. Ca debloque l'hebergement d'Immich, donc les 41 dates sans media.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            },
+            {
+              "id": "ac-5",
+              "q": "Le line-up des dates",
+              "aide": "0 sur 81 aujourd'hui. Le parcours Line-up de l'atelier est fait pour ca, une date a la fois. Chaque nom saisi devient un lien, et ouvre les pages d'artiste.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            }
+          ]
+        },
+        {
+          "titre": "Securite — a faire ensemble",
+          "questions": [
+            {
+              "id": "ac-6",
+              "q": "Trouver un quart d'heure pour les deux rotations de cles",
+              "aide": "Jeton VPS et cle API Immich. Des deux cotes en meme temps, sinon on se coupe l'acces mutuellement. Dis-moi quand tu es dispo et je te guide pas a pas.",
+              "type": "choix",
+              "options": [
+                "J'ai un quart d'heure maintenant",
+                "Plus tard cette semaine",
+                "Pas encore"
+              ]
+            },
+            {
+              "id": "ac-7",
+              "q": "`wrangler login` sur le VPS",
+              "aide": "Aujourd'hui /deploy-worker echoue et tout passe par git : 90 secondes au lieu de 20. C'est du confort, pas une urgence.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            },
+            {
+              "id": "ac-8",
+              "q": "Demarrage automatique de WSL au boot",
+              "aide": "Demande des droits administrateur sur fx-m2. Seuls l'ouverture de session et la garde de 15 minutes sont en place.",
+              "type": "choix",
+              "options": [
+                "Fait",
+                "Pas encore",
+                "J'abandonne cette piste"
+              ]
+            }
+          ]
+        },
+        {
+          "titre": "Decisions a froid",
+          "questions": [
+            {
+              "id": "ac-9",
+              "q": "Un registre unique pour les noms de facettes ?",
+              "aide": "Son / Regie / Projets / Blog / Outils / Contact melangent domaine, metier, format et action. Un seul registre les rendrait coherents. Ecris ta proposition.",
+              "type": "texte"
+            },
+            {
+              "id": "ac-10",
+              "q": "Sortir Contact du disque ?",
+              "aide": "Ce n'est pas un domaine d'activite mais une action. L'en sortir libererait un secteur et rendrait les cinq autres homogenes.",
+              "type": "choix",
+              "options": [
+                "Oui, Contact sort du disque",
+                "Non, il reste",
+                "A voir avec les jaquettes"
+              ]
+            },
+            {
+              "id": "ac-11",
+              "q": "La largeur du cadre contre les bandes de projection",
+              "aide": "`--frame-w` vaut 820 px. C'est le seul vrai levier contre la troncature des colonnes de l'agenda : elargir le cadre retrecit les bandes laterales.",
+              "type": "choix",
+              "options": [
+                "Elargir le cadre",
+                "Garder 820 px",
+                "Montre-moi les deux"
+              ]
+            },
+            {
+              "id": "ac-12",
+              "q": "Le titre de facette centre horizontalement ?",
+              "aide": "Aujourd'hui c'est une barre d'en-tete : titre a gauche, navigation a droite.",
+              "type": "choix",
+              "options": [
+                "Centrer le titre",
+                "Garder la barre d'en-tete"
+              ]
+            },
+            {
+              "id": "ac-13",
+              "q": "Une image par facette pour les rectos",
+              "aide": "Tu l'as pour Son, pas pour les autres. D'ici la, le repli est la teinte de la facette. Dis-moi lesquelles tu peux fournir.",
+              "type": "texte"
             }
           ]
         }

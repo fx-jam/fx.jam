@@ -105,6 +105,7 @@ import { TRACKS } from '../lib/atelier';
     <section class="fiches" id="mode-d" hidden>
       <p class="f-state" id="d-state">chargement…</p>
       <div class="d-cahier" id="d-cahier" hidden>
+        <nav class="d-onglets" id="d-onglets" hidden></nav>
         <p class="d-intro" id="d-intro"></p>
         <div class="d-bar"><span class="d-jauge"><i id="d-jauge-i"></i></span><span class="d-cpt" id="d-cpt"></span></div>
       </div>
@@ -439,6 +440,19 @@ import { TRACKS } from '../lib/atelier';
   .d-intro {
     margin: 0; font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary);
   }
+  .d-onglets { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .d-onglets[hidden] { display: none; }
+  :global(.d-ong) {
+    font: inherit; font-family: var(--font-mono); font-size: 0.66rem;
+    letter-spacing: 0.06em; cursor: pointer;
+    padding: 0.4rem 0.7rem; border-radius: 99px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-tertiary);
+  }
+  :global(.d-ong[aria-current="true"]) {
+    border-color: var(--facet-outils); color: var(--facet-outils);
+  }
+
   .d-bar { display: flex; align-items: center; gap: 0.6rem; }
   .d-jauge {
     flex: 1; height: 3px; border-radius: 2px; overflow: hidden;
@@ -492,6 +506,7 @@ import { TRACKS } from '../lib/atelier';
   @media (pointer: coarse) {
     .md { min-height: 44px; }
     :global(.d-opt) { min-height: 44px; }
+    :global(.d-ong) { min-height: 44px; }
     :global(.d-row) { padding: 0.75rem 0.6rem; }
     :global(.f-row) { padding: 0.7rem 0.6rem; }
   }
@@ -1520,12 +1535,14 @@ import { TRACKS } from '../lib/atelier';
   type DCahier = { cle: string; titre: string; intro?: string; sections: DSec[] };
 
   let cahiers: DCahier[] = [];
+  let cahierActif = 0;
   let reponses: Record<string, { v: string; d: string }> = {};
   let devoirsCharges = false;
   let dOuverte: DQ | null = null;
 
-  const dQuestions = (): DQ[] =>
-    cahiers.flatMap(c => (c.sections || []).flatMap(s => s.questions || []));
+  const dQuestionsDe = (c: DCahier): DQ[] =>
+    (c.sections || []).flatMap(s => s.questions || []);
+  const dQuestions = (): DQ[] => cahiers.flatMap(dQuestionsDe);
 
   async function chargerDevoirs(force = false) {
     if (devoirsCharges && !force) return;
@@ -1547,12 +1564,33 @@ import { TRACKS } from '../lib/atelier';
     dOuverte = null;
     $('d-edit').hidden = true;
     $('d-list').hidden = false;
-    const c = cahiers[0];
+    const c = cahiers[cahierActif] || cahiers[0];
     if (!c) { $('d-state').textContent = 'aucun cahier'; $('d-cahier').hidden = true; return; }
 
     $('d-cahier').hidden = false;
+
+    //  Onglets de cahier. La structure des devoirs se voulait generaliste des
+    //  le depart, mais l'affichage ne montrait que le premier : un second
+    //  cahier aurait ete ecrit dans le JSON et invisible a l'ecran. Ils
+    //  n'apparaissent qu'a partir de deux — un onglet seul n'est pas un choix.
+    const ong = $('d-onglets');
+    ong.textContent = '';
+    ong.hidden = cahiers.length < 2;
+    if (cahiers.length > 1) {
+      cahiers.forEach((x, i) => {
+        const t = dQuestionsDe(x);
+        const faits = t.filter(q => (reponses[q.id]?.v || '').trim()).length;
+        const b = document.createElement('button');
+        b.className = 'd-ong';
+        b.setAttribute('aria-current', String(i === cahierActif));
+        b.textContent = `${x.titre} ${faits}/${t.length}`;
+        b.onclick = () => { cahierActif = i; listeDevoirs(); };
+        ong.appendChild(b);
+      });
+    }
+
     $('d-intro').textContent = c.intro || '';
-    const tout = dQuestions();
+    const tout = dQuestionsDe(c);
     const faites = tout.filter(q => (reponses[q.id]?.v || '').trim()).length;
     $('d-cpt').textContent = `${faites} / ${tout.length}`;
     // Animation par transform seulement : la largeur est interdite ici.
