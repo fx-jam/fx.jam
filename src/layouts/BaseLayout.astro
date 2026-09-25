@@ -348,25 +348,19 @@ const facetHrefs = visibleFacets().map(f => f.href);
          qu'aucune ait a la connaitre. */
       --player-gap: 14px;
     }
-    /*  Echelle tactile. Le telephone de Fx declare un viewport d'environ
-        950 px CSS alors que la balise `viewport` demande `device-width` : le
-        navigateur est en mode « site pour ordinateur ». Consequence, le pixel
-        CSS y est physiquement deux fois trop petit, et tout le bloc d'ecoute
-        devient difficile a lire et a viser — ce n'est pas une question de
-        tailles mal choisies, c'est l'unite elle-meme qui est fausse.
-        On compense la ou ca se voit le plus. Un viewport large ET tactile est
-        le signal : aucune tablette ne se tient a la distance d'un ecran de
-        bureau. `--tac` est la seule source de verite, lue par le CSS pour le
-        zoom et par le JS pour la hauteur du panneau — sans quoi la
-        bibliotheque se dimensionnerait dans une unite et s'afficherait dans
-        une autre. */
+    /*  Une echelle tactile (`zoom: 1.35`) a vecu ici quelques heures le
+        25/09, pour compenser un viewport declare deux fois trop large. La
+        cause reelle etait le mode « site pour ordinateur » active dans le
+        navigateur de Fx ; une fois desactive, cette compensation ne corrigeait
+        plus rien et aurait surdimensionne les vraies tablettes. Elle est donc
+        retiree. `--tac` reste defini a 1 : le JS le lit encore, et une valeur
+        absente vaudrait mieux qu'une valeur fausse, mais autant qu'elle soit
+        explicite. */
     :root { --tac: 1; }
-    @media (pointer: coarse) and (min-width: 700px) { :root { --tac: 1.35; } }
 
     #hamcat-player {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
       pointer-events: none;
-      zoom: var(--tac);
     }
     #hamcat-player[data-active="true"] { pointer-events: auto; }
 
@@ -375,7 +369,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       position: absolute;
       left: 0; right: 0; bottom: 100%;
       height: var(--lib-h, 50vh);
-      max-height: calc(100dvh - 56px);
+      /* Meme regle que `libMax()` en JS : la barre mesuree, plus une reserve
+         qui garde la poignee atteignable. */
+      max-height: calc(100dvh - var(--player-bar-h, 56px) - 56px);
       display: flex;
       flex-direction: column;
       background: color-mix(in srgb, var(--bg-app) 92%, transparent);
@@ -782,7 +778,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
        orphelins en bas. La largeur est le bon critere pour une MISE EN PAGE —
        c'est pour les CIBLES qu'il fallait le pointeur. Voir le bloc tactile
        en fin de feuille. */
-    @media (max-width: 480px) {
+    @media (max-width: 480px) and (pointer: fine) {
       /* Trois commandes atteignables au pouce, bien separees : menu a gauche,
          lecture au centre, muet a droite. Le reste se range entre les deux. */
       /* La barre porte desormais tout : sur telephone elle passe sur deux
@@ -935,7 +931,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
        remplir entierement sans jamais deplacer la colonne du milieu, qui est
        au centre par construction. Sans cette grille, chaque titre un peu long
        repousserait les commandes, ce qui etait exactement le defaut signale. */
-    @media (pointer: coarse) and (min-width: 481px) {
+    @media (pointer: coarse) {
       /*  Le selecteur porte l'id a dessein. La barre est cachee tant que rien
           ne joue (`.player-full { display: none }`) et revele par
           `#hamcat-player[data-active="true"] .player-full { display: flex }`.
@@ -1049,6 +1045,61 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #btn-sp-prev, #btn-sp-next,
       #btn-sp-like, #btn-sc-like { display: none; }
 
+    }
+
+    /*  La meme grille sur un ecran etroit : on ne change pas de disposition,
+        on retaille les pieces. Changer de structure selon la largeur, c'est ce
+        qui avait produit une barre de trois etages — deux mises en page qui se
+        disputaient les memes elements. */
+    @media (pointer: coarse) and (max-width: 560px) {
+      #hamcat-player[data-active="true"] .player-full {
+        min-height: 104px; gap: 0.25rem 0.4rem; padding: 0.4rem 0.5rem;
+      }
+      .pg-l { gap: 0.45rem; }
+      .pg-art { width: 42px; height: 42px; }
+      .pg-c { gap: 0.3rem; }
+      .pg-r { gap: 0.2rem; }
+      .player-full button:not([hidden]) {
+        width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+        font-size: 1.05rem;
+      }
+      #btn-playpause {
+        width: 50px; height: 50px; min-width: 50px; min-height: 50px;
+        font-size: 1.25rem;
+      }
+      /*  Le texte passe sur sa propre rangee, pleine largeur.
+          Ce n'est pas un retour en arriere sur les deux rangees : c'est la
+          meme regle appliquee honnetement. A 950 px, le texte tenait a cote
+          des commandes parce que la colonne de gauche faisait 300 px et que
+          l'espace y etait vide. A 400 px cette meme colonne tombe a 100 px :
+          le texte n'y est plus court, il est ecrase — et Fx a demande de ne
+          pas tronquer. Une rangee pleine largeur lui rend 300 px pour 24 px de
+          hauteur, et ne creuse aucun vide sur les cotes puisqu'elle s'etend
+          d'un bord a l'autre. */
+      #hamcat-player[data-active="true"] .player-full {
+        grid-template-rows: auto auto auto;
+      }
+      /*  Le groupe de gauche s'efface comme boite : ses deux enfants — la
+          pochette et le texte — deviennent eux-memes des cases de la grille,
+          seule facon de les envoyer sur deux rangees differentes. */
+      .pg-l { display: contents; }
+      .pg-art { grid-area: 2 / 1; justify-self: start; }
+      .player-meta {
+        grid-area: 1 / 1 / 2 / 4;
+        justify-self: center; justify-content: center; text-align: center;
+        max-width: 100%;
+      }
+      .pg-c { grid-area: 2 / 2; }
+      .pg-r { grid-area: 2 / 3; }
+      .pg-w { grid-area: 3 / 1 / 4 / 4; }
+      #player-title { font-size: 0.85rem; }
+      #player-artist { font-size: 0.7rem; }
+      .player-volume-slider { width: 52px; }
+      .player-scrubber { height: 38px; }
+      /*  Sous cette largeur le volume et la fermeture se disputent la colonne
+          de droite avec le texte. La fermeture reste — c'est la sortie — et le
+          curseur de volume cede : les telephones ont des touches pour ca. */
+      .player-volume-slider, #btn-volume { display: none; }
     }
 
     /* ── Bibliotheque au doigt : plus lisible SANS perdre de lignes ──
@@ -3020,6 +3071,11 @@ const facetHrefs = visibleFacets().map(f => f.href);
         getComputedStyle(document.documentElement).getPropertyValue('--player-gap')) || 14;
       document.documentElement.style.setProperty('--player-pad',
         ((active ? (h || 56) : 62) + lib + gap) + 'px');
+      //  La hauteur reelle de la barre, publiee pour que la bibliotheque
+      //  cesse de supposer 56 px. Elle en fait 110 a 180 selon la largeur et
+      //  l'echelle : c'est cette supposition qui poussait le panneau hors de
+      //  l'ecran, poignee de redimensionnement comprise.
+      document.documentElement.style.setProperty('--player-bar-h', (h || 56) + 'px');
     }
 
     function openLibrary(open: boolean) {
@@ -3056,7 +3112,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
     //  la meme valeur que celle appliquee en CSS.
     const tac = () => parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue('--tac')) || 1;
-    const libMax = () => ((window.visualViewport?.height || window.innerHeight) - 56) / tac();
+    //  Plafond du panneau. Deux corrections d'un meme calcul :
+    //  — la barre n'est plus supposee de 56 px, on lit sa hauteur mesuree ;
+    //  — on reserve `LIB_AIR` au-dessus du panneau. Sans cette reserve, tirer
+    //    le panneau a fond le collait au bord haut : la poignee sortait de
+    //    l'ecran et il devenait impossible de le refermer au doigt.
+    const LIB_AIR = 56;
+    const barreH = () => parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--player-bar-h')) || 56;
+    const libMax = () => Math.max(
+      120,
+      ((window.visualViewport?.height || window.innerHeight) - barreH() - LIB_AIR) / tac());
     const libMin = () => Math.round(libMax() * 0.22);
     const readLibH = () => {
       try { const v = parseInt(localStorage.getItem(LIB_H_KEY) || '', 10);
