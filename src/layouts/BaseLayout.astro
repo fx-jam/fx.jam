@@ -677,6 +677,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
       white-space: nowrap;
     }
     .player-spotify-connect:hover { background: oklch(0.55 0.22 145 / 0.15) !important; color: oklch(0.65 0.22 145) !important; }
+    .player-saut { display: none; }
 
     .player-scrubber {
       flex: 1; height: 30px;
@@ -856,8 +857,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       /* La bibliotheque a le meme defaut : une liste dense faite pour la
          souris. La ligne entiere devient la cible — on ne vise plus le petit
          triangle, on tape la ligne — et le triangle garde sa taille. */
-      .lib-row { min-height: 52px; align-items: center; }
-      .lib-play { min-height: 40px; }
+      /* La ligne entiere lance deja le set : c'est elle la cible, pas le
+         triangle. Sa densite est reglee plus bas, avec la lisibilite. */
+      .lib-row { align-items: center; }
       .lib-chip { min-height: 40px; display: inline-flex; align-items: center; }
       #lib-search { min-height: 44px; }
       /* La poignee de redimensionnement se manque au pouce : 26 px de haut
@@ -865,37 +867,50 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #library-panel .lib-grip, #library-panel [data-grip] { min-height: 44px; }
     }
 
-    /* ── Player reduit au doigt, sur ecran large : une seule ligne ──
-       Au-dessus de 480 px tout tient sur une rangee, et c'est ce qu'il faut :
-       une barre de transport se lit d'un coup d'oeil, pas en trois etages.
-       Les boutons de connexion restent sur la ligne — ils invitent a lier un
-       compte, les reléguer en bas les rendait a la fois orphelins et inutiles.
-       Ce qui cassait la symetrie n'etait pas le nombre de commandes mais deux
-       `margin-left: auto` herites de la version etroite : ils poussaient le
-       transport a droite et creusaient un vide au milieu. On les annule, et
-       c'est la waveform — seule a s'etirer — qui absorbe toute la place
-       restante. Le reste garde sa largeur naturelle, donc rien ne flotte. */
+    /* ── Player reduit au doigt, sur ecran large : deux rangees centrees ──
+       C'est l'interface principale du site sur telephone, et elle se
+       comportait comme un pied de page. Elle prend maintenant la hauteur de
+       deux entrees de bibliotheque, repartie en deux lignes de meme nature :
+       les COMMANDES au-dessus, la WAVEFORM au-dessous, encadree par les
+       invitations a connecter un compte. Chaque ligne est centree pour elle
+       meme, donc l'ensemble est symetrique par construction et non par
+       reglage.
+       Aucune marge automatique : c'est ce qui creusait les vides. Sur la
+       premiere ligne rien ne s'etire, le groupe reste compact au centre ; sur
+       la seconde, seule la waveform s'etire, ce qui pousse les deux boutons de
+       connexion aux extremites. */
     @media (pointer: coarse) and (min-width: 481px) {
       .player-full {
-        flex-wrap: nowrap;
-        height: 64px; min-height: 64px;
-        gap: 0.4rem; padding: 0 0.6rem;
-        overflow: hidden;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-content: center;
+        height: auto; min-height: 124px;
+        gap: 0.35rem 0.5rem;
+        padding: 0.5rem 0.8rem;
       }
-      /* Ordre du DOM, aucune marge automatique : la barre se lit de gauche a
-         droite comme elle est ecrite. */
-      .player-full > * { order: 0; margin-left: 0; margin-right: 0; }
+      .player-full > * { margin-left: 0; margin-right: 0; }
       #btn-prev, #btn-next, #btn-volume, #btn-close,
       #btn-playpause, .player-volume-slider { margin-left: 0; margin-right: 0; }
 
-      /* Le titre cede avant la waveform : on peut lire un titre tronque, on ne
-         peut rien faire d'une waveform de 40 px. */
-      .player-meta { flex: 0 1 auto; min-width: 48px; }
-      .player-scrubber { flex: 1 1 auto; min-width: 90px; height: 44px; }
+      /* Rangee 1 : les commandes, dans l'ordre ou la main les cherche. */
+      #btn-library        { order: 1; }
+      .player-meta        { order: 2; flex: 0 1 auto; min-width: 48px; max-width: 38%; }
+      #btn-prev           { order: 3; }
+      #btn-playpause      { order: 4; }
+      #btn-next           { order: 5; }
+      #btn-volume         { order: 6; }
+      .player-volume-slider { order: 7; width: 64px; flex: 0 0 auto; }
+      #btn-close          { order: 8; }
 
-      /* Deux informations qui ne sont pas des commandes et que le titre ou la
-         waveform portent deja : elles laissent leur place aux boutons. */
-      #player-artwork, #player-time { display: none; }
+      /* La rupture, puis la rangee 2. */
+      .player-saut { display: block; order: 9; flex: 0 0 100%; height: 0; margin: 0; }
+      #btn-spotify-connect { order: 10; }
+      .player-scrubber     { order: 11; flex: 1 1 auto; min-width: 90px; height: 48px; }
+      #btn-sc-connect      { order: 12; }
+
+      /* Ni commandes ni information utile ici : le titre et la waveform
+         portent deja ce qu'elles disaient. */
+      #player-artwork, #player-time, .player-output-select { display: none; }
 
       /* Le transport etait double : precedent/suivant de la bibliotheque, et
          precedent/suivant de la source. Deux paires de chevrons cote a cote ne
@@ -906,14 +921,40 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #btn-sp-prev, #btn-sp-next,
       #btn-sp-like, #btn-sc-like { display: none; }
 
-      .player-volume-slider { width: 60px; flex: 0 0 auto; }
-      .player-output-select { display: none; }
-      /* Les invitations a connecter : lisibles, mais elles ne prennent jamais
-         la place de la waveform. */
       .player-spotify-connect {
         flex: 0 1 auto; min-width: 0; min-height: 40px;
-        overflow: hidden; text-overflow: ellipsis;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
+    }
+
+    /* ── Bibliotheque au doigt : plus lisible SANS perdre de lignes ──
+       Demande de Fx : texte et boutons plus gros, mais on veut toujours voir
+       autant de sets. Les deux ne s'opposent pas ici, parce que la hauteur
+       d'une ligne n'etait pas depensee dans le texte : elle l'etait dans les
+       marges et dans une bande de waveform de 20 px. On reprend la sur les
+       espaces ce qu'on rend au texte, et le bilan est positif.
+       Le bouton de lecture n'a pas besoin de grandir comme cible — la ligne
+       entiere lance deja le set — seulement d'etre vu. Il grossit donc en
+       dessin, pas en encombrement. */
+    @media (pointer: coarse) {
+      .lib-row {
+        grid-template-columns: 32px 84px minmax(0, 1fr) minmax(0, 0.5fr) 32px;
+        padding: 0.22rem 0.5rem;
+        row-gap: 0;
+      }
+      .lib-title  { font-size: 0.95rem; line-height: 1.15; }
+      .lib-title .lib-sub { font-size: 0.78rem; }
+      .lib-date, .lib-styles, .lib-src { font-size: 0.7rem; }
+      /* Le triangle passe de 9,6 a 13,6 px — il se voit enfin — mais sa boite
+         reste sous la hauteur du texte : c'est elle qui commandait la hauteur
+         de la ligne, et une cible de 30 px ne servait a rien puisque la ligne
+         entiere lance le set. */
+      .lib-play {
+        font-size: 0.85rem; padding: 0.2rem 0; border-radius: 6px;
+        min-height: 26px;
+      }
+      .lib-wave { height: 15px; margin: 0.1rem 0 0; }
+      .lib-legend { font-size: 0.62rem; }
     }
   </style>
 
@@ -1086,6 +1127,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
       <button id="btn-sc-connect" class="player-spotify-connect" aria-label="Se connecter a SoundCloud" hidden>Connexion SC</button>
+      <!-- Rupture de rangee. Au doigt, la barre se range en deux lignes :
+           commandes au-dessus, waveform au-dessous. Forcer ce passage a la
+           ligne par les largeurs serait fragile — il suffirait d'un titre long
+           pour que tout se reorganise. Cet element vide, large de 100 % et
+           haut de zero, le rend certain. Invisible partout ailleurs. -->
+      <i class="player-saut" aria-hidden="true"></i>
       <button id="btn-close" aria-label="Fermer">✕</button>
     </div>
 
