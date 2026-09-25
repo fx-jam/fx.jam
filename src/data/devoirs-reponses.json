@@ -1,4 +1,9 @@
 {
   "_": "Reponses aux cahiers de l'atelier. Ecrit par l'agent VPS, relu par Claude d'une session a l'autre. Cle = id de question, valeur = { v: reponse, d: date ISO }.",
-  "reponses": {}
+  "reponses": {
+    "ac-2": {
+      "v": "Fait",
+      "d": "2026-09-25T02:22:49Z"
+    }
+  }
 }
