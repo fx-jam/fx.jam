@@ -886,6 +886,37 @@ const facetHrefs = visibleFacets().map(f => f.href);
          pour un trait. On elargit la zone, pas le trait. */
       #library-panel .lib-grip, #library-panel [data-grip] { min-height: 44px; }
 
+      /*  Conventions partagees par tout le site. `.home` est defini dans treize
+          fichiers, `.chip` dans deux, `.tile` et `.social-btn` dans un chacun :
+          les corriger un par un, c'est se condamner a en oublier un et a
+          recommencer au prochain gabarit. Une regle globale au doigt, ici, vaut
+          pour les pages existantes comme pour celles qui viendront.
+          Ce bloc est `is:global` : les regles ci-dessous portent bien sur les
+          pages inserees, ce que des styles scopes ne feraient pas. */
+      /*  `!important` a une raison precise ici, et c'est la seule du fichier.
+          Astro isole les styles d'une page en ajoutant un selecteur d'attribut
+          a chacun de ses selecteurs : `.home` y devient `.home[data-astro-...]`,
+          de specificite superieure a toute regle globale de classe. Sans
+          `!important`, la regle ci-dessous est ecrite, chargee, et sans effet —
+          verifie a la mesure avant de l'ajouter.
+          Pas de `:global()` ici : ce bloc est deja `is:global`, et l'enveloppe
+          y serait expediee telle quelle dans le CSS livre — un selecteur
+          invalide qui ne correspond a rien. C'est exactement ce qui s'est
+          passe au premier essai, et seule la mesure l'a revele : la regle
+          etait ecrite, chargee, et muette. */
+      .home {
+        padding-top: 0.82rem !important; padding-bottom: 0.82rem !important;
+        display: inline-flex !important; align-items: center !important;
+      }
+      .chip {
+        min-height: 36px !important;
+        display: inline-flex !important; align-items: center !important;
+      }
+      .chip--big { min-height: 44px !important; }
+      .tile { min-height: 48px !important; }
+      .social-btn { min-height: 44px !important; }
+      .btn-ecouter { min-height: 44px !important; }
+
       /*  Les invitations a connecter. Elles disparaissent d'elles-memes une
           fois le compte lie (`updateSCConnectBtn` / `updateSpotifyConnectBtn`),
           et ne s'affichent que pour la source en cours de lecture.
