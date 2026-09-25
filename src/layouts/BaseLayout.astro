@@ -677,7 +677,9 @@ const facetHrefs = visibleFacets().map(f => f.href);
       white-space: nowrap;
     }
     .player-spotify-connect:hover { background: oklch(0.55 0.22 145 / 0.15) !important; color: oklch(0.65 0.22 145) !important; }
-    .player-saut { display: none; }
+    /* Au bureau les groupes n'existent pas : leurs enfants sont directement
+       les elements flex de la barre, exactement comme avant. */
+    .pg { display: contents; }
 
     .player-scrubber {
       flex: 1; height: 30px;
@@ -867,50 +869,95 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #library-panel .lib-grip, #library-panel [data-grip] { min-height: 44px; }
     }
 
-    /* ── Player reduit au doigt, sur ecran large : deux rangees centrees ──
-       C'est l'interface principale du site sur telephone, et elle se
-       comportait comme un pied de page. Elle prend maintenant la hauteur de
-       deux entrees de bibliotheque, repartie en deux lignes de meme nature :
-       les COMMANDES au-dessus, la WAVEFORM au-dessous, encadree par les
-       invitations a connecter un compte. Chaque ligne est centree pour elle
-       meme, donc l'ensemble est symetrique par construction et non par
-       reglage.
-       Aucune marge automatique : c'est ce qui creusait les vides. Sur la
-       premiere ligne rien ne s'etire, le groupe reste compact au centre ; sur
-       la seconde, seule la waveform s'etire, ce qui pousse les deux boutons de
-       connexion aux extremites. */
+    /* ── Player reduit au doigt, sur ecran large : trois rangees ──
+       C'est l'interface principale du site sur telephone. Elle se lit de haut
+       en bas : ce qu'on ecoute, comment on le commande, ou on en est.
+
+       Le defaut de symetrie venait d'une cause structurelle, pas d'un reglage :
+       tant que le transport partageait sa rangee avec le titre, un titre plus
+       long le poussait hors du centre. Il a donc sa propre rangee, et cette
+       rangee est une grille `minmax(0,1fr) auto minmax(0,1fr)` : les deux
+       colonnes laterales se partagent exactement le reste, donc la colonne du
+       milieu est au milieu quoi qu'il arrive — que le menu soit large ou que
+       le volume soit masque. */
     @media (pointer: coarse) and (min-width: 481px) {
-      .player-full {
-        flex-wrap: wrap;
-        justify-content: center;
-        align-content: center;
-        height: auto; min-height: 124px;
-        gap: 0.35rem 0.5rem;
+      /*  Le selecteur porte l'id a dessein. La barre est cachee tant que rien
+          ne joue (`.player-full { display: none }`) et revele par
+          `#hamcat-player[data-active="true"] .player-full { display: flex }`.
+          Une regle en `.player-full` seule fait donc les deux erreurs a la
+          fois : elle montre la barre a l'arret, et elle se fait ecraser par la
+          regle a id des que la lecture commence. C'est exactement ce qui
+          arrivait — la grille n'existait qu'a l'arret, et le transport
+          retombait a gauche des qu'on ouvrait la bibliotheque. */
+      #hamcat-player[data-active="true"] .player-full {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        align-items: center;
+        height: auto; min-height: 150px;
+        gap: 0.3rem 0.5rem;
         padding: 0.5rem 0.8rem;
       }
-      .player-full > * { margin-left: 0; margin-right: 0; }
-      #btn-prev, #btn-next, #btn-volume, #btn-close,
-      #btn-playpause, .player-volume-slider { margin-left: 0; margin-right: 0; }
+      .pg { display: flex; align-items: center; min-width: 0; }
 
-      /* Rangee 1 : les commandes, dans l'ordre ou la main les cherche. */
-      #btn-library        { order: 1; }
-      .player-meta        { order: 2; flex: 0 1 auto; min-width: 48px; max-width: 38%; }
-      #btn-prev           { order: 3; }
-      #btn-playpause      { order: 4; }
-      #btn-next           { order: 5; }
-      #btn-volume         { order: 6; }
-      .player-volume-slider { order: 7; width: 64px; flex: 0 0 auto; }
-      #btn-close          { order: 8; }
+      /* Rangee 1 — le titre, centre sur toute la largeur. */
+      .pg-t { grid-area: 1 / 1 / 2 / 4; justify-content: center; }
+      .player-meta { align-items: center; text-align: center; min-width: 0; flex: 0 1 auto; }
+      .player-meta-sub { justify-content: center; }
+      #player-title { font-size: 1rem; }
+      #player-artist { font-size: 0.78rem; }
 
-      /* La rupture, puis la rangee 2. */
-      .player-saut { display: block; order: 9; flex: 0 0 100%; height: 0; margin: 0; }
-      #btn-spotify-connect { order: 10; }
-      .player-scrubber     { order: 11; flex: 1 1 auto; min-width: 90px; height: 48px; }
-      #btn-sc-connect      { order: 12; }
+      /* Rangee 2 — les commandes. Menu a gauche, transport au centre, son a
+         droite. Chaque groupe est colle a son bord, le centre est ancre. */
+      .pg-l { grid-area: 2 / 1; justify-content: flex-start; }
+      .pg-c { grid-area: 2 / 2; justify-content: center; gap: 0.5rem; }
+      .pg-r { grid-area: 2 / 3; justify-content: flex-end; gap: 0.35rem; }
 
-      /* Ni commandes ni information utile ici : le titre et la waveform
-         portent deja ce qu'elles disaient. */
-      #player-artwork, #player-time, .player-output-select { display: none; }
+      /* Rangee 3 — la waveform, pleine largeur. */
+      .pg-w { grid-area: 3 / 1 / 4 / 4; }
+      .player-scrubber { flex: 1 1 auto; min-width: 90px; height: 46px; }
+
+      /* Le menu se pose SUR la pochette : meme carre, meme place. La pochette
+         reste visible en transparence sous le voile, et l'encombrement de deux
+         elements tombe a un seul. */
+      .pg-l { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
+      #player-artwork {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        border-radius: 50%; display: block;
+      }
+      .player-lib-btn {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        border-radius: 50%; font-size: 1.3rem;
+        background: color-mix(in srgb, var(--bg-app) 55%, transparent);
+        border: 1px solid color-mix(in srgb, var(--text-secondary) 45%, transparent);
+        color: var(--text-primary);
+        display: flex; align-items: center; justify-content: center;
+      }
+      #hamcat-player[data-library="true"] .player-lib-btn {
+        background: color-mix(in srgb, var(--facet-son) 35%, var(--bg-app));
+        border-color: var(--facet-son);
+      }
+
+      /* Toutes les commandes sont rondes et occupent la hauteur de leur
+         rangee : une rangee de disques de meme diametre se vise sans regarder,
+         et la lecture, qui est l'action principale, est seule a depasser. */
+      .player-full button {
+        border-radius: 50%;
+        width: 52px; height: 52px; min-width: 52px; min-height: 52px;
+        padding: 0; font-size: 1.25rem;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      #btn-playpause {
+        width: 62px; height: 62px; min-width: 62px; min-height: 62px;
+        font-size: 1.5rem;
+        background: color-mix(in srgb, var(--facet-son) 16%, transparent);
+        border: 1px solid color-mix(in srgb, var(--facet-son) 55%, transparent);
+      }
+      .player-volume-slider { width: 78px; height: 44px; flex: 0 0 auto; }
+
+      /* Ni commandes ni information que le titre et la waveform ne portent
+         deja. La duree reviendra si elle manque. */
+      #player-time, .player-output-select { display: none; }
 
       /* Le transport etait double : precedent/suivant de la bibliotheque, et
          precedent/suivant de la source. Deux paires de chevrons cote a cote ne
@@ -921,9 +968,17 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #btn-sp-prev, #btn-sp-next,
       #btn-sp-like, #btn-sc-like { display: none; }
 
+      /* Les invitations a connecter : elles disparaissent d'elles-memes une
+         fois le compte lie (`updateSCConnectBtn` / `updateSpotifyConnectBtn`),
+         donc elles n'encombrent que tant qu'elles servent. Rondes comme le
+         reste, elles ne le seraient pas : ce sont des mots, pas des symboles. */
       .player-spotify-connect {
-        flex: 0 1 auto; min-width: 0; min-height: 40px;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        width: auto !important; min-width: 0 !important;
+        height: 40px !important; min-height: 40px !important;
+        border-radius: 999px !important;
+        font-size: 0.6rem !important; padding: 0 0.6rem !important;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        flex: 0 1 auto;
       }
     }
 
@@ -938,23 +993,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
        dessin, pas en encombrement. */
     @media (pointer: coarse) {
       .lib-row {
-        grid-template-columns: 32px 84px minmax(0, 1fr) minmax(0, 0.5fr) 32px;
-        padding: 0.22rem 0.5rem;
+        grid-template-columns: 30px 88px minmax(0, 1fr) minmax(0, 0.5fr) 34px;
+        padding: 0.16rem 0.5rem;
         row-gap: 0;
       }
-      .lib-title  { font-size: 0.95rem; line-height: 1.15; }
-      .lib-title .lib-sub { font-size: 0.78rem; }
-      .lib-date, .lib-styles, .lib-src { font-size: 0.7rem; }
+      .lib-title  { font-size: 1.08rem; line-height: 1.1; }
+      .lib-title .lib-sub { font-size: 0.85rem; }
+      .lib-date, .lib-styles, .lib-src { font-size: 0.78rem; }
       /* Le triangle passe de 9,6 a 13,6 px — il se voit enfin — mais sa boite
          reste sous la hauteur du texte : c'est elle qui commandait la hauteur
          de la ligne, et une cible de 30 px ne servait a rien puisque la ligne
          entiere lance le set. */
       .lib-play {
-        font-size: 0.85rem; padding: 0.2rem 0; border-radius: 6px;
-        min-height: 26px;
+        font-size: 0.95rem; padding: 0.15rem 0; border-radius: 6px;
+        min-height: 24px;
       }
-      .lib-wave { height: 15px; margin: 0.1rem 0 0; }
-      .lib-legend { font-size: 0.62rem; }
+      /* Deuxieme reprise sur la bande de waveform : elle sert a reconnaitre un
+         set d'un coup d'oeil, pas a le lire en detail — 12 px y suffisent, et
+         ces pixels valent mieux dans le titre. */
+      .lib-wave { height: 12px; margin: 0.06rem 0 0; }
+      .lib-legend { font-size: 0.68rem; }
     }
   </style>
 
@@ -1092,11 +1150,22 @@ const facetHrefs = visibleFacets().map(f => f.href);
          waveform, temps, volume. Il n'y a plus d'etat "reduit" appauvri ;
          deplier ne fait qu'ouvrir la bibliotheque au-dessus. -->
     <div class="player-full">
-      <!-- Le menu reste a la meme place d'un etat a l'autre : premier element. -->
-      <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
-      <!-- data-fallback : pochette par defaut (logo du site) pour les sets joues en direct depuis R2,
-           qui n'ont pas d'artwork fourni par une plateforme. -->
-      <img id="player-artwork" src="" alt="" width="40" height="40" data-fallback={siteData.logo_url} />
+      <!-- Groupes. Ils n'existent qu'au doigt : partout ailleurs ils sont en
+           `display: contents` et leurs enfants restent des elements directs de
+           la barre, dans l'ordre exact d'avant. Au doigt ils deviennent les
+           trois colonnes d'une grille, ce qui est la seule facon d'ancrer le
+           transport au centre : tant qu'il partage sa rangee avec un titre de
+           largeur variable, il se deplace avec lui. -->
+      <div class="pg pg-l">
+        <!-- Le menu reste a la meme place d'un etat a l'autre : premier element.
+             Au doigt il vient se poser SUR la pochette — deux carres de meme
+             taille au meme endroit, un seul encombrement. -->
+        <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
+        <!-- data-fallback : pochette par defaut (logo du site) pour les sets joues en direct depuis R2,
+             qui n'ont pas d'artwork fourni par une plateforme. -->
+        <img id="player-artwork" src="" alt="" width="40" height="40" data-fallback={siteData.logo_url} />
+      </div>
+      <div class="pg pg-t">
       <div class="player-meta">
         <a id="player-title" class="player-label" target="_blank" rel="noopener noreferrer">—</a>
         <div class="player-meta-sub">
@@ -1104,6 +1173,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
           <span id="player-source-badge" class="source-badge">SC</span>
         </div>
       </div>
+      </div>
+      <div class="pg pg-c">
       <button id="btn-sp-shuffle" class="player-sp-extra" aria-label="Lecture aleatoire" hidden data-active="0">🔀</button>
       <button id="btn-sp-prev" class="player-sp-extra" aria-label="Piste precedente" hidden>⏮</button>
       <!-- Precedent / suivant parcourent la bibliotheque, qui est la liste de
@@ -1113,12 +1184,16 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-next" class="player-step" aria-label="Set suivant">⏭</button>
       <button id="btn-sp-next" class="player-sp-extra" aria-label="Piste suivante" hidden>⏭</button>
       <button id="btn-sp-repeat" class="player-sp-extra" aria-label="Repetition" hidden data-mode="0">🔁</button>
+      </div>
+      <div class="pg pg-w">
       <!-- La waveform remplace la barre de progression quand elle existe ;
            la barre pleine reste le repli pour Spotify, qui n'en a pas. -->
       <div class="player-scrubber" id="player-scrubber" role="progressbar">
         <div id="scrubber-fill"></div>
         <div id="player-wave" hidden></div>
       </div>
+      </div>
+      <div class="pg pg-r">
       <span id="player-time">0:00 / 0:00</span>
       <button id="btn-volume" class="player-mute-btn" aria-label="Muet">🔊</button>
       <input id="player-volume" class="player-volume-slider" type="range" min="0" max="100" value="100" aria-label="Volume" />
@@ -1127,13 +1202,8 @@ const facetHrefs = visibleFacets().map(f => f.href);
       <button id="btn-spotify-connect" class="player-spotify-connect" aria-label="Se connecter a Spotify" hidden>Connexion Spotify</button>
       <button id="btn-sc-like" class="player-sp-extra" aria-label="Aimer sur SoundCloud" hidden data-liked="0">♡</button>
       <button id="btn-sc-connect" class="player-spotify-connect" aria-label="Se connecter a SoundCloud" hidden>Connexion SC</button>
-      <!-- Rupture de rangee. Au doigt, la barre se range en deux lignes :
-           commandes au-dessus, waveform au-dessous. Forcer ce passage a la
-           ligne par les largeurs serait fragile — il suffirait d'un titre long
-           pour que tout se reorganise. Cet element vide, large de 100 % et
-           haut de zero, le rend certain. Invisible partout ailleurs. -->
-      <i class="player-saut" aria-hidden="true"></i>
       <button id="btn-close" aria-label="Fermer">✕</button>
+      </div>
     </div>
 
     <!-- Barre de toggle embed — indépendante du transport -->
@@ -1740,6 +1810,24 @@ const facetHrefs = visibleFacets().map(f => f.href);
       rampVolume(audioEl, vol, FADE_IN_MS);
       state.currentSource = 'audio';
       updateUI('playing', lbl, 'audio');
+
+      //  Les sets heberges etaient le seul chemin de lecture a ne poser aucune
+      //  metadonnee. Sans elle, la notification du systeme se rabat sur le
+      //  titre de la page — d'ou « Hamcat · DJ, ingenieur son & prof MAO » sur
+      //  l'ecran verrouille, qui est une accroche de referencement, pas le nom
+      //  d'un set. Ce titre reste utile la ou il sert (l'onglet, Google) ; ici
+      //  on nomme ce qui joue vraiment.
+      if ('mediaSession' in navigator) {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: lbl || 'Set',
+            artist: 'Hamcat',
+            album: 'hamcat.live',
+            artwork: art ? [{ src: art, sizes: '512x512', type: 'image/jpeg' }] : [],
+          });
+          navigator.mediaSession.playbackState = 'playing';
+        } catch (_) { /* navigateur sans Media Session : sans consequence */ }
+      }
       setAudioArtwork(art); // pauseAll() vide la pochette : on la repose apres updateUI
       setPlayerWave(url);
       saveState({ type: 'audio', url, lbl, art, position: startAt, playing: true });
