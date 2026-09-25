@@ -348,7 +348,26 @@ const facetHrefs = visibleFacets().map(f => f.href);
          qu'aucune ait a la connaitre. */
       --player-gap: 14px;
     }
-    #hamcat-player { position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; pointer-events: none; }
+    /*  Echelle tactile. Le telephone de Fx declare un viewport d'environ
+        950 px CSS alors que la balise `viewport` demande `device-width` : le
+        navigateur est en mode « site pour ordinateur ». Consequence, le pixel
+        CSS y est physiquement deux fois trop petit, et tout le bloc d'ecoute
+        devient difficile a lire et a viser — ce n'est pas une question de
+        tailles mal choisies, c'est l'unite elle-meme qui est fausse.
+        On compense la ou ca se voit le plus. Un viewport large ET tactile est
+        le signal : aucune tablette ne se tient a la distance d'un ecran de
+        bureau. `--tac` est la seule source de verite, lue par le CSS pour le
+        zoom et par le JS pour la hauteur du panneau — sans quoi la
+        bibliotheque se dimensionnerait dans une unite et s'afficherait dans
+        une autre. */
+    :root { --tac: 1; }
+    @media (pointer: coarse) and (min-width: 700px) { :root { --tac: 1.35; } }
+
+    #hamcat-player {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+      pointer-events: none;
+      zoom: var(--tac);
+    }
     #hamcat-player[data-active="true"] { pointer-events: auto; }
 
     /* ── Bibliotheque ── mi-hauteur, au-dessus du player, repliable */
@@ -3007,7 +3026,12 @@ const facetHrefs = visibleFacets().map(f => f.href);
     //    celle du bord haut du player — partagent le meme code, si bien qu'on
     //    rouvre la bibliotheque en tirant vers le haut sans passer par le menu.
     const LIB_H_KEY = 'hamcat-lib-height';
-    const libMax = () => (window.visualViewport?.height || window.innerHeight) - 56;
+    //  Le panneau vit dans un element zoome : une hauteur calculee en pixels
+    //  de fenetre s'y afficherait multipliee par le zoom. On divise donc par
+    //  la meme valeur que celle appliquee en CSS.
+    const tac = () => parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--tac')) || 1;
+    const libMax = () => ((window.visualViewport?.height || window.innerHeight) - 56) / tac();
     const libMin = () => Math.round(libMax() * 0.22);
     const readLibH = () => {
       try { const v = parseInt(localStorage.getItem(LIB_H_KEY) || '', 10);
