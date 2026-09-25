@@ -679,7 +679,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
     .player-spotify-connect:hover { background: oklch(0.55 0.22 145 / 0.15) !important; color: oklch(0.65 0.22 145) !important; }
     /* Au bureau les groupes n'existent pas : leurs enfants sont directement
        les elements flex de la barre, exactement comme avant. */
-    .pg { display: contents; }
+    .pg, .pg-art { display: contents; }
 
     .player-scrubber {
       flex: 1; height: 30px;
@@ -869,62 +869,52 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #library-panel .lib-grip, #library-panel [data-grip] { min-height: 44px; }
     }
 
-    /* ── Player reduit au doigt, sur ecran large : trois rangees ──
-       C'est l'interface principale du site sur telephone. Elle se lit de haut
-       en bas : ce qu'on ecoute, comment on le commande, ou on en est.
+    /* ── Player reduit au doigt, sur ecran large : deux rangees ──
+       Rangee 1 : pochette, puis le texte dans l'espace qui restait vide a sa
+       droite, puis le transport, puis le son. Rangee 2 : la waveform, pleine
+       largeur. Deux rangees suffisent — donner au texte une troisieme ligne a
+       lui seul creusait du vide sur les cotes pour une seule ligne de mots.
 
-       Le defaut de symetrie venait d'une cause structurelle, pas d'un reglage :
-       tant que le transport partageait sa rangee avec le titre, un titre plus
-       long le poussait hors du centre. Il a donc sa propre rangee, et cette
-       rangee est une grille `minmax(0,1fr) auto minmax(0,1fr)` : les deux
-       colonnes laterales se partagent exactement le reste, donc la colonne du
-       milieu est au milieu quoi qu'il arrive — que le menu soit large ou que
-       le volume soit masque. */
+       Le texte tient sur UNE ligne : titre, artiste et source se suivent au
+       lieu de s'empiler. Deux lignes de trois mots dans une barre de transport,
+       c'est de la hauteur depensee sans rien gagner en lecture.
+
+       La grille reste `minmax(0,1fr) auto minmax(0,1fr)`, et c'est elle qui
+       resout la tension entre les deux demandes de Fx — texte long et
+       transport centre. Le texte vit dans la colonne de gauche : il peut la
+       remplir entierement sans jamais deplacer la colonne du milieu, qui est
+       au centre par construction. Sans cette grille, chaque titre un peu long
+       repousserait les commandes, ce qui etait exactement le defaut signale. */
     @media (pointer: coarse) and (min-width: 481px) {
       /*  Le selecteur porte l'id a dessein. La barre est cachee tant que rien
           ne joue (`.player-full { display: none }`) et revele par
           `#hamcat-player[data-active="true"] .player-full { display: flex }`.
           Une regle en `.player-full` seule fait donc les deux erreurs a la
           fois : elle montre la barre a l'arret, et elle se fait ecraser par la
-          regle a id des que la lecture commence. C'est exactement ce qui
-          arrivait — la grille n'existait qu'a l'arret, et le transport
-          retombait a gauche des qu'on ouvrait la bibliotheque. */
+          regle a id des que la lecture commence. */
       #hamcat-player[data-active="true"] .player-full {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-        grid-template-rows: auto auto auto;
+        grid-template-rows: auto auto;
         align-items: center;
-        height: auto; min-height: 150px;
-        gap: 0.3rem 0.5rem;
-        padding: 0.5rem 0.8rem;
+        height: auto; min-height: 118px;
+        gap: 0.3rem 0.6rem;
+        padding: 0.45rem 0.8rem;
       }
       .pg { display: flex; align-items: center; min-width: 0; }
 
-      /* Rangee 1 — le titre, centre sur toute la largeur. */
-      .pg-t { grid-area: 1 / 1 / 2 / 4; justify-content: center; }
-      .player-meta { align-items: center; text-align: center; min-width: 0; flex: 0 1 auto; }
-      .player-meta-sub { justify-content: center; }
-      #player-title { font-size: 1rem; }
-      #player-artist { font-size: 0.78rem; }
-
-      /* Rangee 2 — les commandes. Menu a gauche, transport au centre, son a
-         droite. Chaque groupe est colle a son bord, le centre est ancre. */
-      .pg-l { grid-area: 2 / 1; justify-content: flex-start; }
-      .pg-c { grid-area: 2 / 2; justify-content: center; gap: 0.5rem; }
-      .pg-r { grid-area: 2 / 3; justify-content: flex-end; gap: 0.35rem; }
-
-      /* Rangee 3 — la waveform, pleine largeur. */
-      .pg-w { grid-area: 3 / 1 / 4 / 4; }
-      .player-scrubber { flex: 1 1 auto; min-width: 90px; height: 46px; }
-
-      /* Le menu se pose SUR la pochette : meme carre, meme place. La pochette
-         reste visible en transparence sous le voile, et l'encombrement de deux
-         elements tombe a un seul. */
-      .pg-l { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
+      /* Rangee 1, colonne 1 — pochette puis texte, colles a gauche. */
+      .pg-l { grid-area: 1 / 1; justify-content: flex-start; gap: 0.6rem; min-width: 0; }
+      .pg-art {
+        display: block; position: relative;
+        width: 48px; height: 48px; flex: 0 0 auto;
+      }
       #player-artwork {
         position: absolute; inset: 0; width: 100%; height: 100%;
         border-radius: 50%; display: block;
       }
+      /* Le menu se pose SUR la pochette : meme cercle, meme place, un seul
+         encombrement au lieu de deux. */
       .player-lib-btn {
         position: absolute; inset: 0; width: 100%; height: 100%;
         border-radius: 50%; font-size: 1.3rem;
@@ -938,9 +928,44 @@ const facetHrefs = visibleFacets().map(f => f.href);
         border-color: var(--facet-son);
       }
 
-      /* Toutes les commandes sont rondes et occupent la hauteur de leur
-         rangee : une rangee de disques de meme diametre se vise sans regarder,
-         et la lecture, qui est l'action principale, est seule a depasser. */
+      /* Le texte sur une seule ligne. Il prend toute la largeur disponible
+         jusqu'aux commandes ; il ne se coupe que s'il depasse vraiment, et
+         alors par des points de suspension plutot que par un retour a la
+         ligne qui ferait grandir la barre. */
+      .player-meta {
+        flex: 1 1 auto; min-width: 0;
+        flex-direction: row; align-items: baseline; gap: 0.45rem;
+      }
+      /*  Ordre de sacrifice. La colonne de gauche est bornee par la grille, et
+          c'est le prix du transport ancre au centre : on ne peut pas elargir
+          la place du texte sans decentrer les commandes. On decide donc QUI
+          cede en premier. Le nom du set est ce qu'on cherche ; l'artiste est
+          toujours le meme sur ce site. L'artiste cede donc cinq fois plus vite
+          que le titre, ce qui suffit a faire tenir en entier le plus long
+          titre de la bibliotheque. */
+      #player-title { font-size: 0.92rem; flex: 0 1 auto; min-width: 0; flex-shrink: 1; }
+      .player-meta-sub { flex: 0 1 auto; min-width: 0; flex-shrink: 5; gap: 0.3rem; }
+      #player-artist {
+        font-size: 0.76rem; min-width: 0;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      /*  La pastille de source disparait au doigt. Elle repete une information
+          que la bibliotheque porte deja dans sa colonne SRC, et c'est elle qui
+          faisait deborder le plus long titre du site — trente pixels payes
+          pour redire ce qu'on sait. */
+      #player-source-badge { display: none; }
+
+      /* Rangee 1, colonne 2 — le transport, ancre au centre. */
+      .pg-c { grid-area: 1 / 2; justify-content: center; gap: 0.5rem; }
+      /* Rangee 1, colonne 3 — le son, colle a droite. */
+      .pg-r { grid-area: 1 / 3; justify-content: flex-end; gap: 0.35rem; }
+      /* Rangee 2 — la waveform, sur toute la largeur. */
+      .pg-w { grid-area: 2 / 1 / 3 / 4; }
+      .player-scrubber { flex: 1 1 auto; min-width: 90px; height: 46px; }
+
+      /* Toutes les commandes sont rondes et de meme diametre : une rangee de
+         disques identiques se vise sans regarder, et la lecture, qui est
+         l'action principale, est seule a depasser. */
       .player-full button {
         border-radius: 50%;
         width: 52px; height: 52px; min-width: 52px; min-height: 52px;
@@ -953,7 +978,7 @@ const facetHrefs = visibleFacets().map(f => f.href);
         background: color-mix(in srgb, var(--facet-son) 16%, transparent);
         border: 1px solid color-mix(in srgb, var(--facet-son) 55%, transparent);
       }
-      .player-volume-slider { width: 78px; height: 44px; flex: 0 0 auto; }
+      .player-volume-slider { width: 72px; height: 44px; flex: 0 0 auto; }
 
       /* Ni commandes ni information que le titre et la waveform ne portent
          deja. La duree reviendra si elle manque. */
@@ -968,10 +993,10 @@ const facetHrefs = visibleFacets().map(f => f.href);
       #btn-sp-prev, #btn-sp-next,
       #btn-sp-like, #btn-sc-like { display: none; }
 
-      /* Les invitations a connecter : elles disparaissent d'elles-memes une
-         fois le compte lie (`updateSCConnectBtn` / `updateSpotifyConnectBtn`),
-         donc elles n'encombrent que tant qu'elles servent. Rondes comme le
-         reste, elles ne le seraient pas : ce sont des mots, pas des symboles. */
+      /* Les invitations a connecter disparaissent d'elles-memes une fois le
+         compte lie (`updateSCConnectBtn` / `updateSpotifyConnectBtn`) : elles
+         n'encombrent que tant qu'elles servent. Ce sont des mots, pas des
+         symboles — donc des pastilles, pas des ronds. */
       .player-spotify-connect {
         width: auto !important; min-width: 0 !important;
         height: 40px !important; min-height: 40px !important;
@@ -1157,15 +1182,15 @@ const facetHrefs = visibleFacets().map(f => f.href);
            transport au centre : tant qu'il partage sa rangee avec un titre de
            largeur variable, il se deplace avec lui. -->
       <div class="pg pg-l">
-        <!-- Le menu reste a la meme place d'un etat a l'autre : premier element.
-             Au doigt il vient se poser SUR la pochette — deux carres de meme
-             taille au meme endroit, un seul encombrement. -->
-        <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
-        <!-- data-fallback : pochette par defaut (logo du site) pour les sets joues en direct depuis R2,
-             qui n'ont pas d'artwork fourni par une plateforme. -->
-        <img id="player-artwork" src="" alt="" width="40" height="40" data-fallback={siteData.logo_url} />
-      </div>
-      <div class="pg pg-t">
+        <div class="pg-art">
+          <!-- Le menu reste a la meme place d'un etat a l'autre : premier element.
+               Au doigt il vient se poser SUR la pochette — deux carres de meme
+               taille au meme endroit, un seul encombrement. -->
+          <button id="btn-library" class="player-lib-btn" aria-label="Bibliothèque" aria-expanded="false">≡</button>
+          <!-- data-fallback : pochette par defaut (logo du site) pour les sets joues en direct depuis R2,
+               qui n'ont pas d'artwork fourni par une plateforme. -->
+          <img id="player-artwork" src="" alt="" width="40" height="40" data-fallback={siteData.logo_url} />
+        </div>
       <div class="player-meta">
         <a id="player-title" class="player-label" target="_blank" rel="noopener noreferrer">—</a>
         <div class="player-meta-sub">
